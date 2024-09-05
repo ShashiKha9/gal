@@ -1,0 +1,301 @@
+import 'dart:developer';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/scaffold_message.dart';
+import 'package:galaxy_mini/models/Item_model.dart';
+import 'package:galaxy_mini/models/customer_model.dart';
+import 'package:galaxy_mini/models/department_model.dart';
+import 'package:galaxy_mini/models/kotgroup_model.dart';
+import 'package:galaxy_mini/models/kotmessage_model.dart';
+import 'package:galaxy_mini/models/offer_model.dart';
+import 'package:galaxy_mini/models/payment_model.dart';
+import 'package:galaxy_mini/models/table_model.dart';
+import 'package:galaxy_mini/models/tax_model.dart';
+import 'package:galaxy_mini/repositories/sync_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SyncProvider extends ChangeNotifier {
+  final syncRepo = SyncRepository();
+
+  List<ItemModel> itemList = [];
+  List<DepartmentModel> departmentList = [];
+  List<TableMasterModel> tablemasterList = [];
+  List<KotGroupModel> kotgroupList = [];
+  List<TaxModel> taxList = [];
+  List<CustomerModel> customerList = [];
+  List<PaymentModel> paymentList = [];
+  List<OfferModel> offerList = [];
+  List<KotMessageModel> kotmessageList = [];
+
+  // Map to group items by department code
+  Map<String, List<ItemModel>> itemsByDepartment = {};
+
+  // Fetch items and organize them by department code
+  Future<void> getItemsAll() async {
+    try {
+      final response = await syncRepo.getItem();
+      log(response.toString(), name: 'response getItemsAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        log('Valid Status Code 200', name: 'Status Code Check');
+        if (response['body'] != null && response['body'] is List) {
+          itemList = List<ItemModel>.from(
+            response['body'].map((e) => ItemModel.fromJson(e)),
+          );
+          log(itemList.toString(), name: 'Updated itemList');
+          _organizeItemsByDepartment(); // Organize items after fetching
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getItemsAll', stackTrace: s);
+    }
+  }
+
+  // Method to update the itemList and notify listeners
+  void updateItemList(List<ItemModel> newList) {
+    itemList = newList;
+    _organizeItemsByDepartment(); // Ensure items are organized after the update
+    notifyListeners();
+  }
+
+  // Fetch departments
+  Future<void> getDepartmentsAll() async {
+    try {
+      final response = await syncRepo.getDepartment();
+      log(response.toString(), name: 'response getDepartmentsAll');
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        departmentList = List<DepartmentModel>.from(
+          response["body"].map((e) => DepartmentModel.fromJson(e)),
+        );
+        notifyListeners();
+      }
+    } on SocketException catch (e) {
+      scaffoldMessage(message: '$e');
+    } catch (e, s) {
+      log(e.toString(), name: 'error getDepartmentsAll', stackTrace: s);
+    }
+  }
+
+  // Organize items by department code
+  void _organizeItemsByDepartment() {
+    itemsByDepartment.clear(); // Clear any previous data
+
+    for (var item in itemList) {
+      final departmentCode = item.departmentCode;
+
+      if (departmentCode != null) {
+        if (!itemsByDepartment.containsKey(departmentCode)) {
+          itemsByDepartment[departmentCode] = [];
+        }
+
+        itemsByDepartment[departmentCode]?.add(item);
+      }
+    }
+  }
+
+  Future<void> getTableMasterAll() async {
+    try {
+      final response = await syncRepo.getTableMaster();
+      log(response.toString(), name: 'response getTableMasterAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        log('Valid Status Code 200', name: 'Status Code Check');
+        if (response['body'] != null && response['body'] is List) {
+          tablemasterList = List<TableMasterModel>.from(
+            response['body'].map((e) => TableMasterModel.fromJson(e)),
+          );
+          log(itemList.toString(),
+              name: 'Updated tablelist'); // Organize items after fetching
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getTableMasterAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getKotGroupAll() async {
+    try {
+      final response = await syncRepo.getKotGroup();
+      log(response.toString(), name: 'response getKotGroupAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        log('Valid Status Code 200', name: 'Status Code Check');
+        if (response['body'] != null && response['body'] is List) {
+          kotgroupList = List<KotGroupModel>.from(
+            response['body'].map((e) => KotGroupModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getKotGroupAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getTaxAll() async {
+    try {
+      final response = await syncRepo.getTax();
+      log(response.toString(), name: 'response getTaxAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        if (response['body'] != null && response['body'] is List) {
+          taxList = List<TaxModel>.from(
+            response['body'].map((e) => TaxModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error TaxModelAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getCustomerAll() async {
+    try {
+      final response = await syncRepo.getcustomer();
+      log(response.toString(), name: 'response getCustomerAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        if (response['body'] != null && response['body'] is List) {
+          customerList = List<CustomerModel>.from(
+            response['body'].map((e) => CustomerModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getCustomerAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getPaymentAll() async {
+    try {
+      final response = await syncRepo.getpayment();
+      log(response.toString(), name: 'response getPaymentAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        if (response['body'] != null && response['body'] is List) {
+          paymentList = List<PaymentModel>.from(
+            response['body'].map((e) => PaymentModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getPaymentAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getOfferAll() async {
+    try {
+      final response = await syncRepo.getoffer();
+      log(response.toString(), name: 'response getOfferAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        if (response['body'] != null && response['body'] is List) {
+          offerList = List<OfferModel>.from(
+            response['body'].map((e) => OfferModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getOfferAll', stackTrace: s);
+    }
+  }
+
+  Future<void> getKotMessageAll() async {
+    try {
+      final response = await syncRepo.getkotmessage();
+      log(response.toString(), name: 'response getKotMessageAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        if (response['body'] != null && response['body'] is List) {
+          kotmessageList = List<KotMessageModel>.from(
+            response['body'].map((e) => KotMessageModel.fromJson(e)),
+          );
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getKotMessageAll', stackTrace: s);
+    }
+  }
+
+  Future<void> saveDepartmentsOrder() async {
+  final prefs = await SharedPreferences.getInstance();
+  final departmentOrder = departmentList.map((d) => d.code).toList();
+  await prefs.setStringList('departments_order', departmentOrder);
+}
+
+// Load the reordered department list from SharedPreferences
+Future<void> loadDepartmentsOrder() async {
+  final prefs = await SharedPreferences.getInstance();
+  final departmentOrder = prefs.getStringList('departments_order');
+
+  if (departmentOrder != null && departmentOrder.isNotEmpty) {
+    departmentList.sort((a, b) =>
+        departmentOrder.indexOf(a.code).compareTo(departmentOrder.indexOf(b.code)));
+  }
+}
+
+  Future<void> saveItemsOrder() async {
+  final prefs = await SharedPreferences.getInstance();
+  final itemOrder = itemList.map((i) => i.code).toList();
+  await prefs.setStringList('items_order', itemOrder);
+}
+
+// Load the reordered department list from SharedPreferences
+Future<void> loadItemsOrder() async {
+  final prefs = await SharedPreferences.getInstance();
+  final itemOrder = prefs.getStringList('items_order');
+
+  if (itemOrder != null && itemOrder.isNotEmpty) {
+    departmentList.sort((a, b) =>
+        itemOrder.indexOf(a.code).compareTo(itemOrder.indexOf(b.code)));
+  }
+}
+}
