@@ -25,7 +25,7 @@ class _TaxmasterState extends State<Taxmaster> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'Tax Master', onSearch: (String ) {  },),
+      appBar: MainAppBar(title: 'Tax Master', onSearch: (p0 ) {  },),
       body: Column(
         children: [
           Expanded(

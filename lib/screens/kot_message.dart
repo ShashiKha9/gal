@@ -1,7 +1,5 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -70,9 +68,8 @@ class _KotmessageState extends State<Kotmessage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(
-        title: 'KOT Message Master',
-        onSearch: (String) {},
+      appBar: AppBar(
+        title: const Text('KOT Message Master'),
       ),
       body: Column(
         children: [
@@ -84,10 +81,9 @@ class _KotmessageState extends State<Kotmessage> {
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 1,
-                  crossAxisSpacing: 16.0, // Increased spacing for better UI
-                  mainAxisSpacing: 16.0, // Increased spacing for better UI
-                  childAspectRatio:
-                      4.0, // Adjusted aspect ratio for a rectangular shape
+                  crossAxisSpacing: 16.0,
+                  mainAxisSpacing: 16.0,
+                  childAspectRatio: 4.0,
                 ),
                 itemCount: syncProvider.kotmessageList.length,
                 itemBuilder: (context, index) {

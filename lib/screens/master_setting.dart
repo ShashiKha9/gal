@@ -19,7 +19,9 @@ class MasterSettingPage extends StatelessWidget {
       {
         'icon': Icons.local_dining,
         'title': 'Item Master',
-        'page': const DepartmentPage(isEdit: true,)
+        'page': const DepartmentPage(
+          isEdit: true,
+        )
       },
       {
         'icon': Icons.table_restaurant,
@@ -64,7 +66,10 @@ class MasterSettingPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: MainAppBar(title: 'Master settings', onSearch: (String ) {  },),
+      appBar: MainAppBar(
+        title: 'Master settings',
+        onSearch: (p0) {},
+      ),
       body: ListView.builder(
         itemCount: options.length,
         itemBuilder: (context, index) {

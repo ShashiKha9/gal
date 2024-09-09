@@ -26,7 +26,7 @@ class _OffercouponState extends State<Offercoupon> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Offer Coupon Master',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       body: Column(
         children: [

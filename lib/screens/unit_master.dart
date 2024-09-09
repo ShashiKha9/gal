@@ -8,7 +8,10 @@ class Unitmaster extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'Unit Master', onSearch: (String ) {  },),
+      appBar: MainAppBar(
+        title: 'Unit Master',
+        onSearch: (p0) {},
+      ),
       body: const Center(child: Text('This is Option 1 Page')),
     );
   }

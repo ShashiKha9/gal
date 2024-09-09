@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';

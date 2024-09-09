@@ -24,7 +24,7 @@ class _KotgroupState extends State<Kotgroup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'KOT Group Master', onSearch: (String ) {  },),
+      appBar: MainAppBar(title: 'KOT Group Master', onSearch: (p0 ) {  },),
       body: Column(
         children: [
           Expanded(

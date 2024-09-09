@@ -152,7 +152,7 @@ class SyncProvider extends ChangeNotifier {
   }
 
     void _organizeTablesByGroup() {
-    tablesByGroup.clear(); // Clear any previous data
+    tablesByGroup.clear();
 
     for (var item in itemList) {
       final departmentCode = item.departmentCode;

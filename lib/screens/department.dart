@@ -94,15 +94,17 @@ class _DepartmentPageState extends State<DepartmentPage> {
           quantities: quantities,
           rates: rates,
           totalAmount: totalAmount,
-          parkedOrders: [],
+          parkedOrders: const [],
         ),
       ),
     );
   }
 
-    void _showEditDialog() {
-    final selectedDepartment = _syncProvider.departmentList[_selectedDepartmentIndex];
-    final departmentNameController = TextEditingController(text: selectedDepartment.description);
+  void _showEditDialog() {
+    final selectedDepartment =
+        _syncProvider.departmentList[_selectedDepartmentIndex];
+    final departmentNameController =
+        TextEditingController(text: selectedDepartment.description);
 
     showDialog(
       context: context,
@@ -128,9 +130,10 @@ class _DepartmentPageState extends State<DepartmentPage> {
                 if (newName.isNotEmpty) {
                   setState(() {
                     // Update the department name
-                    _syncProvider.departmentList[_selectedDepartmentIndex].description = newName;
+                    _syncProvider.departmentList[_selectedDepartmentIndex]
+                        .description = newName;
                     // Save the updated department list to SharedPreferences or backend if needed
-                    _syncProvider.saveDepartmentsOrder(); 
+                    _syncProvider.saveDepartmentsOrder();
                   });
                 }
                 Navigator.pop(context);
@@ -143,13 +146,12 @@ class _DepartmentPageState extends State<DepartmentPage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Department',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       floatingActionButton: widget.isEdit
           ? SpeedDial(
@@ -178,7 +180,7 @@ class _DepartmentPageState extends State<DepartmentPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ArrangeDepartments(),
+                        builder: (context) => const ArrangeDepartments(),
                       ),
                     );
                   },

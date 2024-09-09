@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Don't forget to import provider
-import 'package:galaxy_mini/models/offer_model.dart';
-import 'package:galaxy_mini/provider/sync_provider.dart'; 
+import 'package:provider/provider.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 
 class EditCouponPage extends StatefulWidget {
   final String couponCode;
@@ -10,7 +9,7 @@ class EditCouponPage extends StatefulWidget {
   final String maxDiscount;
   final String minBillAmount;
   final String validity;
-  final int couponIndex; // Add coupon index
+  final int couponIndex;
 
   const EditCouponPage({
     super.key,
@@ -20,7 +19,7 @@ class EditCouponPage extends StatefulWidget {
     required this.maxDiscount,
     required this.minBillAmount,
     required this.validity,
-    required this.couponIndex, // Pass the index of the coupon
+    required this.couponIndex,
   });
 
   @override
@@ -40,9 +39,11 @@ class _EditCouponPageState extends State<EditCouponPage> {
     super.initState();
     _couponCodeController = TextEditingController(text: widget.couponCode);
     _noteController = TextEditingController(text: widget.note);
-    _discountInPercentController = TextEditingController(text: widget.discountInPercent);
+    _discountInPercentController =
+        TextEditingController(text: widget.discountInPercent);
     _maxDiscountController = TextEditingController(text: widget.maxDiscount);
-    _minBillAmountController = TextEditingController(text: widget.minBillAmount);
+    _minBillAmountController =
+        TextEditingController(text: widget.minBillAmount);
     _validityController = TextEditingController(text: widget.validity);
   }
 
@@ -57,21 +58,22 @@ class _EditCouponPageState extends State<EditCouponPage> {
     super.dispose();
   }
 
-void _saveChanges() {
-  final syncProvider = Provider.of<SyncProvider>(context, listen: false);
+  void _saveChanges() {
+    final syncProvider = Provider.of<SyncProvider>(context, listen: false);
 
-  // Call the updateOffer method to update the coupon details
-  syncProvider.updateOffer(
-    syncProvider.offerList[widget.couponIndex].offerCouponId, // Existing offerCouponId
-    _couponCodeController.text,
-    _noteController.text,
-    _discountInPercentController.text,
-    _maxDiscountController.text,
-    _minBillAmountController.text,
-    _validityController.text,
-  );
-  Navigator.pop(context);
-}
+    // Call the updateOffer method to update the coupon details
+    syncProvider.updateOffer(
+      syncProvider.offerList[widget.couponIndex]
+          .offerCouponId, // Existing offerCouponId
+      _couponCodeController.text,
+      _noteController.text,
+      _discountInPercentController.text,
+      _maxDiscountController.text,
+      _minBillAmountController.text,
+      _validityController.text,
+    );
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +101,8 @@ void _saveChanges() {
             ),
             TextField(
               controller: _discountInPercentController,
-              decoration: const InputDecoration(labelText: 'Discount in Percent'),
+              decoration:
+                  const InputDecoration(labelText: 'Discount in Percent'),
               keyboardType: TextInputType.number,
             ),
             TextField(

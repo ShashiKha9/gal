@@ -68,7 +68,7 @@ class _TablemasterState extends State<Tablemaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Table Master',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},

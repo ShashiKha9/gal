@@ -96,7 +96,7 @@ class _HomePage2State extends State<HomePage2> {
     final items = Provider.of<DataProvider>(context).items;
 
     return Scaffold(
-      appBar: MainAppBar(title: 'Galaxy Mini', onSearch: (String ) {  },),
+      appBar: MainAppBar(title: 'Galaxy Mini', onSearch: (p0 ) {  },),
       // drawer: SideDrawer(
       //   apiService: apiService,
       //   onSyncHomePage: _handleSync,

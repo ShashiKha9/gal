@@ -15,7 +15,7 @@ class CustomerMaster extends StatefulWidget {
 }
 
 class _CustomerMasterState extends State<CustomerMaster> {
-  late SyncProvider _syncProvider; // List to store table names
+  late SyncProvider _syncProvider;
 
   @override
   void initState() {
@@ -28,7 +28,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Customer Master',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
