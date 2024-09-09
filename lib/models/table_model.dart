@@ -1,7 +1,7 @@
 class TableMasterModel {
-    final String? code;
+    final String code;
     final String? rate;
-    final String? name;
+    String? name;
     final String? group;
     final String? status;
     final String? createdBy;

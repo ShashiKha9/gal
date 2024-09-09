@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:galaxy_mini/utils/api_urls.dart';
 import 'package:galaxy_mini/repositories/base_repository.dart';
 
+
 class SyncRepository extends BaseRepository {
   // getItem - updated to handle exceptions
   Future<Map<String, dynamic>> getItem() async {
@@ -43,6 +44,26 @@ class SyncRepository extends BaseRepository {
       }
     } catch (e) {
       log(e.toString(), name: 'getDepartmentError');
+      rethrow; // Rethrow the exception to be caught by the caller
+    }
+  }
+
+    Future<Map<String, dynamic>> getTableGroup() async {
+    try {
+      final response = await getHttp(
+        api: ApiUrls.getTableGroupApi,
+        useToken: true,
+      );
+      // log(response.body, name: 'getDepartment');
+
+      // Check if the response is successful (status code 200)
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw const HttpException('Failed to load table group data');
+      }
+    } catch (e) {
+      log(e.toString(), name: 'getTableGroupError');
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }

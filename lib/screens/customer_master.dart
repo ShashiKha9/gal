@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/screens/add_new_customer.dart';
 import 'package:provider/provider.dart';
 
 // Example Option Pages
@@ -25,7 +26,21 @@ class _CustomerMasterState extends State<CustomerMaster> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'Customer Master', onSearch: (String ) {  },),
+      appBar: MainAppBar(
+        title: 'Customer Master',
+        onSearch: (String) {},
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context, 
+            MaterialPageRoute(builder: (context) => const AddNewCustomer()));
+        },
+        child: const Icon(
+          Icons.add,
+          color: Colors.red,
+        ),
+      ),
       body: Column(
         children: [
           Expanded(

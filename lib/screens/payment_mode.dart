@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -22,6 +21,49 @@ class _PaymentModeState extends State<PaymentMode> {
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
   }
 
+  void _showEditDialog(int index) {
+    final selectedmode = _syncProvider.paymentList[index];
+    final modeTypeController = TextEditingController(text: selectedmode.type);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit mode type'),
+          content: TextField(
+            controller: modeTypeController,
+            decoration: const InputDecoration(
+              labelText: 'Mode Type',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newType = modeTypeController.text;
+                if (newType.isNotEmpty) {
+                  setState(() {
+                    // Update the table name
+                    _syncProvider.paymentList[index].type = newType;
+                    // You might want to save the updated list to SharedPreferences or backend
+                    // _syncProvider.saveTableNames();
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +83,7 @@ class _PaymentModeState extends State<PaymentMode> {
                 itemBuilder: (context, index) {
                   final payment = syncProvider.paymentList[index];
                   return GestureDetector(
-                    // onTap: () => _onItemTap(item),
+                    onTap: () => _showEditDialog(index),
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                           vertical: 8.0, horizontal: 16.0),

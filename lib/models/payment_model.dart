@@ -1,7 +1,7 @@
 
 class PaymentModel {
     final String? id;
-    final String? type;
+    String? type;
     final String? status;
     final DateTime createdDate;
     final String? createdBy;

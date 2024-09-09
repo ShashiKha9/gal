@@ -1,7 +1,7 @@
 
 class KotMessageModel {
-    final String? code;
-    final String? description;
+    final String code;
+    String? description;
     final dynamic isSynced;
     final dynamic addDate;
     final dynamic updateDate;

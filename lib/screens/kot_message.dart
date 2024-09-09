@@ -22,10 +22,58 @@ class _KotmessageState extends State<Kotmessage> {
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
   }
 
+  void _showEditDialog(int index) {
+    final selectedKotmessage = _syncProvider.kotmessageList[index];
+    final kotMessageController =
+        TextEditingController(text: selectedKotmessage.description);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit kot description'),
+          content: TextField(
+            controller: kotMessageController,
+            decoration: const InputDecoration(
+              labelText: 'KOT Message',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newMessage = kotMessageController.text;
+                if (newMessage.isNotEmpty) {
+                  setState(() {
+                    // Update the kotmessage description
+                    _syncProvider.kotmessageList[index].description =
+                        newMessage;
+                    // You might want to save the updated list to SharedPreferences or backend
+                    // _syncProvider.saveKotmessages();
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'KOT Message Master', onSearch: (String ) {  },),
+      appBar: MainAppBar(
+        title: 'KOT Message Master',
+        onSearch: (String) {},
+      ),
       body: Column(
         children: [
           Expanded(
@@ -45,7 +93,8 @@ class _KotmessageState extends State<Kotmessage> {
                 itemBuilder: (context, index) {
                   final kotmessage = syncProvider.kotmessageList[index];
                   return GestureDetector(
-                    // onTap: () => _onItemTap(item),
+                    onTap: () => _showEditDialog(
+                        index), // Pass the index to showEditDialog
                     child: Container(
                       padding: const EdgeInsets.all(
                           16.0), // Added padding for better spacing inside the box
@@ -71,16 +120,6 @@ class _KotmessageState extends State<Kotmessage> {
                             .start, // Align text to the start for a cleaner layout
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Name: ${kotmessage.code ?? 'Unnamed Item'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(
-                              height: 8), // Space between name and description
                           Text(
                             'Description: ${kotmessage.description ?? 'No description'}',
                             textAlign: TextAlign.left, // Align text to the left

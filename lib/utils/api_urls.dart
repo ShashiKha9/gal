@@ -5,10 +5,12 @@ class ApiUrls{
   static const getItemApi = 'getItem';
   static const getDepartmentApi = 'getDepartment';
   static const getTableMasterApi = 'getTableMaster';
+  static const getTableGroupApi = 'getTableGroup';
   static const getKotGroupApi = 'kotgroup';
   static const getTaxApi = 'taxsetting';
   static const getCustomerApi = 'getcustomer';
   static const getPaymentApi = 'getpaymentDetail';
   static const getOfferApi = 'getofferCoupon';
   static const getkotmessageApi = 'getkot_message'; 
+  static const postAddCustomerApi = 'customer';
 }
