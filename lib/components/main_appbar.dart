@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import '../utils/keys.dart';
 
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
@@ -47,6 +48,8 @@ class _MainAppBarState extends State<MainAppBar> {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      centerTitle: true,
+      backgroundColor: AppColors.greenTwo,
       title: _isSearching
           ? TextField(
               controller: _searchController,
@@ -59,11 +62,17 @@ class _MainAppBarState extends State<MainAppBar> {
               style: const TextStyle(color: Colors.black, fontSize: 16.0),
               onChanged: widget.onSearch, // Dynamic search
             )
-          : Text(widget.title),
+          : Text(
+              widget.title,
+              style: const TextStyle(color: Colors.white),
+            ),
       leading: Builder(
         builder: (BuildContext context) {
           return IconButton(
-            icon: const Icon(Icons.menu),
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.white,
+            ),
             onPressed: () {
               scaffoldKey.currentState!.openDrawer();
             },
@@ -73,12 +82,18 @@ class _MainAppBarState extends State<MainAppBar> {
       actions: <Widget>[
         if (_isSearching)
           IconButton(
-            icon: const Icon(Icons.clear),
+            icon: const Icon(
+              Icons.clear,
+              color: Colors.white,
+            ),
             onPressed: _stopSearch,
           )
         else
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(
+              Icons.search,
+              color: Colors.white,
+            ),
             onPressed: _startSearch,
           ),
       ],

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
-import 'package:provider/provider.dart'; // Import Provider package
-import 'auth/login.dart';
+import 'package:galaxy_mini/screens/auth/splash_screen.dart';
+import 'package:provider/provider.dart';
 import 'provider/auth_provider.dart';
-import 'services/dataprovider.dart'; // Import your data provider
-
+import 'services/dataprovider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,12 +18,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => DataProvider()),
-        ChangeNotifierProvider(create: (_) => LoginProvider()),// Add your DataProvider here
+        ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
-        ChangeNotifierProvider(create: (_) => ParkedOrderProvider()),// Add your DataProvider here
+        ChangeNotifierProvider(create: (_) => ParkedOrderProvider()),
       ],
       child: const MaterialApp(
-        home: LoginScreen(), // Use the separated login page
+        home: SplashScreen(),
         debugShowCheckedModeBanner: false,
       ),
     );

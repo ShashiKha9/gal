@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/screens/master_setting.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -8,7 +9,22 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: AppColors.greenTwo,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
@@ -19,7 +35,8 @@ class SettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MasterSettingPage()),
+                MaterialPageRoute(
+                    builder: (context) => const MasterSettingPage()),
               );
             },
           ),
