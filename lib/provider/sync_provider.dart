@@ -10,6 +10,7 @@ import 'package:galaxy_mini/models/kotmessage_model.dart';
 import 'package:galaxy_mini/models/offer_model.dart';
 import 'package:galaxy_mini/models/payment_model.dart';
 import 'package:galaxy_mini/models/table_model.dart';
+import 'package:galaxy_mini/models/tablegroup_model.dart';
 import 'package:galaxy_mini/models/tax_model.dart';
 import 'package:galaxy_mini/repositories/sync_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,7 @@ class SyncProvider extends ChangeNotifier {
 
   List<ItemModel> itemList = [];
   List<DepartmentModel> departmentList = [];
+  List<TableGroupModel> tablegroupList = [];
   List<TableMasterModel> tablemasterList = [];
   List<KotGroupModel> kotgroupList = [];
   List<TaxModel> taxList = [];
@@ -29,6 +31,7 @@ class SyncProvider extends ChangeNotifier {
 
   // Map to group items by department code
   Map<String, List<ItemModel>> itemsByDepartment = {};
+  Map<String, List<TableMasterModel>> tablesByGroup = {};
 
   // Fetch items and organize them by department code
   Future<void> getItemsAll() async {
@@ -100,6 +103,30 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
+    Future<void> getTableGroupAll() async {
+    try {
+      final response = await syncRepo.getTableGroup();
+      log(response.toString(), name: 'response getTableGroupAll');
+
+      final statusCode = int.tryParse(response['status_code'].toString());
+      if (statusCode == 200) {
+        log('Valid Status Code 200', name: 'Status Code Check');
+        if (response['body'] != null && response['body'] is List) {
+          tablegroupList = List<TableGroupModel>.from(
+            response['body'].map((e) => TableGroupModel.fromJson(e)),
+          ); // Organize items after fetching
+          notifyListeners();
+        } else {
+          log('Body is null or not a list', name: 'Body Issue');
+        }
+      } else {
+        log('Invalid Status Code: $statusCode', name: 'Invalid Status Code');
+      }
+    } catch (e, s) {
+      log(e.toString(), name: 'error getTableGroupAll', stackTrace: s);
+    }
+  }
+
   Future<void> getTableMasterAll() async {
     try {
       final response = await syncRepo.getTableMaster();
@@ -111,9 +138,7 @@ class SyncProvider extends ChangeNotifier {
         if (response['body'] != null && response['body'] is List) {
           tablemasterList = List<TableMasterModel>.from(
             response['body'].map((e) => TableMasterModel.fromJson(e)),
-          );
-          log(itemList.toString(),
-              name: 'Updated tablelist'); // Organize items after fetching
+          );// Organize items after fetching
           notifyListeners();
         } else {
           log('Body is null or not a list', name: 'Body Issue');
@@ -123,6 +148,22 @@ class SyncProvider extends ChangeNotifier {
       }
     } catch (e, s) {
       log(e.toString(), name: 'error getTableMasterAll', stackTrace: s);
+    }
+  }
+
+    void _organizeTablesByGroup() {
+    tablesByGroup.clear(); // Clear any previous data
+
+    for (var item in itemList) {
+      final departmentCode = item.departmentCode;
+
+      if (departmentCode != null) {
+        if (!itemsByDepartment.containsKey(departmentCode)) {
+          itemsByDepartment[departmentCode] = [];
+        }
+
+        itemsByDepartment[departmentCode]?.add(item);
+      }
     }
   }
 
@@ -265,37 +306,81 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> saveDepartmentsOrder() async {
-  final prefs = await SharedPreferences.getInstance();
-  final departmentOrder = departmentList.map((d) => d.code).toList();
-  await prefs.setStringList('departments_order', departmentOrder);
+// Save the reordered department list in SharedPreferences
+Future<void> saveDepartmentsOrder() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String> departmentOrder = departmentList.map((d) => d.code).toList();
+  if (departmentOrder.isNotEmpty) {
+    await prefs.setStringList('departments_order', departmentOrder);
+  }
 }
+
 
 // Load the reordered department list from SharedPreferences
 Future<void> loadDepartmentsOrder() async {
-  final prefs = await SharedPreferences.getInstance();
-  final departmentOrder = prefs.getStringList('departments_order');
-
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String>? departmentOrder = prefs.getStringList('departments_order');
   if (departmentOrder != null && departmentOrder.isNotEmpty) {
-    departmentList.sort((a, b) =>
-        departmentOrder.indexOf(a.code).compareTo(departmentOrder.indexOf(b.code)));
+    departmentList.sort((a, b) {
+      int indexA = departmentOrder.indexOf(a.code);
+      int indexB = departmentOrder.indexOf(b.code);
+      return indexA.compareTo(indexB);
+    });
   }
+
+  notifyListeners();  // Notify listeners to update the UI with the new order
 }
+
 
   Future<void> saveItemsOrder() async {
-  final prefs = await SharedPreferences.getInstance();
-  final itemOrder = itemList.map((i) => i.code).toList();
-  await prefs.setStringList('items_order', itemOrder);
-}
-
-// Load the reordered department list from SharedPreferences
-Future<void> loadItemsOrder() async {
-  final prefs = await SharedPreferences.getInstance();
-  final itemOrder = prefs.getStringList('items_order');
-
-  if (itemOrder != null && itemOrder.isNotEmpty) {
-    departmentList.sort((a, b) =>
-        itemOrder.indexOf(a.code).compareTo(itemOrder.indexOf(b.code)));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> orderedItemNames = itemList.map((item) => item.name!).toList();
+    await prefs.setStringList('items_order', orderedItemNames);
   }
+
+  // Method to load the saved order
+  Future<void> loadItemsOrder() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? orderedItemNames = prefs.getStringList('items_order');
+
+    if (orderedItemNames != null) {
+      itemList.sort((a, b) =>
+          orderedItemNames.indexOf(a.name!).compareTo(orderedItemNames.indexOf(b.name!)));
+    }
+
+    notifyListeners(); // Ensure that UI updates after loading the order
+  }
+
+    void updateDepartmentName(String code, String newName) {
+    final department = departmentList.firstWhere((d) => d.code == code);
+    department.description = newName;
+    notifyListeners(); // Notify listeners to update UI
+    }
+    void updateTableName(String code, String newName) {
+    final table = tablemasterList.firstWhere((t) => t.code == code);
+    table.name = newName;
+    notifyListeners(); // Notify listeners to update UI
+    }
+    void updateKotmessage(String code, String newmessage) {
+    final kotmessage = kotmessageList.firstWhere((k) => k.code == code);
+    kotmessage.description = newmessage;
+    notifyListeners(); // Notify listeners to update UI
+    }
+    void updateModeType(String id, String newType) {
+    final mode = paymentList.firstWhere((t) => t.id == id);
+    mode.type = newType;
+    notifyListeners(); // Notify listeners to update UI
+    }
+void updateOffer(String offerCouponId, String newCouponCode, String newNote, String newDiscountInPercent, String newMaxDiscount, String newMinBillAmount, String newValidity) {
+  final coupon = offerList.firstWhere((t) => t.offerCouponId == offerCouponId);
+
+  coupon.couponCode = newCouponCode;
+  coupon.note = newNote;
+  coupon.discountInPercent = newDiscountInPercent;
+  coupon.maxDiscount = newMaxDiscount;
+  coupon.minBillAmount = newMinBillAmount;
+  coupon.validity = newValidity;
+
+  notifyListeners(); // Notify listeners to update UI
 }
 }

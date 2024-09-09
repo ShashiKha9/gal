@@ -2,10 +2,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
-import 'package:galaxy_mini/models/table_model.dart';
 import 'package:provider/provider.dart';
 
-// Example Option Pages
 class Tablemaster extends StatefulWidget {
   const Tablemaster({super.key});
 
@@ -20,6 +18,49 @@ class _TablemasterState extends State<Tablemaster> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+  }
+
+  void _showEditDialog(int index) {
+    final selectedTable = _syncProvider.tablemasterList[index];
+    final tableNameController = TextEditingController(text: selectedTable.name);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit table name'),
+          content: TextField(
+            controller: tableNameController,
+            decoration: const InputDecoration(
+              labelText: 'Table Name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newName = tableNameController.text;
+                if (newName.isNotEmpty) {
+                  setState(() {
+                    // Update the table name
+                    _syncProvider.tablemasterList[index].name = newName;
+                    // You might want to save the updated list to SharedPreferences or backend
+                    // _syncProvider.saveTableNames();
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -54,7 +95,7 @@ class _TablemasterState extends State<Tablemaster> {
                 itemBuilder: (context, index) {
                   final table = syncProvider.tablemasterList[index];
                   return GestureDetector(
-                    // onTap: () => _onItemTap(item),
+                    onTap: () => _showEditDialog(index), // Pass the index
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -74,7 +115,7 @@ class _TablemasterState extends State<Tablemaster> {
                       ),
                       child: Center(
                         child: Text(
-                          table.name ?? 'Unnamed Item',
+                          table.name ?? 'Unnamed table',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 16.0,

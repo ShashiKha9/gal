@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';

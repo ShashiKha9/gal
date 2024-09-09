@@ -1,13 +1,13 @@
 
 class OfferModel {
-    final String? offerCouponId;
+    final String offerCouponId;
     final String? uid;
-    final String? couponCode;
-    final String? note;
-    final String? discountInPercent;
-    final String? maxDiscount;
-    final String? minBillAmount;
-    final String? validity;
+    String? couponCode;
+    String? note;
+    String? discountInPercent;
+    String? maxDiscount;
+    String? minBillAmount;
+    String? validity;
     final DateTime addDate;
     final DateTime createdOn;
     final String? createdBy;

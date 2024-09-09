@@ -1,6 +1,6 @@
 class DepartmentModel {
   final String code;
-  final String? description;
+  String? description;
   final dynamic remark;
 
   DepartmentModel({

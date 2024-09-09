@@ -23,10 +23,11 @@ class _ArrangeItemsState extends State<ArrangeItems> {
     });
   }
 
-    void _saveOrder() {
-    _syncProvider.saveItemsOrder(); // Save order to SharedPreferences
-    Navigator.of(context).pop(); // Navigate back or close the screen
-  }
+void _saveOrder() {
+  _syncProvider.saveItemsOrder(); // Save order to SharedPreferences
+  Navigator.of(context).pop(true); // Return true on successful save
+}
+
 
   void _cancelChanges() {
     _syncProvider.loadItemsOrder(); // Reload the saved order to discard changes

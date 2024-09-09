@@ -100,6 +100,50 @@ class _DepartmentPageState extends State<DepartmentPage> {
     );
   }
 
+    void _showEditDialog() {
+    final selectedDepartment = _syncProvider.departmentList[_selectedDepartmentIndex];
+    final departmentNameController = TextEditingController(text: selectedDepartment.description);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Department'),
+          content: TextField(
+            controller: departmentNameController,
+            decoration: const InputDecoration(
+              labelText: 'Department Name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newName = departmentNameController.text;
+                if (newName.isNotEmpty) {
+                  setState(() {
+                    // Update the department name
+                    _syncProvider.departmentList[_selectedDepartmentIndex].description = newName;
+                    // Save the updated department list to SharedPreferences or backend if needed
+                    _syncProvider.saveDepartmentsOrder(); 
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +165,7 @@ class _DepartmentPageState extends State<DepartmentPage> {
                     style: TextStyle(color: Colors.red),
                   ),
                   backgroundColor: Colors.white,
-                  onTap: () {},
+                  onTap: _showEditDialog,
                 ),
                 SpeedDialChild(
                   elevation: 0,
@@ -146,13 +190,21 @@ class _DepartmentPageState extends State<DepartmentPage> {
                     style: TextStyle(color: Colors.red),
                   ),
                   backgroundColor: Colors.white,
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    // Call the navigate function
+                    bool? result = await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ArrangeItems(),
+                        builder: (context) => const ArrangeItems(),
                       ),
                     );
+
+                    // Refresh items if reordering was saved
+                    if (result == true) {
+                      setState(() {
+                        _syncProvider.loadItemsOrder();
+                      });
+                    }
                   },
                 ),
               ],
