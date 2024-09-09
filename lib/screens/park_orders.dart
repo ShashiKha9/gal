@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/screens/order_detail.dart';
 
 class ParkOrderScreen extends StatelessWidget {
-  const ParkOrderScreen({super.key, required List<Map<String, dynamic>> parkedOrders});
+  const ParkOrderScreen({super.key, List<Map<String, dynamic>>? parkedOrders});
 
   @override
   Widget build(BuildContext context) {
     final parkedOrders = Provider.of<ParkedOrderProvider>(context).parkedOrders;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Parked Orders'),
-        backgroundColor: const Color(0xFFC41E3A),
+      appBar: MainAppBar(
+        title: "Parked Orders",
+        onSearch: (p0) {},
       ),
       body: parkedOrders.isEmpty
           ? const Center(

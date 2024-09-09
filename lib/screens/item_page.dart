@@ -4,6 +4,7 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/models/Item_model.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/billing.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class ItemPage extends StatefulWidget {
@@ -100,9 +101,10 @@ class _ItemPageState extends State<ItemPage> {
   Widget build(BuildContext context) {
     _syncProvider.loadItemsOrder();
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: MainAppBar(
         title: 'Galaxy Mini',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       body: Column(
         children: [
@@ -111,48 +113,51 @@ class _ItemPageState extends State<ItemPage> {
                 Consumer<SyncProvider>(builder: (context, syncProvider, child) {
               log(syncProvider.itemList.length.toString(),
                   name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1,
+              return Padding(
+                padding: const EdgeInsets.all(8),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: syncProvider.itemList.length,
+                  itemBuilder: (context, index) {
+                    final item = syncProvider.itemList[index];
+                    return GestureDetector(
+                      onTap: () => _onItemTap(item),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: AppColors.greenTwo,
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 1,
+                              blurRadius: 2,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            item.name ?? 'Unnamed Item',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                itemCount: syncProvider.itemList.length,
-                itemBuilder: (context, index) {
-                  final item = syncProvider.itemList[index];
-                  return GestureDetector(
-                    onTap: () => _onItemTap(item),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          item.name ?? 'Unnamed Item',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
               );
             }),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 
 class PLUScreen extends StatelessWidget {
   const PLUScreen({super.key});
@@ -6,8 +7,9 @@ class PLUScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PLU Screen'),
+      appBar: MainAppBar(
+        title: "PLU Screen",
+        onSearch: (p0) {},
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

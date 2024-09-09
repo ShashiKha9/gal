@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/screens/settings.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart'; // Import SyncProvider
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart'; // Import Provider
 
 class SideDrawer extends StatelessWidget {
@@ -14,7 +15,7 @@ class SideDrawer extends StatelessWidget {
         children: <Widget>[
           const DrawerHeader(
             decoration: BoxDecoration(
-              color: Color(0xFFC41E3A),
+              color: AppColors.greenTwo,
             ),
             child: Text('Menu'),
           ),
@@ -55,11 +56,12 @@ class SideDrawer extends StatelessWidget {
               await syncProvider.getItemsAll();
               await syncProvider.getTableMasterAll();
               await syncProvider.getKotGroupAll();
-              await syncProvider.getTaxAll(); 
+              await syncProvider.getTaxAll();
               await syncProvider.getCustomerAll();
               await syncProvider.getPaymentAll();
               await syncProvider.getOfferAll();
-              await syncProvider.getKotMessageAll();// If you have another API to call
+              await syncProvider.getOfferAll();
+              await syncProvider.getKotMessageAll();
 
               // Check if the widget is still mounted before calling Navigator.pop
               if (context.mounted) {
