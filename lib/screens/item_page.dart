@@ -1,9 +1,11 @@
 import 'dart:developer';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/models/Item_model.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/billing.dart';
+import 'package:galaxy_mini/theme/app_assets.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +17,10 @@ class ItemPage extends StatefulWidget {
 }
 
 class _ItemPageState extends State<ItemPage> {
+  String beepSound = AppAudio.beepSound;
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   String? selectedItemName;
   double totalAmount = 0.0;
   Map<String, double> quantities = {};
@@ -28,7 +34,16 @@ class _ItemPageState extends State<ItemPage> {
     // _syncProvider.getItemsAll();
   }
 
-  void _onItemTap(ItemModel item) {
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _onItemTap(ItemModel item) async {
+    await _audioPlayer.stop();
+    await _audioPlayer.play(AssetSource(beepSound));
+
     setState(() {
       selectedItemName = item.name;
 
@@ -39,13 +54,16 @@ class _ItemPageState extends State<ItemPage> {
       }
 
       double rate1 = double.tryParse(item.rate1 ?? '0.0') ?? 0.0;
-      rates[item.name!] = rate1; // Store the rate
+      rates[item.name!] = rate1;
       totalAmount += rate1;
     });
   }
 
-  void _increaseQuantity() {
+  void _increaseQuantity() async {
     if (selectedItemName != null) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
+
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount += rate;
@@ -54,16 +72,20 @@ class _ItemPageState extends State<ItemPage> {
     }
   }
 
-  void _decreaseQuantity() {
+  void _decreaseQuantity() async {
     if (selectedItemName != null &&
         quantities.containsKey(selectedItemName) &&
         quantities[selectedItemName]! > 1) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount -= rate;
         quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) - 1;
       });
     } else if (quantities[selectedItemName] == 1) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount -= rate;
@@ -73,7 +95,10 @@ class _ItemPageState extends State<ItemPage> {
     }
   }
 
-  void _navigateToBillPage() {
+  void _navigateToBillPage() async {
+    await _audioPlayer.stop();
+    await _audioPlayer.play(AssetSource(beepSound));
+
     final addedItems = _syncProvider.itemList
         .where((item) => quantities.containsKey(item.name))
         .map((item) => {
@@ -90,8 +115,8 @@ class _ItemPageState extends State<ItemPage> {
           items: addedItems,
           quantities: quantities,
           rates: rates,
-          // ignore: prefer_const_literals_to_create_immutables
-          totalAmount: totalAmount, parkedOrders: [],
+          totalAmount: totalAmount,
+          parkedOrders: const [],
         ),
       ),
     );
@@ -99,106 +124,351 @@ class _ItemPageState extends State<ItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    _syncProvider.loadItemsOrder();
+    final screenSize = MediaQuery.of(context).size;
+    double cardHeight = MediaQuery.of(context).size.height;
+    int crossAxisCount;
+    double childAspectRatio;
+    log(screenSize.toString(), name: "screenSize");
+
+    if (screenSize.width > 1200) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      log(screenSize.toString(), name: "1200");
+    }
+    if (screenSize.width > 1000) {
+      crossAxisCount = 6;
+      childAspectRatio = (cardHeight / crossAxisCount) / 105;
+      log(screenSize.toString(), name: "1000");
+    } else if (screenSize.width > 800) {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 310;
+      log(screenSize.toString(), name: "800");
+    } else {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      log(screenSize.toString(), name: "00");
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white54,
       appBar: MainAppBar(
-        title: 'Galaxy Mini',
+        // title: 'Galaxy Mini',
+        isRate: true,
+        isSearch: true,
         onSearch: (p0) {},
       ),
       body: Column(
         children: [
           Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.itemList.length.toString(),
-                  name: 'Consumer length');
-              return Padding(
-                padding: const EdgeInsets.all(8),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 1,
-                  ),
-                  itemCount: syncProvider.itemList.length,
-                  itemBuilder: (context, index) {
-                    final item = syncProvider.itemList[index];
-                    return GestureDetector(
-                      onTap: () => _onItemTap(item),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8.0),
-                          border: Border.all(
-                            color: AppColors.greenTwo,
-                            width: 1.5,
+            child: Selector<SyncProvider, List<ItemModel>>(
+                selector: (p0, p1) => p1.itemList,
+                builder: (context, itemList, child) {
+                  return itemList.isEmpty
+                      ? const Center(
+                          child:
+                              Text('No Hot Items available. Please sync data.'),
+                        )
+                      : GridView.builder(
+                          padding: const EdgeInsets.all(8),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 2,
+                            mainAxisSpacing: 2,
+                            childAspectRatio: childAspectRatio,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 1,
-                              blurRadius: 2,
-                              offset: const Offset(0, 3),
+                          itemCount: itemList.length,
+                          itemBuilder: (context, index) {
+                            final item = itemList[index];
+                            return GestureDetector(
+                              onTap: () => _onItemTap(item),
+                              child: Card(
+                                color: Colors.white,
+                                // surfaceTintColor: AppColors.lightPink,
+                                borderOnForeground: true,
+                                elevation: 2,
+                                semanticContainer: true,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(15),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        width: double.maxFinite,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(10),
+                                          ),
+                                          // border: Border(
+                                          //   bottom: BorderSide(
+                                          //     color: AppColors.lightPink,
+                                          //     width: 2,
+                                          //   ),
+                                          // ),
+                                        ),
+                                        child: item.imageUrl == null ||
+                                                item.imageUrl!.isEmpty
+                                            ? const Icon(
+                                                Icons.wallpaper,
+                                                color: AppColors.lightGrey,
+                                                size: 50,
+                                              )
+                                            : Image.network(
+                                                item.imageUrl ?? ""),
+                                      ),
+
+                                      SizedBox(
+                                        // height: 30,
+                                        child: Text(
+                                          item.name ?? "NO Name",
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "₹ ${item.rate1}",
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      // Text(
+                                      //   "Rate 2: ₹ ${item.rate2}",
+                                      //   style: const TextStyle(
+                                      //     fontSize: 10.5,
+                                      //     fontWeight: FontWeight.bold,
+                                      //     color: AppColors.blue,
+                                      //   ),
+                                      // ),
+                                      // const SizedBox(height: 5),
+                                      // SizedBox(
+                                      //   height: 25,
+                                      //   child: AppButton(
+                                      //     onTap: () => _onItemTap(item),
+                                      //     buttonText: "Add",
+                                      //     margin: EdgeInsets.zero,
+                                      //     padding: EdgeInsets.zero,
+                                      //   ),
+                                      // ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                }),
+          ),
+          if (selectedItemName != null)
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        flex: 5,
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 0, 5, 5),
+                              child: Container(
+                                width: double.maxFinite,
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(8),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 15,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            "$selectedItemName",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          Text(
+                                            "₹ $totalAmount",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 100,
+                                          maxWidth: 112,
+                                        ),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.black,
+                                            ),
+                                            borderRadius:
+                                                const BorderRadius.all(
+                                              Radius.circular(5),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              InkWell(
+                                                onTap: _decreaseQuantity,
+                                                child: const Icon(
+                                                  Icons.remove,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 15),
+                                              Text(
+                                                "${quantities[selectedItemName]}",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 15),
+                                              InkWell(
+                                                onTap: _increaseQuantity,
+                                                child: const Icon(
+                                                  Icons.add,
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                              child: Container(
+                                width: double.maxFinite,
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(8),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 15,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        "TOTAL:",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                      Text(
+                                        "₹ $totalAmount",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: Text(
-                            item.name ?? 'Unnamed Item',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: InkWell(
+                          onTap: () => _navigateToBillPage(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.red,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(8),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 50,
+                              ),
+                              child: Icon(
+                                Icons.print,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            }),
-          ),
-          if (selectedItemName != null)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(
-                    'Selected Item: $selectedItemName',
-                    style: const TextStyle(
-                        fontSize: 16.0, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Quantity: ${quantities[selectedItemName] ?? 1}',
-                    style: const TextStyle(fontSize: 16.0),
-                  ),
-                  Text(
-                    "Total Amount: Rs.${totalAmount.toStringAsFixed(2)}",
-                    style: const TextStyle(
-                        fontSize: 16.0, fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove),
-                        onPressed: _decreaseQuantity,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: _increaseQuantity,
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.print),
-                        onPressed: _navigateToBillPage,
-                      ),
+                      )
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
         ],
       ),

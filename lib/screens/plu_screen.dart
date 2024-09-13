@@ -1,14 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
-class PLUScreen extends StatelessWidget {
+class PLUScreen extends StatefulWidget {
   const PLUScreen({super.key});
+
+  @override
+  _PLUScreenState createState() => _PLUScreenState();
+}
+
+class _PLUScreenState extends State<PLUScreen> {
+  String displayText = '0';
+
+  void _onButtonPressed(String value) {
+    setState(() {
+      if (value == 'X') {
+        if (displayText.isNotEmpty) {
+          displayText = displayText.substring(0, displayText.length - 1);
+        }
+        if (displayText.isEmpty) {
+          displayText = '0';
+        }
+      } else if (value == '+/-') {
+        displayText = displayText.startsWith('-')
+            ? displayText.substring(1)
+            : '-$displayText';
+      } else if (value == 'PLU' || value == 'Price') {
+        // Implement PLU and Price functionality here
+      } else {
+        if (displayText == '0') {
+          displayText = value;
+        } else {
+          displayText += value;
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white10,
       appBar: MainAppBar(
-        title: "PLU Screen",
+        title: "PLU",
         onSearch: (p0) {},
       ),
       body: Padding(
@@ -20,10 +54,14 @@ class PLUScreen extends StatelessWidget {
               child: Container(
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.all(16.0),
-                color: Colors.black12,
-                child: const Text(
-                  '0',
-                  style: TextStyle(fontSize: 36.0, fontWeight: FontWeight.bold),
+                color: AppColors.lightBlue.withOpacity(0.5),
+                child: Text(
+                  displayText,
+                  style: const TextStyle(
+                    fontSize: 36.0,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.blue, // Display text color
+                  ),
                 ),
               ),
             ),
@@ -62,13 +100,11 @@ class PLUScreen extends StatelessWidget {
 
   Widget _buildButton(String label) {
     return ElevatedButton(
-      onPressed: () {
-        // Implement the button's functionality here
-      },
+      onPressed: () => _onButtonPressed(label),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.all(20.0),
-        backgroundColor: Colors.grey[200],
-        foregroundColor: const Color(0xFFC41E3A), // Apply red color to the text
+        backgroundColor: Colors.white, // Button background color
+        foregroundColor: AppColors.blue, // Button text color
         textStyle: const TextStyle(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,

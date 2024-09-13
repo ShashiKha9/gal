@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/PLU.dart';
 import 'package:galaxy_mini/screens/department.dart';
 import 'package:galaxy_mini/screens/item_page.dart';
 import 'package:galaxy_mini/screens/park_orders.dart';
+import 'package:galaxy_mini/screens/plu_screen.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:galaxy_mini/utils/keys.dart';
 import 'components/side_drawer.dart';
@@ -50,44 +50,49 @@ class _AppState extends State<App> {
           highlightColor: Colors.transparent,
         ),
         child: BottomNavigationBar(
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.white60,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.black54,
           showSelectedLabels: true,
           showUnselectedLabels: true,
-          unselectedLabelStyle: const TextStyle(color: Colors.white60),
           onTap: _onItemTapped,
           currentIndex: _selectedIndex,
-          backgroundColor: AppColors.greenTwo,
+          backgroundColor: AppColors.white,
           items: const [
             BottomNavigationBarItem(
               label: 'Hot Menu',
-              icon: Icon(Icons.local_fire_department_outlined),
-              activeIcon: Icon(Icons.local_fire_department),
-              backgroundColor: AppColors.greenTwo,
+              icon: Icon(
+                Icons.local_fire_department_outlined,
+              ),
+              activeIcon: Icon(
+                Icons.local_fire_department,
+                color: Colors.red,
+              ),
+              backgroundColor: AppColors.white,
             ),
             BottomNavigationBarItem(
               label: 'PLU',
               icon: Icon(Icons.calculate_outlined),
               activeIcon: Icon(Icons.calculate),
-              backgroundColor: AppColors.greenTwo,
+              backgroundColor: AppColors.white,
             ),
             BottomNavigationBarItem(
               label: 'Department',
-              icon: Icon(Icons.menu_book),
-              activeIcon: Icon(Icons.menu_book),
-              backgroundColor: AppColors.greenTwo,
+              icon: Icon(Icons.window_outlined),
+              activeIcon: Icon(Icons.window),
+              backgroundColor: AppColors.white,
             ),
             BottomNavigationBarItem(
-              label: 'Parked orders',
+              label: 'Parked',
               icon: Icon(Icons.flag_outlined),
               activeIcon: Icon(Icons.flag),
-              backgroundColor: AppColors.greenTwo,
+              backgroundColor: AppColors.white,
             ),
             BottomNavigationBarItem(
-              label: 'Previous bill',
-              icon: Icon(Icons.print_outlined),
-              activeIcon: Icon(Icons.print),
-              backgroundColor: AppColors.greenTwo,
+              label: 'RePrint',
+              icon: Icon(Icons.update),
+              activeIcon: Icon(Icons.update),
+              backgroundColor: AppColors.white,
             ),
           ],
         ),

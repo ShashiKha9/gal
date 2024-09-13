@@ -69,7 +69,7 @@ class _PaymentModeState extends State<PaymentMode> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Payment Master',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       body: Column(
         children: [
