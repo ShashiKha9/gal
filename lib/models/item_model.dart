@@ -6,7 +6,7 @@ class ItemModel {
   final String? openPrice;
   final String? shortName;
   final String? unit;
-  final String code;
+  final String? code;
   final String? name;
   final String? qtyInDecimal;
   final String? barcode;
@@ -16,7 +16,7 @@ class ItemModel {
   final String? kotgroup;
   final String? qrcode;
   final String? displayinselection;
-  final dynamic imageUrl;
+  final String? imageUrl;
   final String? isStocked;
 
   ItemModel({

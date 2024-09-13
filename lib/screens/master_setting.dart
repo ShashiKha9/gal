@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/screens/customer_master.dart';
 import 'package:galaxy_mini/screens/department.dart';
 import 'package:galaxy_mini/screens/kotgroup_master.dart';
@@ -9,6 +8,7 @@ import 'package:galaxy_mini/screens/payment_mode.dart';
 import 'package:galaxy_mini/screens/table_master.dart';
 import 'package:galaxy_mini/screens/tax_master.dart';
 import 'package:galaxy_mini/screens/unit_master.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
 class MasterSettingPage extends StatelessWidget {
   const MasterSettingPage({super.key});
@@ -66,9 +66,23 @@ class MasterSettingPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: MainAppBar(
-        title: 'Master settings',
-        onSearch: (p0) {},
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
+        ),
+        title: const Text(
+          'Master Settings',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: AppColors.greenTwo,
       ),
       body: ListView.builder(
         itemCount: options.length,

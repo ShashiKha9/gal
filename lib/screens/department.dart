@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:galaxy_mini/models/Item_model.dart';
@@ -5,6 +8,8 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/arrange_departments.dart';
 import 'package:galaxy_mini/screens/arrange_items.dart';
 import 'package:galaxy_mini/screens/billing.dart';
+import 'package:galaxy_mini/theme/app_assets.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import '../components/main_appbar.dart';
 
@@ -17,8 +22,11 @@ class DepartmentPage extends StatefulWidget {
 }
 
 class _DepartmentPageState extends State<DepartmentPage> {
+  String beepSound = AppAudio.beepSound;
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
   int _selectedDepartmentIndex = 0;
-  String? selectedItemName; // Track selected department
+  String? selectedItemName;
   double totalAmount = 0.0;
   Map<String, double> quantities = {};
   Map<String, double> rates = {};
@@ -28,10 +36,18 @@ class _DepartmentPageState extends State<DepartmentPage> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
-    // Sync data will be triggered from the drawer, so no initial data fetching here
   }
 
-  void _onItemTap(ItemModel item) {
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  void _onItemTap(ItemModel item) async {
+    await _audioPlayer.stop();
+    await _audioPlayer.play(AssetSource(beepSound));
+
     setState(() {
       selectedItemName = item.name;
 
@@ -47,8 +63,11 @@ class _DepartmentPageState extends State<DepartmentPage> {
     });
   }
 
-  void _increaseQuantity() {
+  void _increaseQuantity() async {
     if (selectedItemName != null) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
+
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount += rate;
@@ -57,16 +76,20 @@ class _DepartmentPageState extends State<DepartmentPage> {
     }
   }
 
-  void _decreaseQuantity() {
+  void _decreaseQuantity() async {
     if (selectedItemName != null &&
         quantities.containsKey(selectedItemName) &&
         quantities[selectedItemName]! > 1) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount -= rate;
         quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) - 1;
       });
     } else if (quantities[selectedItemName] == 1) {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(AssetSource(beepSound));
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount -= rate;
@@ -76,7 +99,10 @@ class _DepartmentPageState extends State<DepartmentPage> {
     }
   }
 
-  void _navigateToBillPage() {
+  void _navigateToBillPage() async {
+    await _audioPlayer.stop();
+    await _audioPlayer.play(AssetSource(beepSound));
+
     final addedItems = _syncProvider.itemList
         .where((item) => quantities.containsKey(item.name))
         .map((item) => {
@@ -148,9 +174,37 @@ class _DepartmentPageState extends State<DepartmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    double cardHeight = MediaQuery.of(context).size.height;
+    int crossAxisCount;
+    double childAspectRatio;
+    log(screenSize.toString(), name: "screenSize");
+
+    if (screenSize.width > 1200) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      log(screenSize.toString(), name: "1200");
+    }
+    if (screenSize.width > 1000) {
+      crossAxisCount = 6;
+      childAspectRatio = (cardHeight / crossAxisCount) / 105;
+      log(screenSize.toString(), name: "1000");
+    } else if (screenSize.width > 800) {
+      crossAxisCount = 4;
+      childAspectRatio = (cardHeight / crossAxisCount) / 310;
+      log(screenSize.toString(), name: "800");
+    } else {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      log(screenSize.toString(), name: "00");
+    }
+
     return Scaffold(
+      backgroundColor: Colors.white54,
       appBar: MainAppBar(
-        title: 'Department',
+        // title: 'Department',
+        isSearch: true,
+        isRate: true,
         onSearch: (p0) {},
       ),
       floatingActionButton: widget.isEdit
@@ -217,15 +271,13 @@ class _DepartmentPageState extends State<DepartmentPage> {
             )
           : const SizedBox(),
       body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-        // Check if the department list is empty, return blank screen if true
         if (syncProvider.departmentList.isEmpty) {
           return const Center(
-              child: Text('No departments available. Please sync data.'));
+            child: Text('No departments available. Please sync data.'),
+          );
         }
-
         return Column(
           children: [
-            const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -239,8 +291,8 @@ class _DepartmentPageState extends State<DepartmentPage> {
                     child: ChoiceChip(
                       label: Text(
                         department.description ?? 'Unnamed',
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
+                        style: const TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -250,8 +302,8 @@ class _DepartmentPageState extends State<DepartmentPage> {
                           _selectedDepartmentIndex = index;
                         });
                       },
-                      selectedColor: const Color(0xFFC41E3A),
-                      backgroundColor: Colors.grey[200],
+                      // selectedColor: AppColors.white,
+                      backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
@@ -260,15 +312,14 @@ class _DepartmentPageState extends State<DepartmentPage> {
                 }),
               ),
             ),
-            const SizedBox(height: 16),
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.all(8.0),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 2,
+                  mainAxisSpacing: 2,
+                  childAspectRatio: childAspectRatio,
                 ),
                 itemCount: syncProvider
                         .itemsByDepartment[syncProvider
@@ -280,34 +331,89 @@ class _DepartmentPageState extends State<DepartmentPage> {
                           .departmentList[_selectedDepartmentIndex].code] ??
                       [];
                   final item = items[itemIndex];
-
                   return GestureDetector(
                     onTap: () => _onItemTap(item),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
+                    child: Card(
+                      color: Colors.white,
+                      // surfaceTintColor: AppColors.lightPink,
+                      borderOnForeground: true,
+                      elevation: 2,
+                      semanticContainer: true,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(15),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
-                      child: Center(
-                        child: Text(
-                          item.name ?? 'Unnamed Item',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              width: double.maxFinite,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10),
+                                ),
+                                // border: Border(
+                                //   bottom: BorderSide(
+                                //     color: AppColors.lightPink,
+                                //     width: 2,
+                                //   ),
+                                // ),
+                              ),
+                              child: item.imageUrl == null ||
+                                      item.imageUrl!.isEmpty
+                                  ? const Icon(
+                                      Icons.wallpaper,
+                                      color: AppColors.lightGrey,
+                                      size: 50,
+                                    )
+                                  : Image.network(item.imageUrl ?? ""),
+                            ),
+
+                            SizedBox(
+                              // height: 30,
+                              child: Text(
+                                item.name ?? "NO Name",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                              ),
+                            ),
+                            // const SizedBox(height: 8),
+                            Text(
+                              "₹ ${item.rate1}",
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            // Text(
+                            //   "Rate 2: ₹ ${item.rate2}",
+                            //   style: const TextStyle(
+                            //     fontSize: 10.5,
+                            //     fontWeight: FontWeight.bold,
+                            //     color: AppColors.blue,
+                            //   ),
+                            // ),
+                            // const SizedBox(height: 5),
+                            // SizedBox(
+                            //   height: 25,
+                            //   child: AppButton(
+                            //     onTap: () => _onItemTap(item),
+                            //     buttonText: "Add",
+                            //     margin: EdgeInsets.zero,
+                            //     padding: EdgeInsets.zero,
+                            //   ),
+                            // ),
+                          ],
                         ),
                       ),
                     ),
@@ -316,43 +422,202 @@ class _DepartmentPageState extends State<DepartmentPage> {
               ),
             ),
             if (selectedItemName != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'Selected Item: $selectedItemName',
-                      style: const TextStyle(
-                          fontSize: 16.0, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'Quantity: ${quantities[selectedItemName] ?? 1}',
-                      style: const TextStyle(fontSize: 16.0),
-                    ),
-                    Text(
-                      "Total Amount: Rs.${totalAmount.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontSize: 16.0, fontWeight: FontWeight.bold),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: _decreaseQuantity,
+                        Flexible(
+                          flex: 5,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 5, 5),
+                                child: Container(
+                                  width: double.maxFinite,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(8),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 15,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              "$selectedItemName",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            Text(
+                                              "₹ $totalAmount",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 10),
+                                        ConstrainedBox(
+                                          constraints: const BoxConstraints(
+                                            minWidth: 100,
+                                            maxWidth: 112,
+                                          ),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.black,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.all(
+                                                Radius.circular(5),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                InkWell(
+                                                  onTap: _decreaseQuantity,
+                                                  child: const Icon(
+                                                    Icons.remove,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 15),
+                                                Text(
+                                                  "${quantities[selectedItemName]}",
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 15),
+                                                InkWell(
+                                                  onTap: _increaseQuantity,
+                                                  child: const Icon(
+                                                    Icons.add,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                child: Container(
+                                  width: double.maxFinite,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: const BorderRadius.all(
+                                      Radius.circular(8),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                      horizontal: 15,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          "TOTAL:",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                        Text(
+                                          "₹ $totalAmount",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: _increaseQuantity,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.print),
-                          onPressed: _navigateToBillPage,
-                        ),
+                        Expanded(
+                          flex: 1,
+                          child: InkWell(
+                            onTap: () => _navigateToBillPage(),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.red,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 50,
+                                ),
+                                child: Icon(
+                                  Icons.print,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        )
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
           ],
         );
