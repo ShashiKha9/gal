@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/provider/customer_provider.dart';
 
 class AddNewCustomer extends StatefulWidget {
   const AddNewCustomer({super.key});
@@ -27,6 +28,7 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
 
   bool isPremiumMember = false;
   bool isBlocklistedMember = false;
+  final customerProvider = CustomerProvider(); 
 
   void _saveCustomer() {
     if (_formKey.currentState!.validate()) {

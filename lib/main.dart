@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/auth/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'provider/auth_provider.dart';
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
         ChangeNotifierProvider(create: (_) => ParkedOrderProvider()),
+        ChangeNotifierProvider(create: (_) => UpcomingOrderProvider()),
       ],
       child: const MaterialApp(
         home: SplashScreen(),

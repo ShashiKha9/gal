@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/screens/customer_credits.dart';
 import 'package:galaxy_mini/screens/settings.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart'; // Import SyncProvider
+import 'package:galaxy_mini/screens/upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart'; // Import Provider
 
@@ -24,6 +26,10 @@ class SideDrawer extends StatelessWidget {
             title: const Text('Upcoming orders'),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UpcomingOrdersPage()),
+              );
             },
           ),
           ListTile(
@@ -38,6 +44,10 @@ class SideDrawer extends StatelessWidget {
             title: const Text('Customer Credits'),
             onTap: () {
               Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CustomerCredits()),
+              );
             },
           ),
           ListTile(
