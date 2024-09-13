@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -12,17 +11,27 @@ class Tablemaster extends StatefulWidget {
 }
 
 class _TablemasterState extends State<Tablemaster> {
-  late SyncProvider _syncProvider; // List to store table names
+  late SyncProvider _syncProvider;
+  String? _selectedGroupCode; // Track the selected group code
 
   @override
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _fetchData();
   }
 
-  void _showEditDialog(int index) {
-    final selectedTable = _syncProvider.tablemasterList[index];
-    final tableNameController = TextEditingController(text: selectedTable.name);
+  // Fetch data and organize tables by group
+  Future<void> _fetchData() async {
+    await _syncProvider.fetchAndOrganizeTables();
+    setState(() {}); // Refresh the UI after fetching data
+  }
+
+  // Show dialog to edit table name
+  void _showEditDialog(int index, String groupCode) {
+    final selectedTable = _syncProvider.tablesByGroup[groupCode]?[index];
+    final tableNameController =
+        TextEditingController(text: selectedTable?.name);
 
     showDialog(
       context: context,
@@ -48,9 +57,7 @@ class _TablemasterState extends State<Tablemaster> {
                 if (newName.isNotEmpty) {
                   setState(() {
                     // Update the table name
-                    _syncProvider.tablemasterList[index].name = newName;
-                    // You might want to save the updated list to SharedPreferences or backend
-                    // _syncProvider.saveTableNames();
+                    selectedTable?.name = newName;
                   });
                 }
                 Navigator.pop(context);
@@ -71,7 +78,9 @@ class _TablemasterState extends State<Tablemaster> {
         onSearch: (String) {},
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // Action to add a new table
+        },
         child: const Icon(
           Icons.add,
           color: Colors.red,
@@ -79,55 +88,90 @@ class _TablemasterState extends State<Tablemaster> {
       ),
       body: Column(
         children: [
-          Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.tablemasterList.length.toString(),
-                  name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1,
+          // Display ChoiceChips for each table group
+          Consumer<SyncProvider>(
+            builder: (context, syncProvider, child) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: syncProvider.tablesByGroup.keys.map((groupCode) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: ChoiceChip(
+                        label: Text('Group $groupCode'),
+                        selected: _selectedGroupCode == groupCode,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedGroupCode = selected ? groupCode : null;
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
                 ),
-                itemCount: syncProvider.tablemasterList.length,
-                itemBuilder: (context, index) {
-                  final table = syncProvider.tablemasterList[index];
-                  return GestureDetector(
-                    onTap: () => _showEditDialog(index), // Pass the index
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Text(
-                          table.name ?? 'Unnamed table',
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
               );
-            }),
+            },
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: Consumer<SyncProvider>(
+              builder: (context, syncProvider, child) {
+                // Get tables of the selected group or all if none selected
+                final groupTables = _selectedGroupCode != null
+                    ? syncProvider.tablesByGroup[_selectedGroupCode] ?? []
+                    : [];
+
+                if (groupTables.isEmpty) {
+                  return const Center(
+                      child: Text('No tables available for this group.'));
+                }
+
+                return GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 8.0,
+                    mainAxisSpacing: 8.0,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: groupTables.length,
+                  itemBuilder: (context, index) {
+                    final table = groupTables[index];
+                    return GestureDetector(
+                      onTap: () => _showEditDialog(index,
+                          _selectedGroupCode!), // Pass the index and group
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(
+                            color: const Color(0xFFC41E3A),
+                            width: 1.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            table.name ?? 'Unnamed table',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

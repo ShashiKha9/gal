@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/screens/account_settings.dart';
+import 'package:galaxy_mini/screens/bill_settings.dart';
 import 'package:galaxy_mini/screens/master_setting.dart';
+import 'package:galaxy_mini/screens/printer_settings.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -44,21 +47,33 @@ class SettingsPage extends StatelessWidget {
             leading: const Icon(Icons.notifications),
             title: const Text('Printer settings'),
             onTap: () {
-              // Placeholder for navigation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const PrinterSettings()),
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.language),
             title: const Text('Bill settings'),
             onTap: () {
-              // Placeholder for navigation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const BillSettings()),
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text('Account Setting'),
             onTap: () {
-              // Placeholder for navigation
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AccountSettings()),
+              );
             },
           ),
         ],

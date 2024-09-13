@@ -23,7 +23,7 @@ class CustomerProvider extends ChangeNotifier{
     required bool isActive,
     required bool isPremium,
     required String customerCode,
-    required int createdBy,
+    required int createdBy, required bool isBlocklisted,
   }) async {
     try {
       Map<String, dynamic> data = {

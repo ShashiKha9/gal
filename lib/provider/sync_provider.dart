@@ -114,8 +114,8 @@ class SyncProvider extends ChangeNotifier {
         if (response['body'] != null && response['body'] is List) {
           tablegroupList = List<TableGroupModel>.from(
             response['body'].map((e) => TableGroupModel.fromJson(e)),
-          ); // Organize items after fetching
-          notifyListeners();
+          );
+          notifyListeners(); // Notify that table groups have been fetched
         } else {
           log('Body is null or not a list', name: 'Body Issue');
         }
@@ -127,6 +127,7 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
+  // Fetch all table masters from the API
   Future<void> getTableMasterAll() async {
     try {
       final response = await syncRepo.getTableMaster();
@@ -138,8 +139,8 @@ class SyncProvider extends ChangeNotifier {
         if (response['body'] != null && response['body'] is List) {
           tablemasterList = List<TableMasterModel>.from(
             response['body'].map((e) => TableMasterModel.fromJson(e)),
-          );// Organize items after fetching
-          notifyListeners();
+          );
+          notifyListeners(); // Notify that table master data has been fetched
         } else {
           log('Body is null or not a list', name: 'Body Issue');
         }
@@ -151,20 +152,23 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
-    void _organizeTablesByGroup() {
-    tablesByGroup.clear(); // Clear any previous data
+  // Organize tables by group after fetching both groups and tables
+  void organizeTablesByGroup() {
+    tablesByGroup.clear(); // Clear previous data
 
-    for (var item in itemList) {
-      final departmentCode = item.departmentCode;
+    // Ensure each group code has an entry in the map
+    for (var group in tablegroupList) {
+      tablesByGroup[group.code] = []; // Initialize with an empty list
 
-      if (departmentCode != null) {
-        if (!itemsByDepartment.containsKey(departmentCode)) {
-          itemsByDepartment[departmentCode] = [];
+      // Add tables whose group matches the group code
+      for (var table in tablemasterList) {
+        if (table.group == group.code) {
+          tablesByGroup[group.code]?.add(table);
         }
-
-        itemsByDepartment[departmentCode]?.add(item);
       }
     }
+
+    notifyListeners(); // Notify the UI of changes
   }
 
   Future<void> getKotGroupAll() async {
@@ -307,30 +311,28 @@ class SyncProvider extends ChangeNotifier {
   }
 
 // Save the reordered department list in SharedPreferences
-Future<void> saveDepartmentsOrder() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  List<String> departmentOrder = departmentList.map((d) => d.code).toList();
-  if (departmentOrder.isNotEmpty) {
-    await prefs.setStringList('departments_order', departmentOrder);
+  Future<void> saveDepartmentsOrder() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> departmentOrder = departmentList.map((d) => d.code).toList();
+    if (departmentOrder.isNotEmpty) {
+      await prefs.setStringList('departments_order', departmentOrder);
+    }
   }
-}
-
 
 // Load the reordered department list from SharedPreferences
-Future<void> loadDepartmentsOrder() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  List<String>? departmentOrder = prefs.getStringList('departments_order');
-  if (departmentOrder != null && departmentOrder.isNotEmpty) {
-    departmentList.sort((a, b) {
-      int indexA = departmentOrder.indexOf(a.code);
-      int indexB = departmentOrder.indexOf(b.code);
-      return indexA.compareTo(indexB);
-    });
+  Future<void> loadDepartmentsOrder() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? departmentOrder = prefs.getStringList('departments_order');
+    if (departmentOrder != null && departmentOrder.isNotEmpty) {
+      departmentList.sort((a, b) {
+        int indexA = departmentOrder.indexOf(a.code);
+        int indexB = departmentOrder.indexOf(b.code);
+        return indexA.compareTo(indexB);
+      });
+    }
+
+    notifyListeners(); // Notify listeners to update the UI with the new order
   }
-
-  notifyListeners();  // Notify listeners to update the UI with the new order
-}
-
 
   Future<void> saveItemsOrder() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -344,43 +346,64 @@ Future<void> loadDepartmentsOrder() async {
     List<String>? orderedItemNames = prefs.getStringList('items_order');
 
     if (orderedItemNames != null) {
-      itemList.sort((a, b) =>
-          orderedItemNames.indexOf(a.name!).compareTo(orderedItemNames.indexOf(b.name!)));
+      itemList.sort((a, b) => orderedItemNames
+          .indexOf(a.name!)
+          .compareTo(orderedItemNames.indexOf(b.name!)));
     }
 
     notifyListeners(); // Ensure that UI updates after loading the order
   }
 
-    void updateDepartmentName(String code, String newName) {
+  void updateDepartmentName(String code, String newName) {
     final department = departmentList.firstWhere((d) => d.code == code);
     department.description = newName;
     notifyListeners(); // Notify listeners to update UI
-    }
-    void updateTableName(String code, String newName) {
+  }
+
+  void updateTableName(String code, String newName) {
     final table = tablemasterList.firstWhere((t) => t.code == code);
     table.name = newName;
     notifyListeners(); // Notify listeners to update UI
-    }
-    void updateKotmessage(String code, String newmessage) {
+  }
+
+  void updateKotmessage(String code, String newmessage) {
     final kotmessage = kotmessageList.firstWhere((k) => k.code == code);
     kotmessage.description = newmessage;
     notifyListeners(); // Notify listeners to update UI
-    }
-    void updateModeType(String id, String newType) {
+  }
+
+  void updateModeType(String id, String newType) {
     final mode = paymentList.firstWhere((t) => t.id == id);
     mode.type = newType;
     notifyListeners(); // Notify listeners to update UI
-    }
-void updateOffer(String offerCouponId, String newCouponCode, String newNote, String newDiscountInPercent, String newMaxDiscount, String newMinBillAmount, String newValidity) {
-  final coupon = offerList.firstWhere((t) => t.offerCouponId == offerCouponId);
+  }
 
-  coupon.couponCode = newCouponCode;
-  coupon.note = newNote;
-  coupon.discountInPercent = newDiscountInPercent;
-  coupon.maxDiscount = newMaxDiscount;
-  coupon.minBillAmount = newMinBillAmount;
-  coupon.validity = newValidity;
+  void updateOffer(
+      String offerCouponId,
+      String newCouponCode,
+      String newNote,
+      String newDiscountInPercent,
+      String newMaxDiscount,
+      String newMinBillAmount,
+      String newValidity) {
+    final coupon =
+        offerList.firstWhere((t) => t.offerCouponId == offerCouponId);
 
-  notifyListeners(); // Notify listeners to update UI
-}
+    coupon.couponCode = newCouponCode;
+    coupon.note = newNote;
+    coupon.discountInPercent = newDiscountInPercent;
+    coupon.maxDiscount = newMaxDiscount;
+    coupon.minBillAmount = newMinBillAmount;
+    coupon.validity = newValidity;
+
+    notifyListeners(); // Notify listeners to update UI
+  }
+
+    Future<void> fetchAndOrganizeTables() async {
+    await getTableGroupAll(); // Fetch the table groups
+    await getTableMasterAll(); // Fetch the table masters
+
+    // Once both groups and tables are fetched, organize the tables by group
+    organizeTablesByGroup();
+  }
 }
