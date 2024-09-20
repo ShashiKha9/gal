@@ -26,6 +26,7 @@ class _ItemPageState extends State<ItemPage> {
   Map<String, double> quantities = {};
   Map<String, double> rates = {};
   late SyncProvider _syncProvider;
+  Set<String> selectedItems = {};
 
   @override
   void initState() {
@@ -46,6 +47,11 @@ class _ItemPageState extends State<ItemPage> {
 
     setState(() {
       selectedItemName = item.name;
+      if (selectedItems.contains(item.name)) {
+        selectedItems.remove(item.name);
+      } else {
+        selectedItems.add(item.name!);
+      }
 
       if (!quantities.containsKey(item.name)) {
         quantities[item.name!] = 1;
@@ -150,7 +156,6 @@ class _ItemPageState extends State<ItemPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white54,
       appBar: MainAppBar(
         // title: 'Galaxy Mini',
         isRate: true,
@@ -180,6 +185,8 @@ class _ItemPageState extends State<ItemPage> {
                           itemCount: itemList.length,
                           itemBuilder: (context, index) {
                             final item = itemList[index];
+                            bool isSelected = selectedItems.contains(item.name);
+
                             return GestureDetector(
                               onTap: () => _onItemTap(item),
                               child: Card(
@@ -188,9 +195,14 @@ class _ItemPageState extends State<ItemPage> {
                                 borderOnForeground: true,
                                 elevation: 2,
                                 semanticContainer: true,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: const BorderRadius.all(
                                     Radius.circular(15),
+                                  ),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppColors.blue
+                                        : Colors.transparent,
                                   ),
                                 ),
                                 child: Padding(
@@ -202,7 +214,7 @@ class _ItemPageState extends State<ItemPage> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.all(10),
+                                        // padding: const EdgeInsets.all(10),
                                         width: double.maxFinite,
                                         decoration: const BoxDecoration(
                                           color: Colors.white,
@@ -218,13 +230,24 @@ class _ItemPageState extends State<ItemPage> {
                                         ),
                                         child: item.imageUrl == null ||
                                                 item.imageUrl!.isEmpty
-                                            ? const Icon(
-                                                Icons.wallpaper,
-                                                color: AppColors.lightGrey,
-                                                size: 50,
+                                            ? const Padding(
+                                                padding: EdgeInsets.all(10),
+                                                child: Icon(
+                                                  Icons.wallpaper,
+                                                  color: AppColors.lightGrey,
+                                                  size: 50,
+                                                ),
                                               )
-                                            : Image.network(
-                                                item.imageUrl ?? ""),
+                                            : ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child: Image.network(
+                                                  item.imageUrl ?? "",
+                                                  height: 70,
+                                                  width: double.maxFinite,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
                                       ),
 
                                       SizedBox(
@@ -290,7 +313,7 @@ class _ItemPageState extends State<ItemPage> {
                               child: Container(
                                 width: double.maxFinite,
                                 decoration: BoxDecoration(
-                                  color: AppColors.white,
+                                  color: AppColors.lessBlue,
                                   borderRadius: const BorderRadius.all(
                                     Radius.circular(8),
                                   ),
@@ -338,13 +361,13 @@ class _ItemPageState extends State<ItemPage> {
                                           maxWidth: 112,
                                         ),
                                         child: Container(
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black,
-                                            ),
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                              Radius.circular(5),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.white,
+                                            // border: Border.all(
+                                            //   color: Colors.black,
+                                            // ),
+                                            borderRadius: BorderRadius.all(
+                                              Radius.circular(50),
                                             ),
                                           ),
                                           child: Row(
@@ -353,9 +376,16 @@ class _ItemPageState extends State<ItemPage> {
                                             children: [
                                               InkWell(
                                                 onTap: _decreaseQuantity,
-                                                child: const Icon(
-                                                  Icons.remove,
-                                                  color: Colors.black,
+                                                child: Container(
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: AppColors.blue,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.remove,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                               const SizedBox(width: 15),
@@ -369,9 +399,16 @@ class _ItemPageState extends State<ItemPage> {
                                               const SizedBox(width: 15),
                                               InkWell(
                                                 onTap: _increaseQuantity,
-                                                child: const Icon(
-                                                  Icons.add,
-                                                  color: Colors.black,
+                                                child: Container(
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: AppColors.blue,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.add,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -388,7 +425,7 @@ class _ItemPageState extends State<ItemPage> {
                               child: Container(
                                 width: double.maxFinite,
                                 decoration: BoxDecoration(
-                                  color: AppColors.white,
+                                  color: AppColors.blue,
                                   borderRadius: const BorderRadius.all(
                                     Radius.circular(8),
                                   ),
@@ -414,7 +451,7 @@ class _ItemPageState extends State<ItemPage> {
                                         "TOTAL:",
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.black,
+                                          color: Colors.white,
                                           fontSize: 17,
                                         ),
                                       ),
@@ -422,7 +459,7 @@ class _ItemPageState extends State<ItemPage> {
                                         "₹ $totalAmount",
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.black,
+                                          color: Colors.white,
                                           fontSize: 17,
                                         ),
                                       ),

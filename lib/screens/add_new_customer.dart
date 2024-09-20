@@ -1,10 +1,14 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/customer_provider.dart';
 
 class AddNewCustomer extends StatefulWidget {
-  const AddNewCustomer({super.key});
+  const AddNewCustomer({super.key, this.isEdit = false});
+
+  final bool isEdit;
 
   @override
   _AddNewCustomerState createState() => _AddNewCustomerState();
@@ -12,10 +16,12 @@ class AddNewCustomer extends StatefulWidget {
 
 class _AddNewCustomerState extends State<AddNewCustomer> {
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _alternateMobileController = TextEditingController();
+  final TextEditingController _alternateMobileController =
+      TextEditingController();
   final TextEditingController _landlineController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _address2Controller = TextEditingController();
@@ -28,20 +34,37 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
 
   bool isPremiumMember = false;
   bool isBlocklistedMember = false;
-  final customerProvider = CustomerProvider(); 
+
+  final customerProvider = CustomerProvider();
 
   void _saveCustomer() {
     if (_formKey.currentState!.validate()) {
-      // Handle save logic here
+      _formKey.currentState!.save();
+
       log('Customer Saved');
+    }
+  }
+
+  Future<void> _selectBirthdate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null) {
+      setState(() {
+        _birthdateController.text = "${picked.toLocal()}".split(' ')[0];
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add New Customer'),
+      appBar: MainAppBar(
+        title: widget.isEdit ? "Edit Customer" : "Add New Customer",
+        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -49,9 +72,9 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
           key: _formKey,
           child: ListView(
             children: [
-              TextFormField(
+              AppTextfield(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
+                labelText: 'Name',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the name';
@@ -59,56 +82,77 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                   return null;
                 },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                keyboardType: TextInputType.emailAddress,
+                labelText: 'Email',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the email';
+                  } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email';
                   }
                   return null;
                 },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _mobileController,
-                decoration: const InputDecoration(labelText: 'Mobile No.'),
-                keyboardType: TextInputType.phone,
+                labelText: 'Mobile No.',
+                keyBoardType: TextInputType.phone,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the mobile number';
+                  } else if (value.length < 10) {
+                    return 'Mobile number must be at least 10 digits';
                   }
                   return null;
                 },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _alternateMobileController,
-                decoration: const InputDecoration(labelText: 'Alternate Mobile No.'),
-                keyboardType: TextInputType.phone,
+                labelText: 'Alternate Mobile No.',
+                keyBoardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the mobile number';
+                  } else if (value.length < 10) {
+                    return 'Mobile number must be at least 10 digits';
+                  }
+                  return null;
+                },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _landlineController,
-                decoration: const InputDecoration(labelText: 'Landline No.'),
-                keyboardType: TextInputType.phone,
+                labelText: 'Landline No.',
+                keyBoardType: TextInputType.phone,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter the mobile number';
+                  } else if (value.length < 10) {
+                    return 'Mobile number must be at least 10 digits';
+                  }
+                  return null;
+                },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Address'),
+                labelText: 'Address',
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _address2Controller,
-                decoration: const InputDecoration(labelText: 'Address 2'),
+                labelText: 'Address 2',
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _birthdateController,
-                decoration: const InputDecoration(labelText: 'Birthdate'),
-                keyboardType: TextInputType.datetime,
+                labelText: 'Birthdate',
+                onTap: () {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                  _selectBirthdate();
+                },
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _gstController,
-                decoration: const InputDecoration(labelText: 'GST No.'),
+                labelText: 'GST No.',
               ),
-              const SizedBox(height: 16.0),
               Row(
                 children: [
                   Checkbox(
@@ -135,29 +179,28 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                   const Text('Blocklisted Member'),
                 ],
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _noteController,
-                decoration: const InputDecoration(labelText: 'Note'),
+                labelText: 'Note',
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _extra1Controller,
-                decoration: const InputDecoration(labelText: 'Extra 1'),
+                labelText: 'Extra 1',
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _extra2Controller,
-                decoration: const InputDecoration(labelText: 'Extra 2'),
+                labelText: 'Extra 2',
               ),
-              TextFormField(
+              AppTextfield(
                 controller: _extra3Controller,
-                decoration: const InputDecoration(labelText: 'Extra 3'),
+                labelText: 'Extra 3',
               ),
-              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context); // Cancel action
+                      Navigator.pop(context);
                     },
                     child: const Text('Cancel'),
                   ),
@@ -167,7 +210,14 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                   ),
                 ],
               ),
-            ],
+            ]
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: e,
+                  ),
+                )
+                .toList(),
           ),
         ),
       ),

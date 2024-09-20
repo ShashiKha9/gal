@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class Tablemaster extends StatefulWidget {
@@ -12,7 +13,7 @@ class Tablemaster extends StatefulWidget {
 
 class _TablemasterState extends State<Tablemaster> {
   late SyncProvider _syncProvider;
-  String? _selectedGroupCode; // Track the selected group code
+  String? _selectedGroupCode;
 
   @override
   void initState() {
@@ -24,7 +25,12 @@ class _TablemasterState extends State<Tablemaster> {
   // Fetch data and organize tables by group
   Future<void> _fetchData() async {
     await _syncProvider.fetchAndOrganizeTables();
-    setState(() {}); // Refresh the UI after fetching data
+    setState(() {
+      // Set the first group selected by default
+      if (_syncProvider.tablesByGroup.isNotEmpty) {
+        _selectedGroupCode = _syncProvider.tablesByGroup.keys.first;
+      }
+    });
   }
 
   // Show dialog to edit table name
@@ -75,6 +81,7 @@ class _TablemasterState extends State<Tablemaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Table Master',
+        isMenu: false,
         onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
@@ -88,23 +95,38 @@ class _TablemasterState extends State<Tablemaster> {
       ),
       body: Column(
         children: [
-          // Display ChoiceChips for each table group
           Consumer<SyncProvider>(
             builder: (context, syncProvider, child) {
               return SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: syncProvider.tablesByGroup.keys.map((groupCode) {
+                    final isSelected = _selectedGroupCode == groupCode;
+
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: ChoiceChip(
-                        label: Text('Group $groupCode'),
-                        selected: _selectedGroupCode == groupCode,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedGroupCode = selected ? groupCode : null;
-                          });
-                        },
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Material(
+                        child: ChoiceChip(
+                          label: Text(
+                            'Group $groupCode',
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedGroupCode = selected ? groupCode : null;
+                            });
+                          },
+                          showCheckmark: false,
+                          backgroundColor: Colors.white,
+                          selectedColor: AppColors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -127,6 +149,7 @@ class _TablemasterState extends State<Tablemaster> {
                 }
 
                 return GridView.builder(
+                  padding: const EdgeInsets.all(8.0),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 8.0,
@@ -139,30 +162,20 @@ class _TablemasterState extends State<Tablemaster> {
                     return GestureDetector(
                       onTap: () => _showEditDialog(index,
                           _selectedGroupCode!), // Pass the index and group
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8.0),
-                          border: Border.all(
-                            color: const Color(0xFFC41E3A),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
+                      child: Card(
+                        color: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
+                        elevation: 2,
                         child: Center(
                           child: Text(
                             table.name ?? 'Unnamed table',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
                             ),
                           ),
                         ),

@@ -75,7 +75,7 @@ class _AddNewItemState extends State<AddNewItem> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Department',
-        onSearch: (String) {},
+        onSearch: (p0) {},
       ),
       body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
         // Check if the department list is empty, return blank screen if true

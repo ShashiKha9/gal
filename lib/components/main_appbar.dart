@@ -60,7 +60,7 @@ class _MainAppBarState extends State<MainAppBar> {
   Widget build(BuildContext context) {
     return AppBar(
       centerTitle: true,
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.lightPink,
       title: _isSearching
           ? TextField(
               controller: _searchController,

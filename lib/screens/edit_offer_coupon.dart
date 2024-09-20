@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 
@@ -78,49 +80,51 @@ class _EditCouponPageState extends State<EditCouponPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Coupon'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _saveChanges, // Call the save function
-          ),
-        ],
+      appBar: const MainAppBar(
+        title: "Edit Coupon",
+        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            TextField(
+            AppTextfield(
               controller: _couponCodeController,
-              decoration: const InputDecoration(labelText: 'Coupon Code'),
+              labelText: 'Coupon Code',
             ),
-            TextField(
+            AppTextfield(
               controller: _noteController,
-              decoration: const InputDecoration(labelText: 'Note'),
+              labelText: 'Note',
             ),
-            TextField(
+            AppTextfield(
               controller: _discountInPercentController,
-              decoration:
-                  const InputDecoration(labelText: 'Discount in Percent'),
-              keyboardType: TextInputType.number,
+              labelText: 'Discount in Percent',
             ),
-            TextField(
+            AppTextfield(
               controller: _maxDiscountController,
-              decoration: const InputDecoration(labelText: 'Max Discount'),
-              keyboardType: TextInputType.number,
+              labelText: 'Max Discount',
             ),
-            TextField(
+            AppTextfield(
               controller: _minBillAmountController,
-              decoration: const InputDecoration(labelText: 'Min Bill Amount'),
-              keyboardType: TextInputType.number,
+              labelText: 'Min Bill Amount',
             ),
-            TextField(
+            AppTextfield(
               controller: _validityController,
-              decoration: const InputDecoration(labelText: 'Validity'),
+              labelText: 'Validity',
             ),
-          ],
+          ]
+              .map(
+                (e) => Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: e,
+                ),
+              )
+              .toList(),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _saveChanges,
+        child: const Icon(Icons.save),
       ),
     );
   }

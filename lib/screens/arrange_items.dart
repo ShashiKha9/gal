@@ -1,5 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -18,26 +20,53 @@ class _ArrangeItemsState extends State<ArrangeItems> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
-    _syncProvider.getItemsAll().then((_){
+    _syncProvider.getItemsAll().then((_) {
       _syncProvider.loadItemsOrder();
     });
   }
 
-void _saveOrder() {
-  _syncProvider.saveItemsOrder(); // Save order to SharedPreferences
-  Navigator.of(context).pop(true); // Return true on successful save
-}
-
+  void _saveOrder() {
+    _syncProvider.saveItemsOrder();
+    Navigator.of(context).pop(true);
+  }
 
   void _cancelChanges() {
-    _syncProvider.loadItemsOrder(); // Reload the saved order to discard changes
-    Navigator.of(context).pop(); // Navigate back or close the screen
+    _syncProvider.loadItemsOrder();
+    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    double cardHeight = MediaQuery.of(context).size.height;
+    int crossAxisCount;
+    double childAspectRatio;
+    log(screenSize.toString(), name: "screenSize");
+
+    if (screenSize.width > 1200) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      log(screenSize.toString(), name: "1200");
+    }
+    if (screenSize.width > 1000) {
+      crossAxisCount = 6;
+      childAspectRatio = (cardHeight / crossAxisCount) / 105;
+      log(screenSize.toString(), name: "1000");
+    } else if (screenSize.width > 800) {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 310;
+      log(screenSize.toString(), name: "800");
+    } else {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      log(screenSize.toString(), name: "00");
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Arrange Hot Items')),
+      appBar: const MainAppBar(
+        title: 'Arrange Hot Items',
+        isMenu: false,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -46,41 +75,90 @@ void _saveOrder() {
               log(syncProvider.itemList.length.toString(),
                   name: 'Consumer length');
               return ReorderableGridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 1,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 2,
+                  mainAxisSpacing: 2,
+                  childAspectRatio: childAspectRatio,
                 ),
                 itemCount: syncProvider.itemList.length,
                 itemBuilder: (context, index) {
                   final item = syncProvider.itemList[index];
-                  return Container(
+                  return Card(
                     key: ValueKey(item.name),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: Border.all(
-                        color: const Color(0xFFC41E3A),
-                        width: 1.5,
+
+                    color: Colors.white,
+                    // surfaceTintColor: AppColors.lightPink,
+                    borderOnForeground: true,
+                    elevation: 2,
+                    semanticContainer: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(15),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
-                    child: Center(
-                      child: Text(
-                        item.name ?? 'Unnamed Item',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            // padding: const EdgeInsets.all(10),
+                            width: double.maxFinite,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
+                              // border: Border(
+                              //   bottom: BorderSide(
+                              //     color: AppColors.lightPink,
+                              //     width: 2,
+                              //   ),
+                              // ),
+                            ),
+                            child:
+                                item.imageUrl == null || item.imageUrl!.isEmpty
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Icon(
+                                          Icons.wallpaper,
+                                          color: AppColors.lightGrey,
+                                          size: 50,
+                                        ),
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          item.imageUrl ?? "",
+                                          height: 70,
+                                          width: double.maxFinite,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                          ),
+                          SizedBox(
+                            // height: 30,
+                            child: Text(
+                              item.name ?? "NO Name",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "₹ ${item.rate1}",
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -100,15 +178,13 @@ void _saveOrder() {
             }),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
                   onPressed: _cancelChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey, // Set cancel button color
-                  ),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
