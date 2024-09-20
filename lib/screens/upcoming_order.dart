@@ -12,19 +12,31 @@ class UpcomingOrdersPage extends StatefulWidget {
 }
 
 class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
-  // Date variables for filters
   DateTime? fromDate;
   DateTime? toDate;
+  String? selectedOrderStatus = 'All'; // Set default status to 'All'
+  final DateFormat _dateFormat = DateFormat('d MMMM yyyy');
 
   @override
   void initState() {
     super.initState();
-    // Set initial dates to today's date
     fromDate = DateTime.now();
     toDate = DateTime.now();
+    _loadOrders();
   }
 
-  // Method to show date picker for "From Date"
+  Future<void> _loadOrders() async {
+    await Provider.of<UpcomingOrderProvider>(context, listen: false)
+        .loadOrders();
+    await Provider.of<UpcomingOrderProvider>(context, listen: false)
+        .loadCancelledOrders();
+    await Provider.of<UpcomingOrderProvider>(context, listen: false)
+        .loadDispatchedOrders();
+    await Provider.of<UpcomingOrderProvider>(context, listen: false)
+        .loadPendingOrders(); // Load pending orders
+    setState(() {});
+  }
+
   Future<void> _selectFromDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -35,11 +47,11 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     if (pickedDate != null && pickedDate != fromDate) {
       setState(() {
         fromDate = pickedDate;
+        _loadOrders(); // Reload orders when the date is selected
       });
     }
   }
 
-  // Method to show date picker for "To Date"
   Future<void> _selectToDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -50,15 +62,52 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     if (pickedDate != null && pickedDate != toDate) {
       setState(() {
         toDate = pickedDate;
+        _loadOrders(); // Reload orders when the date is selected
       });
     }
   }
 
+  List<Map<String, dynamic>> _filterOrders(List<Map<String, dynamic>> orders) {
+    if (fromDate == null || toDate == null) {
+      return orders;
+    }
+
+    return orders.where((order) {
+      try {
+        final orderDate = _dateFormat.parse(order['orderDate']);
+        return orderDate.isAfter(fromDate!.subtract(const Duration(days: 1))) &&
+            orderDate.isBefore(toDate!.add(const Duration(days: 1)));
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> _getDisplayedOrders(
+      UpcomingOrderProvider provider) {
+    List<Map<String, dynamic>> filteredOrders;
+
+    if (selectedOrderStatus == 'Cancelled') {
+      filteredOrders = provider.cancelledOrders; // Show cancelled orders
+    } else if (selectedOrderStatus == 'Dispatched') {
+      filteredOrders = provider.dispatchedOrders; // Show dispatched orders
+    } else if (selectedOrderStatus == 'Pending') {
+      filteredOrders = provider.pendingOrders; // Show pending orders
+    } else {
+      // Combine pending, dispatched, and cancelled orders into one list
+      filteredOrders = [
+        ...provider.pendingOrders,
+        ...provider.dispatchedOrders,
+        ...provider.cancelledOrders,
+      ];
+    }
+
+    // Apply date filtering
+    return _filterOrders(filteredOrders);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Call loadOrders() to retrieve saved upcoming orders
-    Provider.of<UpcomingOrderProvider>(context, listen: false).loadOrders();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upcoming Orders'),
@@ -66,60 +115,81 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
       ),
       body: Column(
         children: [
-          // Row for From Date and To Date pickers
           Padding(
             padding:
                 const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // From Date picker
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'From Date',
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('From Date'),
+                        ElevatedButton(
+                          onPressed: () => _selectFromDate(context),
+                          child:
+                              Text(DateFormat('d MMMM yyyy').format(fromDate!)),
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () => _selectFromDate(context),
-                      child: Text(DateFormat('dd/MM/yyyy').format(fromDate!)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('To Date'),
+                        ElevatedButton(
+                          onPressed: () => _selectToDate(context),
+                          child:
+                              Text(DateFormat('d MMMM yyyy').format(toDate!)),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                // To Date picker
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('To Date'),
-                    ElevatedButton(
-                      onPressed: () => _selectToDate(context),
-                      child: Text(DateFormat('dd/MM/yyyy').format(toDate!)),
-                    ),
+                const SizedBox(height: 10.0), // Space between rows
+                DropdownButtonFormField<String>(
+                  value: selectedOrderStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Order Status',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'All', child: Text('All')),
+                    DropdownMenuItem(value: 'Pending', child: Text('Pending')),
+                    DropdownMenuItem(
+                        value: 'Dispatched', child: Text('Dispatched')),
+                    DropdownMenuItem(
+                        value: 'Cancelled', child: Text('Cancelled')),
                   ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedOrderStatus = value;
+                      _loadOrders(); // Reload orders based on selected status
+                    });
+                  },
                 ),
               ],
             ),
           ),
-
-          // Expanded ListView for upcoming orders
           Expanded(
             child: Consumer<UpcomingOrderProvider>(
               builder: (context, provider, child) {
-                final upcomingOrders = provider.upcomingOrders;
+                final displayedOrders = _getDisplayedOrders(provider);
 
-                if (upcomingOrders.isEmpty) {
+                if (displayedOrders.isEmpty) {
                   return const Center(
                     child: Text(
-                      'No Upcoming Orders',
+                      'No Orders Available',
                       style: TextStyle(fontSize: 18),
                     ),
                   );
                 }
 
                 return ListView.builder(
-                  itemCount: upcomingOrders.length,
+                  itemCount: displayedOrders.length,
                   itemBuilder: (context, index) {
-                    final order = upcomingOrders[index];
+                    final order = displayedOrders[index];
                     return Card(
                       elevation: 3,
                       margin: const EdgeInsets.symmetric(
@@ -137,19 +207,14 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
                           ],
                         ),
                         onTap: () {
-                          // Navigate to Order Details page with only the orderId
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OrderDetailsPage(
-                                  orderId:
-                                      order['orderId']), // Pass only orderId
+                              builder: (context) =>
+                                  OrderDetailsPage(orderId: order['orderId']),
                             ),
                           ).then((_) {
-                            // Reload data or trigger UI refresh after returning from the details page
-                            Provider.of<UpcomingOrderProvider>(context,
-                                    listen: false)
-                                .loadOrders();
+                            _loadOrders(); // Reload data or trigger UI refresh after returning from the details page
                           });
                         },
                       ),

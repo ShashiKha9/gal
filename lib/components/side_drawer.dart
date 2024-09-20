@@ -28,7 +28,8 @@ class SideDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UpcomingOrdersPage()),
+                MaterialPageRoute(
+                    builder: (context) => const UpcomingOrdersPage()),
               );
             },
           ),
@@ -36,7 +37,11 @@ class SideDrawer extends StatelessWidget {
             leading: const Icon(Icons.insert_chart),
             title: const Text('Reports'),
             onTap: () {
-              Navigator.pop(context);
+              // Navigator.pop(context);
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => CreditPartyDataPage()),
+              // );
             },
           ),
           ListTile(
@@ -46,7 +51,8 @@ class SideDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CustomerCredits()),
+                MaterialPageRoute(
+                    builder: (context) => const CustomerCredits()),
               );
             },
           ),
