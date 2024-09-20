@@ -17,6 +17,9 @@ class OrderDetailsPage extends StatefulWidget {
 
 class _OrderDetailsPageState extends State<OrderDetailsPage> {
   Map<String, dynamic>? order;
+  bool isUpcomingOrder = false;
+  bool isCancelledOrder = false;
+  bool isDispatchedOrder = false;
 
   @override
   void initState() {
@@ -30,9 +33,26 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
           Provider.of<UpcomingOrderProvider>(context, listen: false);
       provider.loadOrders().then((_) {
         setState(() {
+          // Search for the order in upcoming, cancelled, and dispatched orders
           order = provider.upcomingOrders.firstWhere(
               (order) => order['orderId'] == widget.orderId,
               orElse: () => {});
+
+          if (order!.isEmpty) {
+            order = provider.cancelledOrders.firstWhere(
+                (order) => order['orderId'] == widget.orderId,
+                orElse: () => {});
+            isCancelledOrder = order!.isNotEmpty;
+          } else {
+            isUpcomingOrder = true;
+          }
+
+          if (order!.isEmpty) {
+            order = provider.dispatchedOrders.firstWhere(
+                (order) => order['orderId'] == widget.orderId,
+                orElse: () => {});
+            isDispatchedOrder = order!.isNotEmpty;
+          }
         });
       });
     });
@@ -180,6 +200,62 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   Text('Advance Amount: ₹ ${order!['advanceAmount']}'),
                   Text('Balance Amount: ₹ ${order!['remainingAmount']}'),
                   const SizedBox(height: 20),
+                ],
+              ),
+            ),
+            // Display the action buttons only for upcoming orders
+            if (isUpcomingOrder)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC41E3A),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              EditOrder(orderId: order!['orderId']),
+                        ),
+                      ).then((_) {
+                        // Reload orders and refresh the UI after returning from EditOrder page
+                        Provider.of<UpcomingOrderProvider>(context,
+                                listen: false)
+                            .loadOrders()
+                            .then((_) {
+                          setState(() {
+                            order = Provider.of<UpcomingOrderProvider>(context,
+                                    listen: false)
+                                .upcomingOrders
+                                .firstWhere(
+                                    (order) =>
+                                        order['orderId'] == widget.orderId,
+                                    orElse: () => {});
+                          });
+                        });
+                      });
+                    },
+                    child: const Text(
+                      'Edit',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC41E3A),
+                    ),
+                    onPressed: () {
+                      Provider.of<UpcomingOrderProvider>(context, listen: false)
+                          .dispatchOrder(order!['orderId']);
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Dispatch',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFC41E3A),
@@ -196,56 +272,6 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                   ),
                 ],
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC41E3A),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EditOrder(orderId: order!['orderId']),
-                      ),
-                    ).then((_) {
-                      // Reload orders and refresh the UI after returning from EditOrder page
-                      Provider.of<UpcomingOrderProvider>(context, listen: false)
-                          .loadOrders()
-                          .then((_) {
-                        setState(() {
-                          order = Provider.of<UpcomingOrderProvider>(context,
-                                  listen: false)
-                              .upcomingOrders
-                              .firstWhere(
-                                  (order) => order['orderId'] == widget.orderId,
-                                  orElse: () => {});
-                        });
-                      });
-                    });
-                  },
-                  child: const Text(
-                    'Edit',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFC41E3A),
-                  ),
-                  onPressed: () {
-                    // Handle Dispatch order logic here
-                  },
-                  child: const Text(
-                    'Dispatch',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
