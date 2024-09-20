@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/add_new_customer.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
-// Example Option Pages
 class CustomerMaster extends StatefulWidget {
   const CustomerMaster({super.key});
 
@@ -28,18 +28,18 @@ class _CustomerMasterState extends State<CustomerMaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Customer Master',
+        isMenu: false,
+        isSearch: true,
         onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
-            context, 
-            MaterialPageRoute(builder: (context) => const AddNewCustomer()));
+            context,
+            MaterialPageRoute(builder: (context) => const AddNewCustomer()),
+          );
         },
-        child: const Icon(
-          Icons.add,
-          color: Colors.red,
-        ),
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
@@ -48,73 +48,70 @@ class _CustomerMasterState extends State<CustomerMaster> {
                 Consumer<SyncProvider>(builder: (context, syncProvider, child) {
               log(syncProvider.customerList.length.toString(),
                   name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1, // Number of items per row
-                  crossAxisSpacing: 16.0, // Increased spacing for better UI
-                  mainAxisSpacing: 16.0, // Increased spacing for better UI
-                  childAspectRatio:
-                      3.2, // Adjusted aspect ratio for larger boxes
-                ),
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
                 itemCount: syncProvider.customerList.length,
                 itemBuilder: (context, index) {
                   final customer = syncProvider.customerList[index];
-                  return GestureDetector(
-                    // onTap: () => _onItemTap(item),
-                    child: Container(
-                      padding: const EdgeInsets.all(
-                          16.0), // Added padding for better spacing inside the box
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                            12.0), // Softer corners for a modern look
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 0),
+                      // leading: const Icon(
+                      //   Icons.person,
+                      //   color: AppColors.blue,
+                      // ),
+                      title: Text(
+                        "${customer.customerCode ?? 'no code'} : ${customer.name ?? 'Unnamed'}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                          color: Colors.black,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 5),
+                          // Text(
+                          //   'Customer Code: ${customer.customerCode ?? 'no code'}',
+                          //   style: const TextStyle(
+                          //     fontSize: 14.0,
+                          //     color: Colors.grey,
+                          //   ),
+                          // ),
+                          // const SizedBox(height: 4.0),
+                          Text(
+                            'Mobile: ${customer.mobile1 ?? 'no number'}',
+                            style: const TextStyle(
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment
-                            .start, // Align text to the start for a cleaner layout
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Customer Code: ${customer.customerCode ?? 'no code'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      trailing: GestureDetector(
+                        onTap: () {},
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AddNewCustomer(isEdit: true),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.edit_note,
+                            size: 35,
                           ),
-                          const SizedBox(
-                              height: 8), // Space between name and description
-                          Text(
-                            'Name: ${customer.name ?? 'Unnamed'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(
-                              height: 8), // Space between name and description
-                          Text(
-                            'Mobile: ${customer.mobile1 ?? 'no number'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
+                          color: AppColors.blue,
+                        ),
                       ),
                     ),
                   );

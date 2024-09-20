@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/screens/customer_master.dart';
 import 'package:galaxy_mini/screens/department.dart';
 import 'package:galaxy_mini/screens/kotgroup_master.dart';
@@ -19,9 +20,7 @@ class MasterSettingPage extends StatelessWidget {
       {
         'icon': Icons.local_dining,
         'title': 'Item Master',
-        'page': const DepartmentPage(
-          isEdit: true,
-        )
+        'page': const DepartmentPage(isEdit: true)
       },
       {
         'icon': Icons.table_restaurant,
@@ -66,38 +65,40 @@ class MasterSettingPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.white,
-          ),
-        ),
-        title: const Text(
-          'Master Settings',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppColors.greenTwo,
+      appBar: const MainAppBar(
+        title: 'Master Settings',
+        isMenu: false,
       ),
       body: ListView.builder(
+        padding: const EdgeInsets.all(16.0),
         itemCount: options.length,
         itemBuilder: (context, index) {
-          return ListTile(
-            leading: Icon(options[index]['icon']),
-            title: Text(options[index]['title']),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => options[index]['page'],
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            elevation: 2,
+            child: ListTile(
+              leading: Icon(
+                options[index]['icon'],
+                color: AppColors.blue,
+              ),
+              title: Text(
+                options[index]['title'],
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
                 ),
-              );
-            },
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => options[index]['page'],
+                  ),
+                );
+              },
+            ),
           );
         },
       ),

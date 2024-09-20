@@ -28,7 +28,8 @@ class SideDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UpcomingOrdersPage()),
+                MaterialPageRoute(
+                    builder: (context) => const UpcomingOrdersPage()),
               );
             },
           ),
@@ -46,7 +47,8 @@ class SideDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CustomerCredits()),
+                MaterialPageRoute(
+                    builder: (context) => const CustomerCredits()),
               );
             },
           ),

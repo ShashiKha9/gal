@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
-import 'package:galaxy_mini/theme/app_colors.dart';
 
 class PLUScreen extends StatefulWidget {
   const PLUScreen({super.key});
@@ -54,13 +53,13 @@ class _PLUScreenState extends State<PLUScreen> {
               child: Container(
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.all(16.0),
-                color: AppColors.lightBlue.withOpacity(0.5),
+                color: Colors.white.withOpacity(0.5),
                 child: Text(
                   displayText,
                   style: const TextStyle(
                     fontSize: 36.0,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.blue, // Display text color
+                    color: Colors.black, // Display text color
                   ),
                 ),
               ),
@@ -104,7 +103,7 @@ class _PLUScreenState extends State<PLUScreen> {
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.all(20.0),
         backgroundColor: Colors.white, // Button background color
-        foregroundColor: AppColors.blue, // Button text color
+        foregroundColor: Colors.black, // Button text color
         textStyle: const TextStyle(
           fontSize: 16.0,
           fontWeight: FontWeight.bold,

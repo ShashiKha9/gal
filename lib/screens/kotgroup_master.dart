@@ -4,7 +4,6 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 
-// Example Option Pages
 class Kotgroup extends StatefulWidget {
   const Kotgroup({super.key});
 
@@ -13,7 +12,7 @@ class Kotgroup extends StatefulWidget {
 }
 
 class _KotgroupState extends State<Kotgroup> {
-  late SyncProvider _syncProvider; // List to store table names
+  late SyncProvider _syncProvider;
 
   @override
   void initState() {
@@ -24,79 +23,56 @@ class _KotgroupState extends State<Kotgroup> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(title: 'KOT Group Master', onSearch: (p0 ) {  },),
-      body: Column(
-        children: [
-          Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.kotgroupList.length.toString(),
-                  name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1,
-                  crossAxisSpacing: 16.0, // Increased spacing for better UI
-                  mainAxisSpacing: 16.0, // Increased spacing for better UI
-                  childAspectRatio:
-                      4.0, // Adjusted aspect ratio for a rectangular shape
-                ),
-                itemCount: syncProvider.kotgroupList.length,
-                itemBuilder: (context, index) {
-                  final kotgroup = syncProvider.kotgroupList[index];
-                  return GestureDetector(
-                    // onTap: () => _onItemTap(item),
-                    child: Container(
-                      padding: const EdgeInsets.all(
-                          16.0), // Added padding for better spacing inside the box
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                            12.0), // Softer corners for a modern look
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
+      appBar: MainAppBar(
+        title: 'KOT Group Master',
+        isMenu: false,
+        onSearch: (value) {},
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Consumer<SyncProvider>(
+          builder: (context, syncProvider, child) {
+            log(syncProvider.kotgroupList.length.toString(),
+                name: 'KOT Group List Length');
+            return ListView.builder(
+              itemCount: syncProvider.kotgroupList.length,
+              itemBuilder: (context, index) {
+                final kotgroup = syncProvider.kotgroupList[index];
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Name: ${kotgroup.name ?? 'Unnamed Item'}',
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Description: ${kotgroup.description ?? 'No description'}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment
-                            .start, // Align text to the start for a cleaner layout
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Name: ${kotgroup.name ?? 'Unnamed Item'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(
-                              height: 8), // Space between name and description
-                          Text(
-                            'Description: ${kotgroup.description ?? 'No description'}',
-                            textAlign: TextAlign.left, // Align text to the left
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-              );
-            }),
-          ),
-        ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

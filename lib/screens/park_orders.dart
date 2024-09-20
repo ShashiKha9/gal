@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/screens/order_detail.dart';
 
@@ -24,21 +25,25 @@ class ParkOrderScreen extends StatelessWidget {
               ),
             )
           : ListView.builder(
+              padding: const EdgeInsets.all(16.0),
               itemCount: parkedOrders.length,
               itemBuilder: (context, index) {
                 final order = parkedOrders[index];
                 final rates =
                     (order['rates'] as Map?)?.cast<String, double>() ?? {};
                 return Card(
-                  elevation: 3,
-                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10.0),
                   ),
                   child: ListTile(
                     title: Text(
                       'Order ${index + 1}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blue,
+                      ),
                     ),
                     subtitle: Text('Total: Rs. ${order['totalAmount']}'),
                     onTap: () {

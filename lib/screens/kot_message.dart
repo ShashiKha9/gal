@@ -2,8 +2,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
-// Example Option Pages
 class Kotmessage extends StatefulWidget {
   const Kotmessage({super.key});
 
@@ -12,7 +12,7 @@ class Kotmessage extends StatefulWidget {
 }
 
 class _KotmessageState extends State<Kotmessage> {
-  late SyncProvider _syncProvider; // List to store table names
+  late SyncProvider _syncProvider;
 
   @override
   void initState() {
@@ -29,7 +29,7 @@ class _KotmessageState extends State<Kotmessage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit kot description'),
+          title: const Text('Edit KOT Description'),
           content: TextField(
             controller: kotMessageController,
             decoration: const InputDecoration(
@@ -48,11 +48,8 @@ class _KotmessageState extends State<Kotmessage> {
                 final newMessage = kotMessageController.text;
                 if (newMessage.isNotEmpty) {
                   setState(() {
-                    // Update the kotmessage description
                     _syncProvider.kotmessageList[index].description =
                         newMessage;
-                    // You might want to save the updated list to SharedPreferences or backend
-                    // _syncProvider.saveKotmessages();
                   });
                 }
                 Navigator.pop(context);
@@ -70,69 +67,58 @@ class _KotmessageState extends State<Kotmessage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('KOT Message Master'),
+        backgroundColor: AppColors.lightPink,
+        elevation: 2,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.kotmessageList.length.toString(),
-                  name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1,
-                  crossAxisSpacing: 16.0,
-                  mainAxisSpacing: 16.0,
-                  childAspectRatio: 4.0,
-                ),
-                itemCount: syncProvider.kotmessageList.length,
-                itemBuilder: (context, index) {
-                  final kotmessage = syncProvider.kotmessageList[index];
-                  return GestureDetector(
-                    onTap: () => _showEditDialog(
-                        index), // Pass the index to showEditDialog
-                    child: Container(
-                      padding: const EdgeInsets.all(
-                          16.0), // Added padding for better spacing inside the box
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(
-                            12.0), // Softer corners for a modern look
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Consumer<SyncProvider>(
+                  builder: (context, syncProvider, child) {
+                log(syncProvider.kotmessageList.length.toString(),
+                    name: 'Consumer length');
+                return GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1,
+                    crossAxisSpacing: 16.0,
+                    mainAxisSpacing: 16.0,
+                    childAspectRatio: 4.0,
+                  ),
+                  itemCount: syncProvider.kotmessageList.length,
+                  itemBuilder: (context, index) {
+                    final kotmessage = syncProvider.kotmessageList[index];
+                    return GestureDetector(
+                      onTap: () => _showEditDialog(index),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment
-                            .start, // Align text to the start for a cleaner layout
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16.0),
+                          title: Text(
                             'Description: ${kotmessage.description ?? 'No description'}',
-                            textAlign: TextAlign.left, // Align text to the left
                             style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                          trailing: const Icon(
+                            Icons.edit,
+                            color: AppColors.blue,
+                          ),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            }),
-          ),
-        ],
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
       ),
     );
   }

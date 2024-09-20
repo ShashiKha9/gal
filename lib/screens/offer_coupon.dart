@@ -1,9 +1,9 @@
-import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/edit_offer_coupon.dart';
 import 'package:provider/provider.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
 class Offercoupon extends StatefulWidget {
   const Offercoupon({super.key});
@@ -27,122 +27,102 @@ class _OffercouponState extends State<Offercoupon> {
       appBar: MainAppBar(
         title: 'Offer Coupon Master',
         onSearch: (p0) {},
+        isMenu: false,
       ),
       body: Column(
         children: [
           Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.offerList.length.toString(),
-                  name: 'Consumer length');
-              return GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1, // Number of items per row
-                  crossAxisSpacing: 16.0, // Increased spacing for better UI
-                  mainAxisSpacing: 16.0, // Increased spacing for better UI
-                  childAspectRatio:
-                      2.3, // Adjusted aspect ratio for larger boxes
-                ),
-                itemCount: syncProvider.offerList.length,
-                itemBuilder: (context, index) {
-                  final offer = syncProvider.offerList[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditCouponPage(
-                            couponCode: offer.couponCode ?? '',
-                            note: offer.note ?? '',
-                            discountInPercent: offer.discountInPercent ?? '',
-                            maxDiscount: offer.maxDiscount ?? '',
-                            minBillAmount: offer.minBillAmount ?? '',
-                            validity: offer.validity ?? '',
-                            couponIndex:
-                                index, // Pass the index of the coupon here
+            child: Consumer<SyncProvider>(
+              builder: (context, syncProvider, child) {
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: syncProvider.offerList.length,
+                  itemBuilder: (context, index) {
+                    final offer = syncProvider.offerList[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        leading: const Icon(
+                          Icons.local_offer,
+                          color: AppColors.blue,
+                        ),
+                        title: Text(
+                          offer.couponCode ?? 'no code',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0,
+                            color: Colors.black,
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius:
-                            BorderRadius.circular(12.0), // Softer corners
-                        border: Border.all(
-                          color: const Color(0xFFC41E3A),
-                          width: 1.5,
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              offer.note ?? 'Unnamed',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Discount: ${offer.discountInPercent ?? 'no data'}%',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Max discount: Rs. ${offer.maxDiscount ?? 'no data'}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Min. order Amt: Rs. ${offer.minBillAmount ?? 'no data'}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Valid until: ${offer.validity ?? 'no data'}',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditCouponPage(
+                                couponCode: offer.couponCode ?? '',
+                                note: offer.note ?? '',
+                                discountInPercent:
+                                    offer.discountInPercent ?? '',
+                                maxDiscount: offer.maxDiscount ?? '',
+                                minBillAmount: offer.minBillAmount ?? '',
+                                validity: offer.validity ?? '',
+                                couponIndex: index,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the start
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            offer.couponCode ?? 'no code',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            offer.note ?? 'Unnamed',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            'Discount: ${offer.discountInPercent ?? 'no data'}',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            'Max discount Rs. ${offer.maxDiscount ?? 'no data'}',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            'Min order should be Rs. ${offer.minBillAmount ?? 'no data'}',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Text(
-                            'Valid upto ${offer.validity ?? 'no data'}',
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(
-                              fontSize: 14.0,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            }),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
