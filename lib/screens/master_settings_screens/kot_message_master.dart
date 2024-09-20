@@ -4,14 +4,14 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class Kotmessage extends StatefulWidget {
-  const Kotmessage({super.key});
+class KotMessageMaster extends StatefulWidget {
+  const KotMessageMaster({super.key});
 
   @override
-  State<Kotmessage> createState() => _KotmessageState();
+  State<KotMessageMaster> createState() => _KotMessageMasterState();
 }
 
-class _KotmessageState extends State<Kotmessage> {
+class _KotMessageMasterState extends State<KotMessageMaster> {
   late SyncProvider _syncProvider;
 
   @override

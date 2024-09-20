@@ -4,14 +4,14 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 
-class Taxmaster extends StatefulWidget {
-  const Taxmaster({super.key});
+class KotGroupMaster extends StatefulWidget {
+  const KotGroupMaster({super.key});
 
   @override
-  State<Taxmaster> createState() => _TaxmasterState();
+  State<KotGroupMaster> createState() => _KotGroupMasterState();
 }
 
-class _TaxmasterState extends State<Taxmaster> {
+class _KotGroupMasterState extends State<KotGroupMaster> {
   late SyncProvider _syncProvider;
 
   @override
@@ -24,7 +24,7 @@ class _TaxmasterState extends State<Taxmaster> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppBar(
-        title: 'Tax Master',
+        title: 'KOT Group Master',
         isMenu: false,
         onSearch: (value) {},
       ),
@@ -32,12 +32,12 @@ class _TaxmasterState extends State<Taxmaster> {
         padding: const EdgeInsets.all(16.0),
         child: Consumer<SyncProvider>(
           builder: (context, syncProvider, child) {
-            log(syncProvider.taxList.length.toString(),
-                name: 'Tax List Length');
+            log(syncProvider.kotgroupList.length.toString(),
+                name: 'KOT Group List Length');
             return ListView.builder(
-              itemCount: syncProvider.taxList.length,
+              itemCount: syncProvider.kotgroupList.length,
               itemBuilder: (context, index) {
-                final tax = syncProvider.taxList[index];
+                final kotgroup = syncProvider.kotgroupList[index];
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -48,10 +48,9 @@ class _TaxmasterState extends State<Taxmaster> {
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'GST Code: ${tax.code ?? 'No Code'}',
+                          'Name: ${kotgroup.name ?? 'Unnamed Item'}',
                           style: const TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.w600,
@@ -60,39 +59,7 @@ class _TaxmasterState extends State<Taxmaster> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'GST Name: ${tax.name ?? 'Unnamed'}',
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Total GST Rate: ${tax.rate ?? 'No Rate'}',
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'CGst Rate: ${tax.cGst ?? 'No CGst'}',
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'SGst Rate: ${tax.sgst ?? 'No SGst'}',
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'IGst Rate: ${tax.iGst ?? 'No IGst'}',
+                          'Description: ${kotgroup.description ?? 'No description'}',
                           style: const TextStyle(
                             fontSize: 14.0,
                             color: Colors.grey,

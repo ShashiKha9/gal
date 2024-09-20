@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 
 // Example Option Pages
-class Unitmaster extends StatelessWidget {
-  const Unitmaster({super.key});
+class UnitMasterScreen extends StatelessWidget {
+  const UnitMasterScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       appBar: MainAppBar(
         title: 'Unit Master',
-        onSearch: (p0) {},
+        isMenu: false,
       ),
-      body: const Center(child: Text('This is Option 1 Page')),
+      body: Center(child: Text('This is Unit Master')),
     );
   }
 }

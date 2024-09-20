@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
-import 'package:galaxy_mini/screens/edit_order.dart';
+import 'package:galaxy_mini/screens/upcoming_orders_screens/edit_upcoming_order.dart';
 import 'package:provider/provider.dart';
 
-class OrderDetailsPage extends StatefulWidget {
+class UpcomingOrderDetails extends StatefulWidget {
   final String orderId;
 
-  const OrderDetailsPage({
+  const UpcomingOrderDetails({
     super.key,
     required this.orderId,
   });
 
   @override
-  _OrderDetailsPageState createState() => _OrderDetailsPageState();
+  _UpcomingOrderDetailsState createState() => _UpcomingOrderDetailsState();
 }
 
-class _OrderDetailsPageState extends State<OrderDetailsPage> {
+class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
   Map<String, dynamic>? order;
   bool isUpcomingOrder = false;
   bool isCancelledOrder = false;
@@ -217,7 +217,7 @@ class _OrderDetailsPageState extends State<OrderDetailsPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              EditOrder(orderId: order!['orderId']),
+                              EditUpcomingOrder(orderId: order!['orderId']),
                         ),
                       ).then((_) {
                         // Reload orders and refresh the UI after returning from EditOrder page

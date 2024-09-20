@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
-import 'package:galaxy_mini/screens/add_new_item.dart';
+import 'package:galaxy_mini/screens/upcoming_orders_screens/add_new_upcoming_item.dart';
 import 'package:provider/provider.dart';
 
-class EditOrder extends StatefulWidget {
+class EditUpcomingOrder extends StatefulWidget {
   final String orderId;
 
-  const EditOrder({
+  const EditUpcomingOrder({
     super.key,
     required this.orderId,
   });
 
   @override
-  EditOrderState createState() => EditOrderState();
+  EditUpcomingOrderState createState() => EditUpcomingOrderState();
 }
 
-class EditOrderState extends State<EditOrder> {
+class EditUpcomingOrderState extends State<EditUpcomingOrder> {
   Map<String, dynamic>? order;
 
   @override
@@ -243,7 +243,7 @@ class EditOrderState extends State<EditOrder> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              AddNewItem(orderId: order!['orderId']),
+                              AddNewUpcomingItem(orderId: order!['orderId']),
                         ),
                       );
                     },

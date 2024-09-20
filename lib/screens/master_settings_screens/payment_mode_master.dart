@@ -5,14 +5,15 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class PaymentMode extends StatefulWidget {
-  const PaymentMode({super.key});
+class PaymentModeMasterScreen extends StatefulWidget {
+  const PaymentModeMasterScreen({super.key});
 
   @override
-  State<PaymentMode> createState() => _PaymentModeState();
+  State<PaymentModeMasterScreen> createState() =>
+      _PaymentModeMasterScreenState();
 }
 
-class _PaymentModeState extends State<PaymentMode> {
+class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
   late SyncProvider _syncProvider;
   int _selectedPaymentIndex = 0;
 
@@ -104,11 +105,11 @@ class _PaymentModeState extends State<PaymentMode> {
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
                   leading: Icon(
-                    _getPaymentIcon(payment.type ?? 'Others'),
+                    _getPaymentIcon(payment.type),
                     color: AppColors.blue,
                   ),
                   title: Text(
-                    payment.type ?? 'No type',
+                    payment.type,
                     style: const TextStyle(
                       color: Colors.black,
                       fontWeight: FontWeight.w600,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/app.dart';
-import 'package:galaxy_mini/auth/login.dart';
+import 'package:galaxy_mini/screens/auth/login.dart';
 import 'package:galaxy_mini/theme/app_assets.dart';
 
 class SplashScreen extends StatefulWidget {

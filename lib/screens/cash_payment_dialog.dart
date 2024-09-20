@@ -3,8 +3,8 @@ import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:provider/provider.dart';
 
 class CashPaymentDialog extends StatefulWidget {
-  final String customerName; // Add customer name
-  final String customerCode; // Add customer code
+  final String customerName;
+  final String customerCode;
   final double totalAmount;
   final Function(double receivedAmount) onConfirm;
 
@@ -12,8 +12,8 @@ class CashPaymentDialog extends StatefulWidget {
     super.key,
     required this.totalAmount,
     required this.onConfirm,
-    required this.customerName, // Initialize customer name
-    required this.customerCode, // Initialize customer code
+    required this.customerName,
+    required this.customerCode,
   });
 
   @override
@@ -58,7 +58,7 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop(); // Close the dialog
+            Navigator.of(context).pop();
           },
           child: const Text('Cancel'),
         ),
@@ -70,11 +70,11 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
 
             // Pass the required parameters: customer name, customer code, total amount, received amount, return amount
             creditPartyProvider.storeCashPaymentData(
-              widget.customerName, // Customer name
-              widget.customerCode, // Customer code
-              widget.totalAmount,  // Total amount
-              receivedAmount,      // Received amount
-              returnAmount,        // Return amount
+              widget.customerName,
+              widget.customerCode,
+              widget.totalAmount,
+              receivedAmount,
+              returnAmount,
             );
 
             // Close the dialog

@@ -1,8 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:galaxy_mini/provider/customer_credit_provider.dart';
-import 'package:provider/provider.dart';
 import 'customer_credit_detail.dart'; // Ensure this import is correct
 
 class CustomerCredits extends StatefulWidget {

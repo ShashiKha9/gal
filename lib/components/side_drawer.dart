@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/customer_credits.dart';
-import 'package:galaxy_mini/screens/settings.dart';
+import 'package:galaxy_mini/screens/customer_credit_screens/customer_credits.dart';
+import 'package:galaxy_mini/screens/setting_screens/settings_screen.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart'; // Import SyncProvider
-import 'package:galaxy_mini/screens/upcoming_order.dart';
+import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart'; // Import Provider
 
@@ -96,7 +96,7 @@ class SideDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),

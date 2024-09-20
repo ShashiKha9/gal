@@ -3,10 +3,11 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
-import 'package:galaxy_mini/screens/order_detail.dart';
+import 'package:galaxy_mini/screens/details_screens/parked_order_detail.dart';
 
-class ParkOrderScreen extends StatelessWidget {
-  const ParkOrderScreen({super.key, List<Map<String, dynamic>>? parkedOrders});
+class ParkedOrderScreen extends StatelessWidget {
+  const ParkedOrderScreen(
+      {super.key, List<Map<String, dynamic>>? parkedOrders});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +51,7 @@ class ParkOrderScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => Orderdetail(
+                          builder: (context) => ParkedOrderDetail(
                             items:
                                 List<Map<String, dynamic>>.from(order['items']),
                             quantities:

@@ -9,14 +9,14 @@ import 'package:galaxy_mini/theme/app_assets.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
-class ItemPage extends StatefulWidget {
-  const ItemPage({super.key});
+class HotItemsScreen extends StatefulWidget {
+  const HotItemsScreen({super.key});
 
   @override
-  State<ItemPage> createState() => _ItemPageState();
+  State<HotItemsScreen> createState() => _HotItemsScreenState();
 }
 
-class _ItemPageState extends State<ItemPage> {
+class _HotItemsScreenState extends State<HotItemsScreen> {
   String beepSound = AppAudio.beepSound;
 
   final AudioPlayer _audioPlayer = AudioPlayer();

@@ -6,7 +6,6 @@ import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/auth/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'provider/auth_provider.dart';
-import 'services/dataprovider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +18,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => DataProvider()),
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => SyncProvider()),
         ChangeNotifierProvider(create: (_) => ParkedOrderProvider()),
