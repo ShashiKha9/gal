@@ -5,23 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:galaxy_mini/models/Item_model.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
-import 'package:galaxy_mini/screens/arrange_departments.dart';
-import 'package:galaxy_mini/screens/arrange_items.dart';
+import 'package:galaxy_mini/screens/master_settings_screens/item_master_screens/arrange_departments.dart';
+import 'package:galaxy_mini/screens/master_settings_screens/item_master_screens/arrange_items.dart';
 import 'package:galaxy_mini/screens/billing.dart';
 import 'package:galaxy_mini/theme/app_assets.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
-import '../components/main_appbar.dart';
+import '../../components/main_appbar.dart';
 
-class DepartmentPage extends StatefulWidget {
-  const DepartmentPage({super.key, this.isEdit = false});
+class DepartmentScreen extends StatefulWidget {
+  const DepartmentScreen({super.key, this.isEdit = false});
   final bool isEdit;
 
   @override
-  _DepartmentPageState createState() => _DepartmentPageState();
+  _DepartmentScreenState createState() => _DepartmentScreenState();
 }
 
-class _DepartmentPageState extends State<DepartmentPage> {
+class _DepartmentScreenState extends State<DepartmentScreen> {
   String beepSound = AppAudio.beepSound;
 
   final AudioPlayer _audioPlayer = AudioPlayer();

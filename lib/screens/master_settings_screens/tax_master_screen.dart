@@ -4,14 +4,14 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
 
-class Kotgroup extends StatefulWidget {
-  const Kotgroup({super.key});
+class TaxMasterScreen extends StatefulWidget {
+  const TaxMasterScreen({super.key});
 
   @override
-  State<Kotgroup> createState() => _KotgroupState();
+  State<TaxMasterScreen> createState() => _TaxMasterScreenState();
 }
 
-class _KotgroupState extends State<Kotgroup> {
+class _TaxMasterScreenState extends State<TaxMasterScreen> {
   late SyncProvider _syncProvider;
 
   @override
@@ -24,7 +24,7 @@ class _KotgroupState extends State<Kotgroup> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppBar(
-        title: 'KOT Group Master',
+        title: 'Tax Master',
         isMenu: false,
         onSearch: (value) {},
       ),
@@ -32,12 +32,12 @@ class _KotgroupState extends State<Kotgroup> {
         padding: const EdgeInsets.all(16.0),
         child: Consumer<SyncProvider>(
           builder: (context, syncProvider, child) {
-            log(syncProvider.kotgroupList.length.toString(),
-                name: 'KOT Group List Length');
+            log(syncProvider.taxList.length.toString(),
+                name: 'Tax List Length');
             return ListView.builder(
-              itemCount: syncProvider.kotgroupList.length,
+              itemCount: syncProvider.taxList.length,
               itemBuilder: (context, index) {
-                final kotgroup = syncProvider.kotgroupList[index];
+                final tax = syncProvider.taxList[index];
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -48,9 +48,10 @@ class _KotgroupState extends State<Kotgroup> {
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Name: ${kotgroup.name ?? 'Unnamed Item'}',
+                          'GST Code: ${tax.code ?? 'No Code'}',
                           style: const TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.w600,
@@ -59,7 +60,39 @@ class _KotgroupState extends State<Kotgroup> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Description: ${kotgroup.description ?? 'No description'}',
+                          'GST Name: ${tax.name ?? 'Unnamed'}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Total GST Rate: ${tax.rate ?? 'No Rate'}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'CGst Rate: ${tax.cGst ?? 'No CGst'}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'SGst Rate: ${tax.sgst ?? 'No SGst'}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'IGst Rate: ${tax.iGst ?? 'No IGst'}',
                           style: const TextStyle(
                             fontSize: 14.0,
                             color: Colors.grey,

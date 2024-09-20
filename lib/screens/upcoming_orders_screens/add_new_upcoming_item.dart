@@ -5,18 +5,19 @@ import 'package:galaxy_mini/models/Item_model.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart'; // Import the provider
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:provider/provider.dart';
-import '../components/main_appbar.dart';
+import '../../components/main_appbar.dart';
 
-class AddNewItem extends StatefulWidget {
+class AddNewUpcomingItem extends StatefulWidget {
   final String orderId;
-  const AddNewItem({super.key, this.isEdit = false, required this.orderId});
+  const AddNewUpcomingItem(
+      {super.key, this.isEdit = false, required this.orderId});
   final bool isEdit;
 
   @override
-  _AddNewItemState createState() => _AddNewItemState();
+  _AddNewUpcomingItemState createState() => _AddNewUpcomingItemState();
 }
 
-class _AddNewItemState extends State<AddNewItem> {
+class _AddNewUpcomingItemState extends State<AddNewUpcomingItem> {
   int _selectedDepartmentIndex = 0;
   String? selectedItemName;
   String? itemName; // Track selected department

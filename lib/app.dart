@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/department.dart';
-import 'package:galaxy_mini/screens/item_page.dart';
-import 'package:galaxy_mini/screens/park_orders.dart';
-import 'package:galaxy_mini/screens/plu_screen.dart';
+import 'package:galaxy_mini/screens/home_screens/department_screen.dart';
+import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
+import 'package:galaxy_mini/screens/home_screens/parked_orders_screen.dart';
+import 'package:galaxy_mini/screens/home_screens/plu_screen.dart';
 import 'package:galaxy_mini/theme/app_assets.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:galaxy_mini/utils/keys.dart';
 import 'components/side_drawer.dart';
-import 'example_page.dart';
+import 'screens/home_screens/example_page.dart';
 
 class App extends StatefulWidget {
   const App({super.key});
@@ -19,10 +19,10 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
-    const ItemPage(),
+    const HotItemsScreen(),
     const PLUScreen(),
-    const DepartmentPage(),
-    const ParkOrderScreen(),
+    const DepartmentScreen(),
+    const ParkedOrderScreen(),
     const ExamplePage(),
   ];
 

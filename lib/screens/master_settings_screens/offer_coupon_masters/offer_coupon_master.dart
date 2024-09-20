@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
-import 'package:galaxy_mini/screens/edit_offer_coupon.dart';
+import 'package:galaxy_mini/screens/master_settings_screens/offer_coupon_masters/edit_offer_coupon.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class Offercoupon extends StatefulWidget {
-  const Offercoupon({super.key});
+class OfferCouponMaster extends StatefulWidget {
+  const OfferCouponMaster({super.key});
 
   @override
-  State<Offercoupon> createState() => _OffercouponState();
+  State<OfferCouponMaster> createState() => _OfferCouponMasterState();
 }
 
-class _OffercouponState extends State<Offercoupon> {
+class _OfferCouponMasterState extends State<OfferCouponMaster> {
   late SyncProvider _syncProvider;
 
   @override

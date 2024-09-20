@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
-import 'package:galaxy_mini/screens/order_details.dart';
+import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order_details.dart';
 import 'package:provider/provider.dart'; // Import your provider file
 import 'package:intl/intl.dart'; // For formatting dates
 
@@ -210,8 +210,8 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  OrderDetailsPage(orderId: order['orderId']),
+                              builder: (context) => UpcomingOrderDetails(
+                                  orderId: order['orderId']),
                             ),
                           ).then((_) {
                             _loadOrders(); // Reload data or trigger UI refresh after returning from the details page

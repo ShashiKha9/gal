@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
-import 'package:galaxy_mini/screens/add_new_customer.dart';
+import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 

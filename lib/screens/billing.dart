@@ -6,9 +6,9 @@ import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
-import 'package:galaxy_mini/screens/add_new_customer.dart';
-import 'package:galaxy_mini/screens/cashpaymentdialog.dart';
-import 'package:galaxy_mini/screens/item_page.dart';
+import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
+import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
+import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart'; // Add this import
 
@@ -626,7 +626,7 @@ class BillPageState extends State<BillPage> {
 
                       // Navigate to ItemPage and dispose of the bill
                       Navigator.push(
-                          context, const ItemPage() as Route<Object?>);
+                          context, const HotItemsScreen() as Route<Object?>);
                     },
                     child: const Text(
                       'Park',
@@ -869,7 +869,7 @@ class BillPageState extends State<BillPage> {
                                         paymentMode:
                                             selectedPaymentModeInDialog ??
                                                 selectedPaymentMode!,
-                                        enteredAmount: enteredAmount ?? '0', 
+                                        enteredAmount: enteredAmount ?? '0',
                                       );
 
                                       // Update the stored numbers

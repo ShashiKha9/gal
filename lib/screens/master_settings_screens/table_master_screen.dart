@@ -4,14 +4,14 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
-class Tablemaster extends StatefulWidget {
-  const Tablemaster({super.key});
+class TablemasterScreen extends StatefulWidget {
+  const TablemasterScreen({super.key});
 
   @override
-  State<Tablemaster> createState() => _TablemasterState();
+  State<TablemasterScreen> createState() => _TablemasterScreenState();
 }
 
-class _TablemasterState extends State<Tablemaster> {
+class _TablemasterScreenState extends State<TablemasterScreen> {
   late SyncProvider _syncProvider;
   String? _selectedGroupCode;
 

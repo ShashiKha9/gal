@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/park_orders.dart';
+import 'package:galaxy_mini/screens/home_screens/parked_orders_screen.dart';
 import 'package:uuid/uuid.dart'; // Add this import
 
-class Orderdetail extends StatefulWidget {
+class ParkedOrderDetail extends StatefulWidget {
   final List<Map<String, dynamic>> items;
   final Map<String, double> quantities;
   final Map<String, double> rates;
   final double totalAmount;
 
-  const Orderdetail({
+  const ParkedOrderDetail({
     super.key,
     required this.items,
     required this.quantities,
@@ -17,10 +17,10 @@ class Orderdetail extends StatefulWidget {
   });
 
   @override
-  _OrderdetailState createState() => _OrderdetailState();
+  _ParkedOrderDetailState createState() => _ParkedOrderDetailState();
 }
 
-class _OrderdetailState extends State<Orderdetail> {
+class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
   late Map<String, double> quantities;
   late double totalAmount;
   List<Map<String, dynamic>> parkedOrders = [];
@@ -220,7 +220,7 @@ class _OrderdetailState extends State<Orderdetail> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              ParkOrderScreen(parkedOrders: parkedOrders),
+                              ParkedOrderScreen(parkedOrders: parkedOrders),
                         ),
                       );
                     },
