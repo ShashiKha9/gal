@@ -101,8 +101,13 @@ class _CustomerMasterState extends State<CustomerMaster> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const AddNewCustomer(isEdit: true),
+                                builder: (context) => AddNewCustomer(
+                                  isEdit: true,
+                                  customerName: customer.name ??
+                                      '', // Pass the selected customer name
+                                  customerMobile: customer.mobile1 ??
+                                      '', // Pass the selected customer mobile
+                                ),
                               ),
                             );
                           },

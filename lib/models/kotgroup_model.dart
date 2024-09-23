@@ -1,8 +1,8 @@
 
 class KotGroupModel {
-    final String? code;
-    final String? name;
-    final dynamic description;
+    final String code;
+    String name;
+    dynamic description;
 
     KotGroupModel({
         required this.code,

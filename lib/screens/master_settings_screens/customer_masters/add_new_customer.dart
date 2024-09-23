@@ -6,9 +6,16 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/customer_provider.dart';
 
 class AddNewCustomer extends StatefulWidget {
-  const AddNewCustomer({super.key, this.isEdit = false});
+  const AddNewCustomer({
+    super.key,
+    this.isEdit = false,
+    this.customerName = '',
+    this.customerMobile = '',
+  });
 
   final bool isEdit;
+  final String customerName;
+  final String customerMobile;
 
   @override
   _AddNewCustomerState createState() => _AddNewCustomerState();
@@ -17,30 +24,68 @@ class AddNewCustomer extends StatefulWidget {
 class _AddNewCustomerState extends State<AddNewCustomer> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _mobileController = TextEditingController();
-  final TextEditingController _alternateMobileController =
-      TextEditingController();
-  final TextEditingController _landlineController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _address2Controller = TextEditingController();
-  final TextEditingController _birthdateController = TextEditingController();
-  final TextEditingController _gstController = TextEditingController();
-  final TextEditingController _noteController = TextEditingController();
-  final TextEditingController _extra1Controller = TextEditingController();
-  final TextEditingController _extra2Controller = TextEditingController();
-  final TextEditingController _extra3Controller = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _mobileController;
+  late TextEditingController _alternateMobileController;
+  late TextEditingController _landlineController;
+  late TextEditingController _addressController;
+  late TextEditingController _address2Controller;
+  late TextEditingController _birthdateController;
+  late TextEditingController _gstController;
+  late TextEditingController _noteController;
+  late TextEditingController _extra1Controller;
+  late TextEditingController _extra2Controller;
+  late TextEditingController _extra3Controller;
 
   bool isPremiumMember = false;
   bool isBlocklistedMember = false;
 
   final customerProvider = CustomerProvider();
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize the controllers with the passed customer data if editing
+    _nameController =
+        TextEditingController(text: widget.isEdit ? widget.customerName : '');
+    _emailController = TextEditingController();
+    _mobileController =
+        TextEditingController(text: widget.isEdit ? widget.customerMobile : '');
+    _alternateMobileController = TextEditingController();
+    _landlineController = TextEditingController();
+    _addressController = TextEditingController();
+    _address2Controller = TextEditingController();
+    _birthdateController = TextEditingController();
+    _gstController = TextEditingController();
+    _noteController = TextEditingController();
+    _extra1Controller = TextEditingController();
+    _extra2Controller = TextEditingController();
+    _extra3Controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _mobileController.dispose();
+    _alternateMobileController.dispose();
+    _landlineController.dispose();
+    _addressController.dispose();
+    _address2Controller.dispose();
+    _birthdateController.dispose();
+    _gstController.dispose();
+    _noteController.dispose();
+    _extra1Controller.dispose();
+    _extra2Controller.dispose();
+    _extra3Controller.dispose();
+    super.dispose();
+  }
+
   void _saveCustomer() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
       log('Customer Saved');
     }
   }
@@ -111,27 +156,11 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                 controller: _alternateMobileController,
                 labelText: 'Alternate Mobile No.',
                 keyBoardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the mobile number';
-                  } else if (value.length < 10) {
-                    return 'Mobile number must be at least 10 digits';
-                  }
-                  return null;
-                },
               ),
               AppTextfield(
                 controller: _landlineController,
                 labelText: 'Landline No.',
                 keyBoardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the mobile number';
-                  } else if (value.length < 10) {
-                    return 'Mobile number must be at least 10 digits';
-                  }
-                  return null;
-                },
               ),
               AppTextfield(
                 controller: _addressController,

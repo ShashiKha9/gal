@@ -1,6 +1,6 @@
 class TableGroupModel {
     final String code;
-    final String name;
+    String name;
     final String status;
 
     TableGroupModel({

@@ -43,7 +43,7 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Edit table name'),
+          title: const Text('Edit Table Name'),
           content: TextField(
             controller: tableNameController,
             decoration: const InputDecoration(
@@ -76,6 +76,62 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
     );
   }
 
+  // Show dialog to edit group name
+  void _showEditGroupDialog() {
+    if (_selectedGroupCode == null) return;
+
+    final selectedGroup = _syncProvider.tablegroupList.firstWhere(
+      (group) => group.code == _selectedGroupCode,
+    );
+
+    final groupNameController = TextEditingController(
+      text: selectedGroup.name ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Group Name'),
+          content: TextField(
+            controller: groupNameController,
+            decoration: const InputDecoration(
+              labelText: 'Group Name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newName = groupNameController.text;
+                if (newName.isNotEmpty && _selectedGroupCode != null) {
+                  // Update the group name in the provider
+                  _syncProvider.updateTableGroup(
+                      _selectedGroupCode!, newName, '');
+
+                  // No need to re-fetch data manually
+                  // _fetchData(); -> this is not necessary
+
+                  setState(
+                      () {}); // Optionally call setState to ensure local UI update
+
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,12 +141,10 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
         onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Action to add a new table
-        },
+        onPressed: _showEditGroupDialog, // Call the new edit group dialog
         child: const Icon(
-          Icons.add,
-          color: Colors.red,
+          Icons.edit,
+          color: Colors.white,
         ),
       ),
       body: Column(
@@ -102,13 +156,16 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
                 child: Row(
                   children: syncProvider.tablesByGroup.keys.map((groupCode) {
                     final isSelected = _selectedGroupCode == groupCode;
+                    final groupName = syncProvider.tablegroupList
+                        .firstWhere((group) => group.code == groupCode)
+                        .name; // Get updated group name
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Material(
                         child: ChoiceChip(
                           label: Text(
-                            'Group $groupCode',
+                            groupName ?? 'T-$groupCode',
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
                               fontWeight: FontWeight.bold,
@@ -117,7 +174,12 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
                           selected: isSelected,
                           onSelected: (selected) {
                             setState(() {
-                              _selectedGroupCode = selected ? groupCode : null;
+                              if (selected) {
+                                _selectedGroupCode =
+                                    groupCode; // Select the current group code
+                              } else {
+                                _selectedGroupCode = null; // Deselect if needed
+                              }
                             });
                           },
                           showCheckmark: false,
@@ -160,8 +222,7 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
                   itemBuilder: (context, index) {
                     final table = groupTables[index];
                     return GestureDetector(
-                      onTap: () => _showEditDialog(index,
-                          _selectedGroupCode!), // Pass the index and group
+                      onTap: () => _showEditDialog(index, _selectedGroupCode!),
                       child: Card(
                         color: Colors.white,
                         shape: RoundedRectangleBorder(
