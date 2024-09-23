@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
-import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/screens/details_screens/parked_order_detail.dart';
 

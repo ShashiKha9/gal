@@ -8,7 +8,6 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
 import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
-import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
 import 'package:galaxy_mini/utils/extension.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart'; // Add this import

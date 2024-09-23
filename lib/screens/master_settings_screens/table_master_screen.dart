@@ -85,7 +85,7 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
     );
 
     final groupNameController = TextEditingController(
-      text: selectedGroup.name ?? '',
+      text: selectedGroup.name,
     );
 
     showDialog(
@@ -130,7 +130,6 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
       },
     );
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -141,11 +140,8 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
         onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showEditGroupDialog, // Call the new edit group dialog
-        child: const Icon(
-          Icons.edit,
-          color: Colors.white,
-        ),
+        onPressed: _showEditGroupDialog,
+        child: const Icon(Icons.edit),
       ),
       body: Column(
         children: [
@@ -165,7 +161,7 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
                       child: Material(
                         child: ChoiceChip(
                           label: Text(
-                            groupName ?? 'T-$groupCode',
+                            groupName,
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
                               fontWeight: FontWeight.bold,

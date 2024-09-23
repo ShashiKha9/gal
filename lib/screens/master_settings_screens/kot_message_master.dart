@@ -160,7 +160,6 @@ class _KotMessageMasterState extends State<KotMessageMaster> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddDialog,
-        backgroundColor: AppColors.blue,
         child: const Icon(Icons.add),
       ),
     );
