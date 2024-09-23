@@ -40,12 +40,7 @@ class ParkedOrderScreen extends StatelessWidget {
                   ),
                   child: ListTile(
                     title: Text(
-                      'Order ${index + 1}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blue,
-                      ),
-                    ),
+                        'Order ${index + 1} - Table: ${order['tableName']}'),
                     subtitle: Text('Total: Rs. ${order['totalAmount']}'),
                     onTap: () {
                       Navigator.push(

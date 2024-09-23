@@ -79,6 +79,46 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
     }
   }
 
+  void _showEditDialog(int index) {
+    final selectedMode = _syncProvider.paymentList[index];
+    final modeTypeController = TextEditingController(text: selectedMode.type);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Mode Type'),
+          content: TextField(
+            controller: modeTypeController,
+            decoration: const InputDecoration(
+              labelText: 'Mode Type',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newType = modeTypeController.text;
+                if (newType.isNotEmpty) {
+                  setState(() {
+                    _syncProvider.paymentList[index].type = newType;
+                  });
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -86,135 +126,122 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
         title: 'Payment Master',
         isMenu: false,
       ),
-      body: Column(
-        children: [
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: _syncProvider.paymentList.length,
-            itemBuilder: (context, index) {
-              final payment = _syncProvider.paymentList[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 5),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                  leading: Icon(
-                    _getPaymentIcon(payment.type),
-                    color: AppColors.blue,
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              itemCount: _syncProvider.paymentList.length,
+              itemBuilder: (context, index) {
+                final payment = _syncProvider.paymentList[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
-                  title: Text(
-                    payment.type,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 10),
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _getPaymentIcon(payment.type),
+                          color: AppColors.blue,
+                        ),
+                        const SizedBox(
+                            width: 10), // Adds spacing between icon and text
+                      ],
                     ),
+                    title: Text(
+                      payment.type,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _selectedPaymentIndex == index
+                            ? Radio<int>(
+                                value: index,
+                                groupValue: _selectedPaymentIndex,
+                                activeColor: AppColors.blue,
+                                onChanged: (int? value) {
+                                  if (value != null) {
+                                    _showDefaultPaymentDialog(value);
+                                  }
+                                },
+                              )
+                            : const SizedBox(),
+                        IconButton(
+                          icon: const Icon(Icons.edit_note,
+                              color: AppColors.blue),
+                          onPressed: () {
+                            _showEditDialog(index); // Pass the index
+                          },
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      _showDefaultPaymentDialog(index);
+                    },
                   ),
-                  trailing: _selectedPaymentIndex == index
-                      ? Radio<int>(
-                          value: index,
-                          groupValue: _selectedPaymentIndex,
-                          activeColor: AppColors.blue,
-                          onChanged: (int? value) {
-                            if (value != null) {
-                              _showDefaultPaymentDialog(value);
-                            }
-                          },
-                        )
-                      : null,
-                  onTap: () {
-                    _showDefaultPaymentDialog(index);
-                  },
-                ),
-              );
-            },
-          ),
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              leading: const Icon(
-                Icons.more_horiz,
-                color: AppColors.blue,
-              ),
-              title: const Text(
-                'Others',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              trailing:
-                  _selectedPaymentIndex == _syncProvider.paymentList.length
-                      ? Radio<int>(
-                          value: _syncProvider.paymentList.length,
-                          groupValue: _selectedPaymentIndex,
-                          activeColor: AppColors.blue,
-                          onChanged: (int? value) {
-                            if (value != null) {
-                              _showDefaultPaymentDialog(value);
-                            }
-                          },
-                        )
-                      : null,
-              onTap: () {
-                _showDefaultPaymentDialog(_syncProvider.paymentList.length);
+                );
               },
             ),
-          ),
-        ],
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                leading: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.more_horiz,
+                      color: AppColors.blue,
+                    ),
+                    SizedBox(width: 10), // Adds spacing between the icons
+                  ],
+                ),
+                title: const Text(
+                  'Others',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                trailing:
+                    _selectedPaymentIndex == _syncProvider.paymentList.length
+                        ? Radio<int>(
+                            value: _syncProvider.paymentList.length,
+                            groupValue: _selectedPaymentIndex,
+                            activeColor: AppColors.blue,
+                            onChanged: (int? value) {
+                              if (value != null) {
+                                _showDefaultPaymentDialog(value);
+                              }
+                            },
+                          )
+                        : null,
+                onTap: () {
+                  _showDefaultPaymentDialog(_syncProvider.paymentList.length);
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-
-  // void _showEditDialog(int index) {
-  //   final selectedMode = _syncProvider.paymentList[index];
-  //   final modeTypeController = TextEditingController(text: selectedMode.type);
-
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: const Text('Edit Mode Type'),
-  //         content: TextField(
-  //           controller: modeTypeController,
-  //           decoration: const InputDecoration(
-  //             labelText: 'Mode Type',
-  //           ),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-  //             child: const Text('Cancel'),
-  //           ),
-  //           TextButton(
-  //             onPressed: () {
-  //               final newType = modeTypeController.text;
-  //               if (newType.isNotEmpty) {
-  //                 setState(() {
-  //                   _syncProvider.paymentList[index].type = newType;
-  //                 });
-  //               }
-  //               Navigator.pop(context);
-  //             },
-  //             child: const Text('Save'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }

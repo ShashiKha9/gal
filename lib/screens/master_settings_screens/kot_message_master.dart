@@ -62,6 +62,44 @@ class _KotMessageMasterState extends State<KotMessageMaster> {
     );
   }
 
+  void _showAddDialog() {
+    final kotMessageController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add KOT Message'),
+          content: TextField(
+            controller: kotMessageController,
+            decoration: const InputDecoration(
+              labelText: 'KOT Message',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newMessage = kotMessageController.text;
+                if (newMessage.isNotEmpty) {
+                  // Use the addKotMessage function from the provider
+                  _syncProvider.addKotMessage(newMessage);
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,6 +158,18 @@ class _KotMessageMasterState extends State<KotMessageMaster> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddDialog,
+        backgroundColor: AppColors.blue,
+        child: const Icon(Icons.add),
+      ),
     );
   }
+}
+
+// Assuming KotMessage is your model class
+class KotMessage {
+  String description;
+
+  KotMessage({required this.description});
 }

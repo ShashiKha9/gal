@@ -103,7 +103,7 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
-    Future<void> getTableGroupAll() async {
+  Future<void> getTableGroupAll() async {
     try {
       final response = await syncRepo.getTableGroup();
       log(response.toString(), name: 'response getTableGroupAll');
@@ -372,6 +372,35 @@ class SyncProvider extends ChangeNotifier {
     notifyListeners(); // Notify listeners to update UI
   }
 
+void updateTableGroup(String groupCode, String newName, String description) {
+  // Ensure you find the correct group
+  final groupIndex = tablegroupList.indexWhere((g) => g.code == groupCode);
+  if (groupIndex != -1) {
+    tablegroupList[groupIndex].name = newName; // Update the name
+    notifyListeners(); // Notify listeners to refresh the UI
+  }
+}
+
+  void addKotMessage(String description) {
+    final newKotMessage = KotMessageModel(
+      code: 'KOT-${kotmessageList.length + 1}', // Generate a new code
+      description: description,
+      isSynced: false, // Set to false or adjust based on your logic
+      addDate: DateTime.now(),
+      updateDate: DateTime.now(),
+    );
+
+    kotmessageList.add(newKotMessage);
+    notifyListeners(); // Notify listeners to update UI
+  }
+
+  void updateKotGroup(String code, String newName, String newDescription) {
+    final kotGroup = kotgroupList.firstWhere((k) => k.code == code);
+    kotGroup.name = newName;
+    kotGroup.description = newDescription;
+    notifyListeners(); // Notify listeners to update UI
+  }
+
   void updateModeType(String id, String newType) {
     final mode = paymentList.firstWhere((t) => t.id == id);
     mode.type = newType;
@@ -399,7 +428,7 @@ class SyncProvider extends ChangeNotifier {
     notifyListeners(); // Notify listeners to update UI
   }
 
-    Future<void> fetchAndOrganizeTables() async {
+  Future<void> fetchAndOrganizeTables() async {
     await getTableGroupAll(); // Fetch the table groups
     await getTableMasterAll(); // Fetch the table masters
 

@@ -24,6 +24,9 @@ class CustomerCreditProvider extends ChangeNotifier {
     required String selectedCustomerName,
     required String selectedCustomerCode,
     required double totalAmount,
+    required List<Map<String, dynamic>> items, // New parameter
+    required Map<String, double> quantities, // New parameter
+    required Map<String, double> rates, // New parameter
   }) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -38,15 +41,15 @@ class CustomerCreditProvider extends ChangeNotifier {
       'billDate': billDate,
       'customerName': selectedCustomerName,
       'totalAmount': totalAmount.toString(),
+      'items': items, // Add items to the bill
+      'quantities': quantities, // Add quantities to the bill
+      'rates': rates, // Add rates to the bill
     };
 
     // Convert the map to a JSON string for storage
     String newBillJson = jsonEncode(newBill);
 
-    // Log the new bill JSON
-    log('New Bill JSON: $newBillJson');
-
-    // If the customer already has bills, append the new bill to the list
+    // Append new bill to customer bills list or create a new list if it doesn't exist
     if (customerBills != null) {
       customerBills.add(newBillJson);
     } else {
@@ -56,18 +59,20 @@ class CustomerCreditProvider extends ChangeNotifier {
     // Store the updated list of bills for the customer
     await prefs.setStringList('${selectedCustomerCode}_bills', customerBills);
 
-    // Store or update the list of customer codes
-    List<String>? customerCodes = prefs.getStringList('customer_codes');
-    if (customerCodes == null) {
-      customerCodes = [selectedCustomerCode];
-    } else if (!customerCodes.contains(selectedCustomerCode)) {
-      customerCodes.add(selectedCustomerCode);
-    }
-    await prefs.setStringList('customer_codes', customerCodes);
+    // Retrieve the customer names map (stored as JSON) from SharedPreferences
+    String? customerNamesJson = prefs.getString('customer_names');
+    Map<String, String> customerNames = customerNamesJson != null
+        ? Map<String, String>.from(jsonDecode(customerNamesJson))
+        : {};
 
-    // Log the updated list of bills and customer codes
-    log('Updated Bills List for $selectedCustomerCode: $customerBills');
-    log('Updated Customer Codes List: $customerCodes');
+    // Update the map with the new customer name
+    customerNames[selectedCustomerCode] = selectedCustomerName;
+
+    // Save the updated customer names map back to SharedPreferences as JSON
+    await prefs.setString('customer_names', jsonEncode(customerNames));
+
+    // Log the updated customer names map
+    debugPrint('Updated customer names stored: $customerNames');
 
     notifyListeners();
   }
@@ -127,32 +132,36 @@ class CustomerCreditProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Fetch the list of bills for this specific customer
-    List<String>? customerBills = prefs.getStringList('${customerCode}_bills');
+  // Fetch the list of bills for this specific customer
+  List<String>? customerBills = prefs.getStringList('${customerCode}_bills');
 
-    if (customerBills == null) {
-      return [];
-    }
-
-    List<Map<String, dynamic>> bills = customerBills.map((billJson) {
-      Map<String, dynamic> bill = jsonDecode(billJson);
-
-      double totalAmount = double.tryParse(bill['totalAmount'] ?? '0.0') ?? 0.0;
-
-      return {
-        'billNumber': bill['billNumber'] ?? '',
-        'billDate': bill['billDate'] ?? '',
-        'customerName': bill['customerName'] ?? '',
-        'customerCode': bill['customerCode'] ?? '',
-        'totalAmount': totalAmount,
-      };
-    }).toList();
-
-    return bills;
+  if (customerBills == null) {
+    return [];
   }
+
+  List<Map<String, dynamic>> bills = customerBills.map((billJson) {
+    Map<String, dynamic> bill = jsonDecode(billJson);
+
+    double totalAmount = double.tryParse(bill['totalAmount'] ?? '0.0') ?? 0.0;
+
+    return {
+      'billNumber': bill['billNumber'] ?? '',
+      'billDate': bill['billDate'] ?? '',
+      'customerName': bill['customerName'] ?? '',
+      'customerCode': bill['customerCode'] ?? '',
+      'totalAmount': totalAmount,
+      'items': bill['items'] ?? [], // Ensure this is a list
+      'quantities': bill['quantities'] ?? {}, // Load quantities
+      'rates': bill['rates'] ?? {}, // Load rates
+    };
+  }).toList();
+
+  return bills;
+}
+
 
   Future<List<Map<String, dynamic>>> loadAllBillData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

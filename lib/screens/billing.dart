@@ -1,7 +1,7 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:galaxy_mini/models/table_model.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -9,6 +9,7 @@ import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
 import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
 import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
+import 'package:galaxy_mini/utils/extension.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart'; // Add this import
 
@@ -373,6 +374,89 @@ class BillPageState extends State<BillPage> {
     );
   }
 
+  void _showTableSelectionDialog(BuildContext context) async {
+    final syncProvider = Provider.of<SyncProvider>(context, listen: false);
+
+    // Fetch and organize tables before showing the dialog
+    await syncProvider.fetchAndOrganizeTables();
+
+    List<Widget> tableOptions = [];
+
+    // Debugging: Print the contents of tablesByGroup
+    log('Tables by group after fetch: ${syncProvider.tablesByGroup}');
+
+    // Generate table options based on groups and tables
+    for (var group in syncProvider.tablesByGroup.keys) {
+      for (var table in syncProvider.tablesByGroup[group]!) {
+        tableOptions.add(
+          ListTile(
+            title: Text(
+              '${syncProvider.tablegroupList.firstWhere((g) => g.code == group).name} - ${table.name}',
+            ),
+            onTap: () {
+              _parkOrder(context, group, table);
+              Navigator.pop(context); // Close the dialog
+            },
+          ),
+        );
+      }
+    }
+
+    // If tableOptions is empty, log a message
+    if (tableOptions.isEmpty) {
+      log('No tables found for selected groups.');
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Select Table'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: tableOptions,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _parkOrder(BuildContext context, String group, TableMasterModel table) {
+    final currentOrder = {
+      'id': const Uuid().v4(),
+      'items': widget.items
+          .where((item) => quantities.containsKey(item['name']))
+          .toList(),
+      'quantities': Map.from(quantities),
+      'rates': Map.from(widget.rates),
+      'totalAmount': totalAmount,
+      'tableName': table.name,
+    };
+
+    try {
+      // Add the order to the provider
+      Provider.of<ParkedOrderProvider>(context, listen: false)
+          .addOrder(currentOrder);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Order parked successfully')),
+      );
+    } catch (e) {
+      // Show error message if an order is already parked on the table
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayedItems = widget.items
@@ -547,15 +631,16 @@ class BillPageState extends State<BillPage> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12.0, horizontal: 10.0),
+                        vertical: 12.0,
+                        horizontal: 10.0,
+                      ),
                     ),
-                    items: syncProvider.paymentList
-                        .map((paymentMode) => DropdownMenuItem<String>(
-                              value: paymentMode
-                                  .type, // Assuming `type` is in PaymentModel
-                              child: Text(paymentMode.type),
-                            ))
-                        .toList(),
+                    items: syncProvider.paymentList.map((paymentMode) {
+                      return DropdownMenuItem<String>(
+                        value: paymentMode.type,
+                        child: Text(paymentMode.type),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       setState(() {
                         selectedPaymentMode = value;
@@ -563,9 +648,19 @@ class BillPageState extends State<BillPage> {
                       // Handle payment mode selection
                       log('Selected Payment Mode: $selectedPaymentMode');
                     },
-                    value: selectedPaymentMode,
+                    value: selectedPaymentMode ??
+                        (syncProvider.paymentList.isNotEmpty
+                            ? syncProvider.paymentList
+                                .firstWhere(
+                                  (paymentMode) => paymentMode.isDefault,
+                                  orElse: () => syncProvider.paymentList
+                                      .first, // Fallback to the first item
+                                )
+                                .type
+                            : null), // Handle the case if the paymentList is empty
                   ),
                 ),
+
                 const SizedBox(width: 16.0), // Add spacing between fields
                 // Discount TextField
                 Expanded(
@@ -601,39 +696,16 @@ class BillPageState extends State<BillPage> {
                       ),
                     ),
                     onPressed: () {
-                      final currentOrder = {
-                        'id': const Uuid().v4(), // Generate unique ID
-                        'items': widget.items
-                            .where(
-                                (item) => quantities.containsKey(item['name']))
-                            .toList(),
-                        'quantities': Map.from(quantities),
-                        'rates':
-                            Map.from(widget.rates), // Ensure rates are included
-                        'totalAmount': totalAmount,
-                      };
-
-                      // Add the current order to the provider
-                      Provider.of<ParkedOrderProvider>(context, listen: false)
-                          .addOrder(currentOrder);
-
-                      // Show toast message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Order parked successfully'),
-                        ),
-                      );
-
-                      // Navigate to ItemPage and dispose of the bill
-                      Navigator.push(
-                          context, const HotItemsScreen() as Route<Object?>);
+                      // Show table selection dialog
+                      _showTableSelectionDialog(context);
                     },
                     child: const Text(
                       'Park',
                       style: TextStyle(
-                          fontSize: 14.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -840,12 +912,10 @@ class BillPageState extends State<BillPage> {
                                           'PAY-${currentPaymentId + 1}';
 
                                       final currentDate = DateTime.now();
-                                      final billDate = currentDate
-                                          .toLocal()
-                                          .toIso8601String();
-                                      final paymentDate = currentDate
-                                          .toLocal()
-                                          .toIso8601String();
+                                      final billDate =
+                                          currentDate.toStandardDtTime();
+                                      final paymentDate =
+                                          currentDate.toStandardDtTime();
 
                                       // Call the function to store the credit party data
                                       await creditPartyProvider.storeBillData(
@@ -856,6 +926,10 @@ class BillPageState extends State<BillPage> {
                                             selectedCustomerName!,
                                         selectedCustomerCode:
                                             selectedCustomerCode!,
+                                        items: widget.items, // Pass the items
+                                        quantities: widget
+                                            .quantities, // Pass the quantities
+                                        rates: widget.rates,
                                       );
 
                                       await creditPartyProvider
