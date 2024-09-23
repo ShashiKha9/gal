@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(
           builder: (context) {
             // TODO: Update this after Login API thing is implemented
-            return !isLogin ? const App() : const LoginScreen();
+            return isLogin ? const App() : const LoginScreen();
           },
         ),
       ),
@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
       body: Center(
         child: Image.asset(
           AppLogos.galaxyMiniLogo,

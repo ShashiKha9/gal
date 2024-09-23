@@ -66,35 +66,35 @@ class _OfferCouponMasterState extends State<OfferCouponMaster> {
                             Text(
                               offer.note ?? 'Unnamed',
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
                               'Discount: ${offer.discountInPercent ?? 'no data'}%',
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
                               'Max discount: Rs. ${offer.maxDiscount ?? 'no data'}',
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
                               'Min. order Amt: Rs. ${offer.minBillAmount ?? 'no data'}',
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
                               'Valid until: ${offer.validity ?? 'no data'}',
                               style: const TextStyle(
-                                color: Colors.grey,
+                                color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),

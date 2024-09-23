@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:galaxy_mini/components/app_button.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/add_new_upcoming_item.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class EditUpcomingOrder extends StatefulWidget {
@@ -48,20 +52,17 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
   void _decreaseQuantity(String itemName) {
     setState(() {
       if (order!['quantities'][itemName] > 1) {
-        // Decrease quantity if more than 1
         order!['quantities'][itemName] -= 1;
       } else {
-        // Remove the item if the quantity is 1 or less
         order!['items'].removeWhere((item) => item['name'] == itemName);
         order!['quantities'].remove(itemName);
         order!['rates'].remove(itemName);
       }
-      _updateTotals(itemName); // Update totals after removing or decreasing
+      _updateTotals(itemName);
     });
   }
 
   void _updateTotals(String itemName) {
-    // Update the total amount for the order
     double totalAmount = 0.0;
     for (var item in order!['items']) {
       String currentItemName = item['name'];
@@ -79,61 +80,76 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
   void _saveChanges() async {
     final provider = Provider.of<UpcomingOrderProvider>(context, listen: false);
     await provider.updateOrderInSharedPreferences(widget.orderId);
-    // Navigate back or provide feedback after saving
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Order saved successfully!')),
+    Fluttertoast.showToast(
+      msg: "Order Saved Successfully",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.black54,
+      textColor: Colors.white,
+      fontSize: 16.0,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     if (order == null || order!.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Edit Order'),
-          backgroundColor: const Color(0xFFC41E3A),
+      return const Scaffold(
+        appBar: MainAppBar(
+          title: 'Order Details',
+          isMenu: false,
         ),
-        body: const Center(
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Order'),
-        backgroundColor: const Color(0xFFC41E3A),
-        actions: [
-          IconButton(
-            icon: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.print, color: Colors.black),
-            ),
-            onPressed: () {
-              // Handle print action here
-            },
-          ),
-        ],
+      appBar: const MainAppBar(
+        title: 'Edit Order',
+        isMenu: false,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0), // Reduced padding slightly
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           children: [
             Expanded(
               child: ListView(
                 children: [
-                  Text('Customer Code: ${order!['customerCode']}'),
-                  Text('Customer Name: ${order!['customerName']}'),
-                  Text('Order ID: ${order!['orderId']}'),
-                  Text(
-                      'Order Date: ${order!['orderDate']} at ${order!['orderTime']}'),
-                  Text('Order Placed on: ${order!['orderPlacedTime']}'),
-                  Text('Note: ${order!['note']}'),
-                  const SizedBox(height: 10),
+                  Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Customer Code: ${order!['customerCode']}'),
+                          Text('Customer Name: ${order!['customerName']}'),
+                          Text(
+                            'Order ID: ${order!['orderId']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Order Date: ${order!['orderDate']} ${order!['orderTime']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text('Order Placed on: ${order!['orderPlacedTime']}'),
+                          Text('Note: ${order!['note']}'),
+                        ],
+                      ),
+                    ),
+                  ),
                   const Divider(thickness: 2),
                   const Padding(
-                    padding: EdgeInsets.symmetric(
-                        vertical: 5.0), // Reduced vertical padding
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -167,120 +183,162 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
                       double rate = order!['rates'][itemName];
                       double price = quantity * rate;
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 5.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    itemName,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      IconButton(
-                                        onPressed: () =>
-                                            _decreaseQuantity(itemName),
-                                        icon: const Icon(Icons.remove_circle),
-                                        color: Colors.red,
-                                        iconSize: 24,
+                      return Card(
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(vertical: 5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.all(8.0).copyWith(bottom: 15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      itemName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      SizedBox(
-                                        width: 24,
-                                        child: Center(
-                                          child: Text(
-                                            quantity.toString(),
-                                            textAlign: TextAlign.center,
-                                            style:
-                                                const TextStyle(fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          onPressed: () =>
+                                              _decreaseQuantity(itemName),
+                                          icon: const Icon(Icons.remove_circle),
+                                          color: Colors.red,
+                                          iconSize: 24,
+                                        ),
+                                        SizedBox(
+                                          width: 30,
+                                          child: Center(
+                                            child: Text(
+                                              quantity.toString(),
+                                              textAlign: TextAlign.center,
+                                              style:
+                                                  const TextStyle(fontSize: 16),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () =>
-                                            _increaseQuantity(itemName),
-                                        icon: const Icon(Icons.add_circle),
-                                        color: Colors.green,
-                                        iconSize: 24,
-                                      ),
-                                    ],
+                                        IconButton(
+                                          onPressed: () =>
+                                              _increaseQuantity(itemName),
+                                          icon: const Icon(Icons.add_circle),
+                                          color: Colors.green,
+                                          iconSize: 24,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child: Text(
+                                ],
+                              ),
+                              Text(
                                 'Price: ₹ ${price.toStringAsFixed(2)}',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      AppButton(
+                        buttonText: "Add More Items",
+                        padding: EdgeInsets.zero,
+                        margin: EdgeInsets.zero,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AddNewUpcomingItem(
+                                orderId: order!['orderId'],
                               ),
                             ),
-                            const Divider(thickness: 2),
-                          ],
-                        ),
-                      );
-                    },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
+                  Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AddNewUpcomingItem(orderId: order!['orderId']),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      'Add more items',
-                      style: TextStyle(color: Colors.white),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sub Total: ₹ ${order!['totalAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Total Amount: ₹ ${order!['totalAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                          Text(
+                            'Advance Amount: ₹ ${order!['advanceAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Balance Amount: ₹ ${order!['remainingAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text('Sub Total: ₹ ${order!['totalAmount']}'),
-                  Text('Total Amount: ₹ ${order!['totalAmount']}'),
-                  Text('Advance Amount: ₹ ${order!['advanceAmount']}'),
-                  Text('Balance Amount: ₹ ${order!['remainingAmount']}'),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
-                    ),
-                    onPressed: _saveChanges, // Save Changes Button
-                    child: const Text(
-                      'Save Changes',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
-                    ),
-                    onPressed: () {
-                      Provider.of<UpcomingOrderProvider>(context, listen: false)
-                          .cancelOrder(order!['orderId']);
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Cancel Order',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      AppButton(
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        padding: const EdgeInsets.all(0),
+                        buttonText: "Save",
+                        onTap: () => _saveChanges(),
+                      ),
+                      AppButton(
+                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                        padding: const EdgeInsets.all(0),
+                        buttonText: "Cancel",
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
