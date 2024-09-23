@@ -8,6 +8,7 @@ import 'package:galaxy_mini/screens/billing.dart';
 import 'package:galaxy_mini/theme/app_assets.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 class HotItemsScreen extends StatefulWidget {
   const HotItemsScreen({super.key});
@@ -73,30 +74,41 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount += rate;
+
+        // Increment quantity
         quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) + 1;
+
+        // Ensure the item is in the selectedItems
+        if (!selectedItems.contains(selectedItemName)) {
+          selectedItems.add(selectedItemName!);
+        }
       });
     }
   }
 
   void _decreaseQuantity() async {
-    if (selectedItemName != null &&
-        quantities.containsKey(selectedItemName) &&
-        quantities[selectedItemName]! > 1) {
+    if (selectedItemName != null && quantities.containsKey(selectedItemName)) {
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource(beepSound));
+
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
-        totalAmount -= rate;
-        quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) - 1;
-      });
-    } else if (quantities[selectedItemName] == 1) {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource(beepSound));
-      setState(() {
-        double rate = rates[selectedItemName!] ?? 0.0;
-        totalAmount -= rate;
-        quantities.remove(selectedItemName);
-        selectedItemName = quantities.isNotEmpty ? quantities.keys.last : null;
+
+        // If the quantity is greater than 1, decrease it
+        if (quantities[selectedItemName]! > 1) {
+          totalAmount -= rate;
+          quantities[selectedItemName!] = quantities[selectedItemName]! - 1;
+
+          // If the quantity is 1, remove the item from quantities and selectedItems
+        } else if (quantities[selectedItemName] == 1) {
+          totalAmount -= rate;
+          quantities.remove(selectedItemName);
+          selectedItems.remove(selectedItemName);
+
+          // Update selectedItemName to another item if available
+          selectedItemName =
+              quantities.isNotEmpty ? quantities.keys.last : null;
+        }
       });
     }
   }
@@ -137,17 +149,16 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     log(screenSize.toString(), name: "screenSize");
 
     if (screenSize.width > 1200) {
-      crossAxisCount = 8;
-      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      crossAxisCount = 10;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
       log(screenSize.toString(), name: "1200");
-    }
-    if (screenSize.width > 1000) {
-      crossAxisCount = 6;
-      childAspectRatio = (cardHeight / crossAxisCount) / 105;
+    } else if (screenSize.width > 1000) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
       log(screenSize.toString(), name: "1000");
-    } else if (screenSize.width > 800) {
-      crossAxisCount = 3;
-      childAspectRatio = (cardHeight / crossAxisCount) / 310;
+    } else if (screenSize.width > 800 || screenSize.width >= 800) {
+      crossAxisCount = 4;
+      childAspectRatio = (cardHeight / crossAxisCount) / 250;
       log(screenSize.toString(), name: "800");
     } else {
       crossAxisCount = 3;
@@ -158,144 +169,138 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     return Scaffold(
       appBar: MainAppBar(
         // title: 'Galaxy Mini',
-        isRate: true,
+
         isSearch: true,
         onSearch: (p0) {},
+        actions: true,
+        actionWidget: InkWell(
+          onTap: () {},
+          child: Row(
+            children: [
+              const Text(
+                "Rate 1",
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 5),
+              Transform.rotate(
+                angle: 90 * math.pi / 180,
+                child: const Icon(
+                  Icons.compare_arrows,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
           Expanded(
             child: Selector<SyncProvider, List<ItemModel>>(
-                selector: (p0, p1) => p1.itemList,
-                builder: (context, itemList, child) {
-                  return itemList.isEmpty
-                      ? const Center(
-                          child:
-                              Text('No Hot Items available. Please sync data.'),
-                        )
-                      : GridView.builder(
-                          padding: const EdgeInsets.all(8),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 2,
-                            mainAxisSpacing: 2,
-                            childAspectRatio: childAspectRatio,
-                          ),
-                          itemCount: itemList.length,
-                          itemBuilder: (context, index) {
-                            final item = itemList[index];
-                            bool isSelected = selectedItems.contains(item.name);
+              selector: (p0, p1) => p1.itemList,
+              builder: (context, itemList, child) {
+                return itemList.isEmpty
+                    ? const Center(
+                        child:
+                            Text('No Hot Items available. Please sync data.'),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                          childAspectRatio: childAspectRatio,
+                        ),
+                        itemCount: itemList.length,
+                        itemBuilder: (context, index) {
+                          final item = itemList[index];
+                          bool isSelected = selectedItems.contains(item.name) ||
+                              (quantities[item.name] ?? 0) > 0;
 
-                            return GestureDetector(
-                              onTap: () => _onItemTap(item),
-                              child: Card(
-                                color: Colors.white,
-                                // surfaceTintColor: AppColors.lightPink,
-                                borderOnForeground: true,
-                                elevation: 2,
-                                semanticContainer: true,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: const BorderRadius.all(
-                                    Radius.circular(15),
-                                  ),
-                                  side: BorderSide(
-                                    color: isSelected
-                                        ? AppColors.blue
-                                        : Colors.transparent,
-                                  ),
+                          return GestureDetector(
+                            onTap: () => _onItemTap(item),
+                            child: Card(
+                              color: Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(15),
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        // padding: const EdgeInsets.all(10),
-                                        width: double.maxFinite,
-                                        decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.all(
-                                            Radius.circular(10),
-                                          ),
-                                          // border: Border(
-                                          //   bottom: BorderSide(
-                                          //     color: AppColors.lightPink,
-                                          //     width: 2,
-                                          //   ),
-                                          // ),
-                                        ),
-                                        child: item.imageUrl == null ||
-                                                item.imageUrl!.isEmpty
-                                            ? const Padding(
-                                                padding: EdgeInsets.all(10),
-                                                child: Icon(
-                                                  Icons.wallpaper,
-                                                  color: AppColors.lightGrey,
-                                                  size: 50,
-                                                ),
-                                              )
-                                            : ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                child: Image.network(
-                                                  item.imageUrl ?? "",
-                                                  height: 70,
-                                                  width: double.maxFinite,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                      ),
-
-                                      SizedBox(
-                                        // height: 30,
-                                        child: Text(
-                                          item.name ?? "NO Name",
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        "₹ ${item.rate1}",
-                                        style: const TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black,
-                                        ),
-                                      ),
-                                      // Text(
-                                      //   "Rate 2: ₹ ${item.rate2}",
-                                      //   style: const TextStyle(
-                                      //     fontSize: 10.5,
-                                      //     fontWeight: FontWeight.bold,
-                                      //     color: AppColors.blue,
-                                      //   ),
-                                      // ),
-                                      // const SizedBox(height: 5),
-                                      // SizedBox(
-                                      //   height: 25,
-                                      //   child: AppButton(
-                                      //     onTap: () => _onItemTap(item),
-                                      //     buttonText: "Add",
-                                      //     margin: EdgeInsets.zero,
-                                      //     padding: EdgeInsets.zero,
-                                      //   ),
-                                      // ),
-                                    ],
-                                  ),
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? AppColors
+                                          .blue // Show blue border if selected
+                                      : Colors
+                                          .transparent, // No border if not selected
                                 ),
                               ),
-                            );
-                          },
-                        );
-                }),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      width: double.maxFinite,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.all(
+                                          Radius.circular(10),
+                                        ),
+                                      ),
+                                      child: item.imageUrl == null ||
+                                              item.imageUrl!.isEmpty
+                                          ? const Padding(
+                                              padding: EdgeInsets.all(10),
+                                              child: Icon(
+                                                Icons.wallpaper,
+                                                color: AppColors.lightGrey,
+                                                size: 50,
+                                              ),
+                                            )
+                                          : ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.network(
+                                                item.imageUrl ?? "",
+                                                height: 70,
+                                                width: double.maxFinite,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                    ),
+                                    SizedBox(
+                                      child: Text(
+                                        item.name ?? "NO Name",
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "₹ ${item.rate1}",
+                                      style: const TextStyle(
+                                        fontSize: 10.5,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+              },
+            ),
           ),
           if (selectedItemName != null)
             Column(

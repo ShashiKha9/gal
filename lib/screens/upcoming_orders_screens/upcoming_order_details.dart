@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_button.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/edit_upcoming_order.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class UpcomingOrderDetails extends StatefulWidget {
@@ -33,7 +36,6 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
           Provider.of<UpcomingOrderProvider>(context, listen: false);
       provider.loadOrders().then((_) {
         setState(() {
-          // Search for the order in upcoming, cancelled, and dispatched orders
           order = provider.upcomingOrders.firstWhere(
               (order) => order['orderId'] == widget.orderId,
               orElse: () => {});
@@ -61,32 +63,26 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
   @override
   Widget build(BuildContext context) {
     if (order == null || order!.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Order Details'),
-          backgroundColor: const Color(0xFFC41E3A),
+      return const Scaffold(
+        appBar: MainAppBar(
+          title: 'Order Details',
+          isMenu: false,
         ),
-        body: const Center(
+        body:  Center(
           child: CircularProgressIndicator(),
         ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Details'),
-        backgroundColor: const Color(0xFFC41E3A),
-        actions: [
-          IconButton(
-            icon: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.print, color: Colors.black),
-            ),
-            onPressed: () {
-              // Handle print action here
-            },
-          ),
-        ],
+      appBar: MainAppBar(
+        title: 'Order Details',
+        isMenu: false,
+        actions: true,
+        actionWidget: IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.print),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,53 +91,74 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
             Expanded(
               child: ListView(
                 children: [
-                  Text('Customer Code: ${order!['customerCode']}'),
-                  Text('Customer Name: ${order!['customerName']}'),
-                  Text('Order ID: ${order!['orderId']}'),
-                  Text(
-                      'Order Date: ${order!['orderDate']} at ${order!['orderTime']}'),
-                  Text('Order Placed on: ${order!['orderPlacedTime']}'),
-                  Text('Note: ${order!['note']}'),
+                  Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Customer Code: ${order!['customerCode']}'),
+                          Text('Customer Name: ${order!['customerName']}'),
+                          Text(
+                            'Order ID: ${order!['orderId']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Order Date: ${order!['orderDate']} ${order!['orderTime']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text('Order Placed on: ${order!['orderPlacedTime']}'),
+                          Text('Note: ${order!['note']}'),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   const Divider(thickness: 2),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Item Name',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Item Name',
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            'Qty',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Qty',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            'Rate',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Rate',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            'Price',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          'Price',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   const Divider(thickness: 2),
                   ListView.builder(
@@ -164,7 +181,8 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
                               child: Text(
                                 itemName,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             Expanded(
@@ -195,11 +213,47 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
                   ),
                   const Divider(thickness: 2),
                   const SizedBox(height: 10),
-                  Text('Sub Total: ₹ ${order!['totalAmount']}'),
-                  Text('Total Amount: ₹ ${order!['totalAmount']}'),
-                  Text('Advance Amount: ₹ ${order!['advanceAmount']}'),
-                  Text('Balance Amount: ₹ ${order!['remainingAmount']}'),
-                  const SizedBox(height: 20),
+                  Card(
+                    elevation: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 8.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Sub Total: ₹ ${order!['totalAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Total Amount: ₹ ${order!['totalAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                          Text(
+                            'Advance Amount: ₹ ${order!['advanceAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Balance Amount: ₹ ${order!['remainingAmount']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -208,67 +262,63 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
-                    ),
-                    onPressed: () {
+                  AppButton(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    padding: const EdgeInsets.all(0),
+                    style: const TextStyle(color: Colors.white),
+                    buttonText: "Edit",
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) =>
-                              EditUpcomingOrder(orderId: order!['orderId']),
+                          builder: (context) => EditUpcomingOrder(
+                            orderId: order!['orderId'],
+                          ),
                         ),
-                      ).then((_) {
-                        // Reload orders and refresh the UI after returning from EditOrder page
-                        Provider.of<UpcomingOrderProvider>(context,
-                                listen: false)
-                            .loadOrders()
-                            .then((_) {
-                          setState(() {
-                            order = Provider.of<UpcomingOrderProvider>(context,
-                                    listen: false)
-                                .upcomingOrders
-                                .firstWhere(
-                                    (order) =>
-                                        order['orderId'] == widget.orderId,
-                                    orElse: () => {});
-                          });
-                        });
-                      });
+                      ).then(
+                        (_) {
+                          Provider.of<UpcomingOrderProvider>(context,
+                                  listen: false)
+                              .loadOrders()
+                              .then(
+                            (_) {
+                              setState(() {
+                                order = Provider.of<UpcomingOrderProvider>(
+                                  context,
+                                  listen: false,
+                                ).upcomingOrders.firstWhere(
+                                      (order) =>
+                                          order['orderId'] == widget.orderId,
+                                      orElse: () => {},
+                                    );
+                              });
+                            },
+                          );
+                        },
+                      );
                     },
-                    child: const Text(
-                      'Edit',
-                      style: TextStyle(color: Colors.white),
-                    ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
-                    ),
-                    onPressed: () {
+                  AppButton(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    padding: const EdgeInsets.all(0),
+                    buttonText: "Dispatch",
+                    style: const TextStyle(color: Colors.white),
+                    onTap: () {
                       Provider.of<UpcomingOrderProvider>(context, listen: false)
                           .dispatchOrder(order!['orderId']);
                       Navigator.pop(context);
                     },
-                    child: const Text(
-                      'Dispatch',
-                      style: TextStyle(color: Colors.white),
-                    ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFC41E3A),
-                    ),
-                    onPressed: () {
+                  AppButton(
+                    margin: const EdgeInsets.symmetric(horizontal: 5),
+                    padding: const EdgeInsets.all(0),
+                    buttonText: "Cancel Order",
+                    style: const TextStyle(color: Colors.white),
+                    onTap: () {
                       Provider.of<UpcomingOrderProvider>(context, listen: false)
                           .cancelOrder(order!['orderId']);
                       Navigator.pop(context);
                     },
-                    child: const Text(
-                      'Cancel Order',
-                      style: TextStyle(color: Colors.white),
-                    ),
                   ),
                 ],
               ),

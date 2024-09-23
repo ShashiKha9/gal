@@ -8,7 +8,7 @@
 PRODUCT_NAME = galaxy_mini
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.galaxyMini
+PRODUCT_BUNDLE_IDENTIFIER = com.galaxy.mini
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2024 com.example. All rights reserved.

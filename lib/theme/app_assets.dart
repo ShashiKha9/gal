@@ -5,7 +5,8 @@ class AppIcons {
 }
 
 class AppLogos {
-  static const galaxyMiniLogo = 'assets/logos/logo1.PNG';
+  static const galaxyMiniLogo = 'assets/logos/logo1.png';
+  static const galaxyMiniLogoBg = 'assets/logos/logo2.png';
 }
 
 class AppAudio {

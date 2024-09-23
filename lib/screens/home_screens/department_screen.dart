@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'dart:math' as math;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -64,7 +64,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       }
 
       double rate1 = double.tryParse(item.rate1 ?? '0.0') ?? 0.0;
-      rates[item.name!] = rate1; // Store the rate
+      rates[item.name!] = rate1;
       totalAmount += rate1;
     });
   }
@@ -77,30 +77,41 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
         totalAmount += rate;
+
+        // Increment quantity
         quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) + 1;
+
+        // Ensure the item is in the selectedItems
+        if (!selectedItems.contains(selectedItemName)) {
+          selectedItems.add(selectedItemName!);
+        }
       });
     }
   }
 
   void _decreaseQuantity() async {
-    if (selectedItemName != null &&
-        quantities.containsKey(selectedItemName) &&
-        quantities[selectedItemName]! > 1) {
+    if (selectedItemName != null && quantities.containsKey(selectedItemName)) {
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource(beepSound));
+
       setState(() {
         double rate = rates[selectedItemName!] ?? 0.0;
-        totalAmount -= rate;
-        quantities[selectedItemName!] = (quantities[selectedItemName] ?? 1) - 1;
-      });
-    } else if (quantities[selectedItemName] == 1) {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource(beepSound));
-      setState(() {
-        double rate = rates[selectedItemName!] ?? 0.0;
-        totalAmount -= rate;
-        quantities.remove(selectedItemName);
-        selectedItemName = quantities.isNotEmpty ? quantities.keys.last : null;
+
+        // If the quantity is greater than 1, decrease it
+        if (quantities[selectedItemName]! > 1) {
+          totalAmount -= rate;
+          quantities[selectedItemName!] = quantities[selectedItemName]! - 1;
+
+          // If the quantity is 1, remove the item from quantities and selectedItems
+        } else if (quantities[selectedItemName] == 1) {
+          totalAmount -= rate;
+          quantities.remove(selectedItemName);
+          selectedItems.remove(selectedItemName);
+
+          // Update selectedItemName to another item if available
+          selectedItemName =
+              quantities.isNotEmpty ? quantities.keys.last : null;
+        }
       });
     }
   }
@@ -236,17 +247,16 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     log(screenSize.toString(), name: "screenSize");
 
     if (screenSize.width > 1200) {
-      crossAxisCount = 8;
-      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      crossAxisCount = 10;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
       log(screenSize.toString(), name: "1200");
-    }
-    if (screenSize.width > 1000) {
-      crossAxisCount = 6;
-      childAspectRatio = (cardHeight / crossAxisCount) / 105;
+    } else if (screenSize.width > 1000) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
       log(screenSize.toString(), name: "1000");
-    } else if (screenSize.width > 800) {
+    } else if (screenSize.width > 800 || screenSize.width >= 800) {
       crossAxisCount = 4;
-      childAspectRatio = (cardHeight / crossAxisCount) / 310;
+      childAspectRatio = (cardHeight / crossAxisCount) / 250;
       log(screenSize.toString(), name: "800");
     } else {
       crossAxisCount = 3;
@@ -257,9 +267,30 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     return Scaffold(
       appBar: MainAppBar(
         isSearch: true,
-        isRate: true,
         onSearch: (p0) {},
         isMenu: widget.isEdit ? false : true,
+        actions: true,
+        actionWidget: InkWell(
+          onTap: () {},
+          child: Row(
+            children: [
+              const Text(
+                "Rate 1",
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 5),
+              Transform.rotate(
+                angle: 90 * math.pi / 180,
+                child: const Icon(
+                  Icons.compare_arrows,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: widget.isEdit
           ? SpeedDial(
@@ -373,7 +404,8 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                           .departmentList[_selectedDepartmentIndex].code] ??
                       [];
                   final item = items[itemIndex];
-                  bool isSelected = selectedItems.contains(item.name);
+                  bool isSelected = selectedItems.contains(item.name) ||
+                      (quantities[item.name] ?? 0) > 0;
 
                   return GestureDetector(
                     onTap: () => _onItemTap(item),
@@ -454,24 +486,6 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                 color: Colors.black,
                               ),
                             ),
-                            // Text(
-                            //   "Rate 2: ₹ ${item.rate2}",
-                            //   style: const TextStyle(
-                            //     fontSize: 10.5,
-                            //     fontWeight: FontWeight.bold,
-                            //     color: AppColors.blue,
-                            //   ),
-                            // ),
-                            // const SizedBox(height: 5),
-                            // SizedBox(
-                            //   height: 25,
-                            //   child: AppButton(
-                            //     onTap: () => _onItemTap(item),
-                            //     buttonText: "Add",
-                            //     margin: EdgeInsets.zero,
-                            //     padding: EdgeInsets.zero,
-                            //   ),
-                            // ),
                           ],
                         ),
                       ),
