@@ -113,7 +113,7 @@ class _KotGroupMasterState extends State<KotGroupMaster> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Name: ${kotgroup.name ?? 'Unnamed Item'}',
+                            'Name: ${kotgroup.name}',
                             style: const TextStyle(
                               fontSize: 16.0,
                               fontWeight: FontWeight.w600,
