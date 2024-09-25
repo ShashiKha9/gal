@@ -61,7 +61,7 @@ class _ArrangeDepartmentsState extends State<ArrangeDepartments> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
-                          department.description ?? 'No description',
+                          department.description,
                           style: const TextStyle(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
