@@ -66,7 +66,6 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Unit Master',
-        isMenu: false,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),

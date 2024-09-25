@@ -110,7 +110,6 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
     return Scaffold(
       appBar: MainAppBar(
         title: widget.isEdit ? "Edit Customer" : "Add New Customer",
-        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

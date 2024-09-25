@@ -28,7 +28,6 @@ class _CustomerMasterState extends State<CustomerMaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Customer Master',
-        isMenu: false,
         isSearch: true,
         onSearch: (p0) {},
       ),

@@ -67,7 +67,6 @@ class MasterSettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Master Settings',
-        isMenu: false,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16.0),

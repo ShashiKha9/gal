@@ -27,7 +27,6 @@ class _OfferCouponMasterState extends State<OfferCouponMaster> {
       appBar: MainAppBar(
         title: 'Offer Coupon Master',
         onSearch: (p0) {},
-        isMenu: false,
       ),
       body: Column(
         children: [

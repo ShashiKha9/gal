@@ -37,7 +37,6 @@ class _ArrangeDepartmentsState extends State<ArrangeDepartments> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Arrange Departments',
-        isMenu: false,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

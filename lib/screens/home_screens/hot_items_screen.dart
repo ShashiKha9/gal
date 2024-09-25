@@ -170,7 +170,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     return Scaffold(
       appBar: MainAppBar(
         // title: 'Galaxy Mini',
-
+        isMenu: true,
         isSearch: true,
         onSearch: (p0) {},
         actions: true,

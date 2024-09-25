@@ -66,9 +66,8 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
       return const Scaffold(
         appBar: MainAppBar(
           title: 'Order Details',
-          isMenu: false,
         ),
-        body:  Center(
+        body: Center(
           child: CircularProgressIndicator(),
         ),
       );
@@ -77,7 +76,6 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Order Details',
-        isMenu: false,
         actions: true,
         actionWidget: IconButton(
           onPressed: () {},

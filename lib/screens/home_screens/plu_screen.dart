@@ -40,9 +40,9 @@ class _PLUScreenState extends State<PLUScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white10,
-      appBar: MainAppBar(
+      appBar: const MainAppBar(
+        isMenu: true,
         title: "PLU",
-        onSearch: (p0) {},
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -15,7 +15,7 @@ class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
     super.key,
     this.title,
     this.onSearch,
-    this.isMenu = true,
+    this.isMenu = false,
     this.isSearch = false,
     this.actions = false,
     this.actionWidget,

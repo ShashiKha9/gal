@@ -85,7 +85,6 @@ class _KotGroupMasterState extends State<KotGroupMaster> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'KOT Group Master',
-        isMenu: false,
         onSearch: (value) {},
       ),
       body: Padding(

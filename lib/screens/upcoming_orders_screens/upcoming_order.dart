@@ -74,7 +74,6 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Upcoming Orders',
-        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

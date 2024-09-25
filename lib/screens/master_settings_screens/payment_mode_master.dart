@@ -123,7 +123,6 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Payment Master',
-        isMenu: false,
       ),
       resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(

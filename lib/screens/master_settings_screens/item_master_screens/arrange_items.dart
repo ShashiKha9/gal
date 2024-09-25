@@ -66,7 +66,6 @@ class _ArrangeItemsState extends State<ArrangeItems> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Arrange Hot Items',
-        isMenu: false,
       ),
       body: Column(
         children: [
