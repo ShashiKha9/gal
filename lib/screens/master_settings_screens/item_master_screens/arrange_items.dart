@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
@@ -128,14 +129,39 @@ class _ArrangeItemsState extends State<ArrangeItems> {
                                           size: 50,
                                         ),
                                       )
-                                    : ClipRRect(
-                                        borderRadius: BorderRadius.circular(10),
-                                        child: Image.network(
-                                          item.imageUrl ?? "",
-                                          height: 70,
-                                          width: double.maxFinite,
-                                          fit: BoxFit.cover,
-                                        ),
+                                    : Stack(
+                                        children: [
+                                          Align(
+                                            alignment: Alignment.center,
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: ImageFiltered(
+                                                imageFilter: ImageFilter.blur(
+                                                    sigmaX: 10, sigmaY: 10),
+                                                child: Image.network(
+                                                  item.imageUrl ?? "",
+                                                  height: 70,
+                                                  width: double.maxFinite,
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Align(
+                                            alignment: Alignment.center,
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              child: Image.network(
+                                                item.imageUrl ?? "",
+                                                height: 70,
+                                                width: double.maxFinite,
+                                                fit: BoxFit.contain,
+                                              ),
+                                            ),
+                                          )
+                                        ],
                                       ),
                           ),
                           SizedBox(

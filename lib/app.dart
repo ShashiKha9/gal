@@ -95,7 +95,7 @@ class _AppState extends State<App> {
               backgroundColor: AppColors.lightPink,
             ),
             BottomNavigationBarItem(
-              label: 'Department',
+              label: 'Dept',
               icon: Icon(Icons.window_outlined),
               activeIcon: Icon(Icons.window),
               backgroundColor: AppColors.lightPink,

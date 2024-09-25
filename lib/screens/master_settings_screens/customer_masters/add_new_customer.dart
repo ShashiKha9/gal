@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/customer_provider.dart';
@@ -225,17 +226,21 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                 labelText: 'Extra 3',
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  ElevatedButton(
-                    onPressed: () {
+                  AppButton(
+                    margin: const EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
+                    onTap: () {
                       Navigator.pop(context);
                     },
-                    child: const Text('Cancel'),
+                    buttonText: 'Cancel',
                   ),
-                  ElevatedButton(
-                    onPressed: _saveCustomer,
-                    child: const Text('Save'),
+                  AppButton(
+                    margin: const EdgeInsets.all(0),
+                    padding: const EdgeInsets.all(0),
+                    onTap: () => _saveCustomer(),
+                    buttonText: 'Save',
                   ),
                 ],
               ),
