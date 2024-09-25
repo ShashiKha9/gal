@@ -82,7 +82,6 @@ class _EditCouponPageState extends State<EditCouponPage> {
     return Scaffold(
       appBar: const MainAppBar(
         title: "Edit Coupon",
-        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

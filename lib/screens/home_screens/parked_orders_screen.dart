@@ -14,6 +14,7 @@ class ParkedOrderScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: MainAppBar(
+        isMenu: true,
         title: "Parked Orders",
         onSearch: (p0) {},
       ),

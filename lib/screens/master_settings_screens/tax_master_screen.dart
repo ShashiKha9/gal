@@ -88,10 +88,8 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MainAppBar(
+      appBar: const MainAppBar(
         title: 'Tax Master',
-        isMenu: false,
-        onSearch: (value) {},
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -96,7 +96,6 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
       return const Scaffold(
         appBar: MainAppBar(
           title: 'Order Details',
-          isMenu: false,
         ),
         body: Center(
           child: CircularProgressIndicator(),
@@ -107,7 +106,6 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Edit Order',
-        isMenu: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),

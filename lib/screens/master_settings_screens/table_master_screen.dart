@@ -162,7 +162,6 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
     return Scaffold(
       appBar: MainAppBar(
         title: 'Table Master',
-        isMenu: false,
         onSearch: (p0) {},
       ),
       floatingActionButton: FloatingActionButton(

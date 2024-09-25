@@ -155,7 +155,6 @@ class _AddNewUpcomingItemState extends State<AddNewUpcomingItem> {
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Department',
-        isMenu: false,
         isSearch: true,
       ),
       body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
