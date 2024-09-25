@@ -3,10 +3,8 @@ import 'package:galaxy_mini/screens/auth/login.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/customer_credits.dart';
 import 'package:galaxy_mini/screens/details_screens/sync_data.dart';
 import 'package:galaxy_mini/screens/setting_screens/settings_screen.dart';
-import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
-import 'package:provider/provider.dart';
 
 class SideDrawer extends StatelessWidget {
   const SideDrawer({super.key});

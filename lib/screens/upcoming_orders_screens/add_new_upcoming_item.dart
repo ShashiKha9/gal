@@ -180,7 +180,7 @@ class _AddNewUpcomingItemState extends State<AddNewUpcomingItem> {
                     child: Material(
                       child: ChoiceChip(
                         label: Text(
-                          department.description ?? 'Unnamed',
+                          department.description,
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
