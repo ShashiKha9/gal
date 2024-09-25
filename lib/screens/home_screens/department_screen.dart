@@ -1,10 +1,12 @@
 import 'dart:developer';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:galaxy_mini/models/Item_model.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/screens/details_screens/item_detail.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/item_master_screens/arrange_departments.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/item_master_screens/arrange_items.dart';
 import 'package:galaxy_mini/screens/billing.dart';
@@ -67,6 +69,32 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       rates[item.name!] = rate1;
       totalAmount += rate1;
     });
+  }
+
+  void _onTapNavigate(ItemModel item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ItemDetail(
+            // item: item,
+            itemName: item.name,
+            itemShortName: item.shortName,
+            itemDepartmentCode: item.departmentCode,
+            itemKotGroup: item.kotgroup,
+            itemRate1: item.rate1,
+            itemRate2: item.rate2,
+            itemGST: item.gStcode,
+            itemUnit: item.unit,
+            itemBarcode: item.barcode,
+            itemQRcode: item.qrcode,
+            itemHSN: item.hsnCode,
+            itemDisplayInSelection: item.displayinselection,
+            itemIsHotItem: item.isHot,
+            itemQtyInDecimal: item.qtyInDecimal,
+            itemIsOpenPrice: item.openPrice,
+            itemHasKOTMessage: item.hasKotMessage),
+      ),
+    );
   }
 
   void _increaseQuantity() async {
@@ -360,7 +388,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                     child: Material(
                       child: ChoiceChip(
                         label: Text(
-                          department.description ?? 'Unnamed',
+                          department.description,
                           style: TextStyle(
                             color: isSelected ? Colors.white : Colors.black,
                             fontWeight: FontWeight.bold,
@@ -408,7 +436,8 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                       (quantities[item.name] ?? 0) > 0;
 
                   return GestureDetector(
-                    onTap: () => _onItemTap(item),
+                    onTap: () =>
+                        widget.isEdit ? _onTapNavigate(item) : _onItemTap(item),
                     child: Card(
                       color: Colors.white,
                       // surfaceTintColor: AppColors.lightPink,
@@ -455,14 +484,39 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                         size: 50,
                                       ),
                                     )
-                                  : ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.network(
-                                        item.imageUrl ?? "",
-                                        height: 70,
-                                        width: double.maxFinite,
-                                        fit: BoxFit.cover,
-                                      ),
+                                  : Stack(
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.center,
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            child: ImageFiltered(
+                                              imageFilter: ImageFilter.blur(
+                                                  sigmaX: 10, sigmaY: 10),
+                                              child: Image.network(
+                                                item.imageUrl ?? "",
+                                                height: 70,
+                                                width: double.maxFinite,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Align(
+                                          alignment: Alignment.center,
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            child: Image.network(
+                                              item.imageUrl ?? "",
+                                              height: 70,
+                                              width: double.maxFinite,
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        )
+                                      ],
                                     ),
                             ),
 

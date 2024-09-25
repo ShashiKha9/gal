@@ -1,7 +1,14 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/bill_detail.dart';
+import 'package:galaxy_mini/screens/customer_credit_screens/custom_card.dart';
+import 'package:galaxy_mini/utils/extension.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CustomerCreditDetail extends StatefulWidget {
   final String customerName;
@@ -23,11 +30,20 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   String currentBillNumber = '';
   String currentPaymentId = '';
   double currentBalance = 0.0;
+  late SyncProvider syncProvider;
+  late CustomerCreditProvider creditProvider;
+  final currentDate = DateTime.now();
+
+  // State variable for the selected chip
+  String selectedChip = 'All';
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    creditProvider =
+        Provider.of<CustomerCreditProvider>(context, listen: false);
   }
 
   Future<void> _loadData() async {
@@ -66,6 +82,114 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     return _calculateTotalBillAmount() - _calculateTotalPaymentAmount();
   }
 
+  // Function to show "Make Payment" dialog
+  void _showMakePaymentDialog(
+      BuildContext context,
+      SyncProvider syncProvider,
+      CustomerCreditProvider creditProvider,
+      String selectedCustomerCode,
+      String selectedCustomerName) async {
+    final TextEditingController amountController = TextEditingController();
+    String? selectedPaymentModeInDialog = syncProvider.paymentList.isNotEmpty
+        ? syncProvider.paymentList.first.type
+        : null; // Default to first available payment mode or null if list is empty
+
+    // Fetch the current payment ID from CustomerCreditProvider
+    int currentPaymentId = await creditProvider.getCurrentPaymentId();
+    int newPaymentId = currentPaymentId + 1; // Increment the payment ID
+
+    // Get the current date in your desired format
+    String paymentDate =
+        DateFormat('yyyy-MM-dd').format(DateTime.now()); // Example format
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Make Payment'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount',
+                      hintText: 'Enter payment amount',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(
+                      labelText: 'Payment Mode',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: syncProvider.paymentList
+                        .map((paymentMode) => DropdownMenuItem<String>(
+                              value: paymentMode.type,
+                              child: Text(paymentMode.type),
+                            ))
+                        .toList(),
+                    value: selectedPaymentModeInDialog,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedPaymentModeInDialog = newValue;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (amountController.text.isNotEmpty &&
+                        selectedPaymentModeInDialog != null) {
+                      // Handle saving the payment here
+                      log('Amount: ${amountController.text}, Payment Mode: $selectedPaymentModeInDialog, Payment ID: $newPaymentId, Payment Date: $paymentDate');
+
+                      // Store the payment data using the storePaymentData function
+                      await creditProvider.storePaymentData(
+                        paymentId: 'PAY-$newPaymentId',
+                        paymentDate: paymentDate,
+                        selectedCustomerName: selectedCustomerName,
+                        selectedCustomerCode: selectedCustomerCode,
+                        paymentMode: selectedPaymentModeInDialog!,
+                        enteredAmount: amountController.text,
+                      );
+
+                      // Update the current payment ID in SharedPreferences
+                      SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                      await prefs.setInt('currentPaymentId', newPaymentId);
+
+                      await _loadData();
+
+                      // After handling the payment, close the dialog
+                      Navigator.of(context).pop();
+                    } else {
+                      // Optionally, handle the case where the form is not filled properly
+                      log('Please enter amount and select a payment mode');
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,34 +205,103 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                 children: [
                   _buildCustomerInfo(),
                   const SizedBox(height: 16),
-                  _buildBillList(),
+                  _buildChoiceChips(), // Add choice chips here
                   const SizedBox(height: 16),
-                  _buildPaymentList(),
+                  if (selectedChip == 'All') _buildAllDataList(),
+                  if (selectedChip == 'Bills') _buildBillList(),
+                  if (selectedChip == 'Payments') _buildPaymentList(),
                 ],
               ),
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showMakePaymentDialog(
+            context, syncProvider, creditProvider,
+            widget.customerCode, // Pass the customer code
+            widget.customerName,
+          );
+        },
+        child: const Icon(Icons.payment),
+      ),
     );
   }
 
-  // Widget to display customer code, name, bill number, payment ID, and current balance
+// Widget to display customer code, name, bill number, payment ID, and current balance
   Widget _buildCustomerInfo() {
     return CustomCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDataRow('Customer Name:', widget.customerName),
-          _buildDataRow('Customer Code:', widget.customerCode),
-          _buildDataRow('Latest Bill Number:',
-              currentBillNumber.isNotEmpty ? currentBillNumber : 'N/A'),
-          _buildDataRow('Latest Payment ID:',
-              currentPaymentId.isNotEmpty ? currentPaymentId : 'N/A'),
-          _buildDataRow(
-            'Current Balance:',
-            'Rs. ${currentBalance.toStringAsFixed(2)}',
-            textColor: Colors.red,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8.0), // Add padding around the card
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDataRow('Customer Name:', widget.customerName),
+            _buildDataRow('Customer Code:', widget.customerCode),
+            _buildDataRow('Latest Bill Number:',
+                currentBillNumber.isNotEmpty ? currentBillNumber : 'N/A'),
+            _buildDataRow('Latest Payment ID:',
+                currentPaymentId.isNotEmpty ? currentPaymentId : 'N/A'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Current Balance:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  'Rs. ${currentBalance.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  // New widget to build choice chips for filtering
+  Widget _buildChoiceChips() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ChoiceChip(
+          label: const Text('All'),
+          selected: selectedChip == 'All',
+          onSelected: (selected) {
+            setState(() {
+              selectedChip = 'All';
+            });
+          },
+        ),
+        const SizedBox(width: 8),
+        ChoiceChip(
+          label: const Text('Bills'),
+          selected: selectedChip == 'Bills',
+          onSelected: (selected) {
+            setState(() {
+              selectedChip = 'Bills';
+            });
+          },
+        ),
+        const SizedBox(width: 8),
+        ChoiceChip(
+          label: const Text('Payments'),
+          selected: selectedChip == 'Payments',
+          onSelected: (selected) {
+            setState(() {
+              selectedChip = 'Payments';
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllDataList() {
+    return Column(
+      children: [
+        _buildBillList(),
+        _buildPaymentList(),
+      ],
     );
   }
 
@@ -176,12 +369,50 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                   itemCount: paymentData.length,
                   itemBuilder: (context, index) {
                     final payment = paymentData[index];
-                    return _buildPaymentInfoBox('Payment', payment);
+                    return GestureDetector(
+                      onTap: () {
+                        // Show an Alert Dialog with payment details
+                        _showPaymentDetailsDialog(context, payment);
+                      },
+                      child: _buildPaymentInfoBox('Payment', payment),
+                    );
                   },
                 )
               : const Text('No payments available'),
         ],
       ),
+    );
+  }
+
+// Function to show payment details in an AlertDialog
+  void _showPaymentDetailsDialog(
+      BuildContext context, Map<String, dynamic> payment) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Payment Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDataRow('Payment ID:', payment['paymentId'] ?? 'N/A'),
+              _buildDataRow('Payment Date:', payment['paymentDate'] ?? 'N/A'),
+              _buildDataRow('Amount:',
+                  'Rs. ${(payment['enteredAmount'] ?? 0.0).toStringAsFixed(2)}'),
+              _buildDataRow('Payment Mode:', payment['paymentMode'] ?? 'N/A'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -191,17 +422,21 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: Text(
+              'Rs. ${(data['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Text(
             '$title Number: ${data['billNumber'] ?? 'N/A'}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           _buildDataRow('Bill Date:', data['billDate'] ?? 'N/A'),
-          _buildDataRow('Customer Name:', data['customerName'] ?? 'N/A'),
-          _buildDataRow('Customer Code:', data['customerCode'] ?? 'N/A'),
-          _buildDataRow(
-            'Total Amount:',
-            'Rs. ${(data['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
-          ),
         ],
       ),
     );
@@ -213,57 +448,39 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Align(
+            alignment: Alignment.topRight,
+            child: Text(
+              'Rs. ${(data['enteredAmount'] ?? 0.0).toStringAsFixed(2)}',
+              style: const TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           Text(
             '$title ID: ${data['paymentId'] ?? 'N/A'}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           _buildDataRow('Payment Date:', data['paymentDate'] ?? 'N/A'),
-          _buildDataRow('Customer Name:', data['customerName'] ?? 'N/A'),
-          _buildDataRow('Customer Code:', data['customerCode'] ?? 'N/A'),
           _buildDataRow('Payment Mode:', data['paymentMode'] ?? 'N/A'),
-          _buildDataRow(
-            'Entered Amount:',
-            'Rs. ${(data['enteredAmount'] ?? 0.0).toStringAsFixed(2)}',
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildDataRow(String label, String value,
-      {Color textColor = Colors.black}) {
+  Widget _buildDataRow(String label, String value, {Color? textColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value,
-              style: TextStyle(color: textColor)), // Apply textColor here
+          Text(label),
+          Text(
+            value,
+            style: TextStyle(color: textColor),
+          ),
         ],
-      ),
-    );
-  }
-}
-
-// Custom reusable Card widget
-class CustomCard extends StatelessWidget {
-  final Widget child;
-
-  const CustomCard({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.blueGrey[50], // Set a common background color
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      elevation: 4,
-      margin: const EdgeInsets.all(12.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: child,
       ),
     );
   }

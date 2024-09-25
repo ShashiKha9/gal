@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/screens/auth/login.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/customer_credits.dart';
+import 'package:galaxy_mini/screens/details_screens/sync_data.dart';
 import 'package:galaxy_mini/screens/setting_screens/settings_screen.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order.dart';
@@ -67,34 +68,12 @@ class SideDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.sync, color: AppColors.blue),
             title: const Text('Sync data'),
-            onTap: () async {
-              // Close the drawer
+            onTap: () {
               Navigator.pop(context);
-
-              // Trigger API calls using SyncProvider
-              final syncProvider =
-                  Provider.of<SyncProvider>(context, listen: false);
-
-              // Perform the API calls
-              await syncProvider.getDepartmentsAll();
-              await syncProvider.getItemsAll();
-              await syncProvider.getTableMasterAll();
-              await syncProvider.getKotGroupAll();
-              await syncProvider.getTaxAll();
-              await syncProvider.getCustomerAll();
-              await syncProvider.getPaymentAll();
-              await syncProvider.getOfferAll();
-              await syncProvider.getOfferAll();
-              await syncProvider.getKotMessageAll();
-
-              // Check if the widget is still mounted before calling Navigator.pop
-              if (context.mounted) {
-                // Optionally show a success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Data synchronized successfully!')),
-                );
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SyncData()),
+              );
             },
           ),
           ListTile(
