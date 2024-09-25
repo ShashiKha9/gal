@@ -41,91 +41,77 @@ class _CustomerMasterState extends State<CustomerMaster> {
         },
         child: const Icon(Icons.add),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child:
-                Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-              log(syncProvider.customerList.length.toString(),
-                  name: 'Consumer length');
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: syncProvider.customerList.length,
-                itemBuilder: (context, index) {
-                  final customer = syncProvider.customerList[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 5),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 15, vertical: 0),
-                      // leading: const Icon(
-                      //   Icons.person,
-                      //   color: AppColors.blue,
-                      // ),
-                      title: Text(
-                        "${customer.customerCode ?? 'no code'} : ${customer.name ?? 'Unnamed'}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.0,
-                          color: Colors.black,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 5),
-                          // Text(
-                          //   'Customer Code: ${customer.customerCode ?? 'no code'}',
-                          //   style: const TextStyle(
-                          //     fontSize: 14.0,
-                          //     color: Colors.grey,
-                          //   ),
-                          // ),
-                          // const SizedBox(height: 4.0),
-                          Text(
-                            'Mobile: ${customer.mobile1 ?? 'no number'}',
-                            style: const TextStyle(
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: GestureDetector(
-                        onTap: () {},
-                        child: IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddNewCustomer(
-                                  isEdit: true,
-                                  customerName: customer.name ??
-                                      '', // Pass the selected customer name
-                                  customerMobile: customer.mobile1 ??
-                                      '', // Pass the selected customer mobile
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.edit_note,
-                            size: 35,
-                          ),
-                          color: AppColors.blue,
-                        ),
+      body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
+        log(syncProvider.customerList.length.toString(),
+            name: 'Consumer length');
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: syncProvider.customerList.length,
+          itemBuilder: (context, index) {
+            final customer = syncProvider.customerList[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(vertical: 5),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+                // leading: const Icon(
+                //   Icons.person,
+                //   color: AppColors.blue,
+                // ),
+                title: Text(
+                  "${customer.customerCode ?? 'no code'} : ${customer.name ?? 'Unnamed'}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                    color: Colors.black,
+                  ),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 5),
+                    // Text(
+                    //   'Customer Code: ${customer.customerCode ?? 'no code'}',
+                    //   style: const TextStyle(
+                    //     fontSize: 14.0,
+                    //     color: Colors.grey,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 4.0),
+                    Text(
+                      'Mobile: ${customer.mobile1 ?? 'no number'}',
+                      style: const TextStyle(
+                        color: Colors.black54,
                       ),
                     ),
-                  );
-                },
-              );
-            }),
-          ),
-        ],
-      ),
+                  ],
+                ),
+                trailing: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddNewCustomer(
+                          isEdit: true,
+                          customerName: customer.name ??
+                              '', // Pass the selected customer name
+                          customerMobile: customer.mobile1 ??
+                              '', // Pass the selected customer mobile
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.edit, color: AppColors.blue),
+                ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:provider/provider.dart';
@@ -22,16 +21,16 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Fluttertoast.showToast(
-        msg: "Please select default from the list",
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.black54,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   Fluttertoast.showToast(
+    //     msg: "Please select default from the list",
+    //     toastLength: Toast.LENGTH_LONG,
+    //     gravity: ToastGravity.BOTTOM,
+    //     backgroundColor: Colors.black54,
+    //     textColor: Colors.white,
+    //     fontSize: 16.0,
+    //   );
+    // });
   }
 
   void _showDefaultPaymentDialog(int index) {
@@ -130,10 +129,19 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 16),
+              child: const Row(
+                children: [
+                  Text("Please select default from the list"),
+                ],
+              ),
+            ),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _syncProvider.paymentList.length,
               itemBuilder: (context, index) {
                 final payment = _syncProvider.paymentList[index];
@@ -153,8 +161,7 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
                           _getPaymentIcon(payment.type),
                           color: AppColors.blue,
                         ),
-                        const SizedBox(
-                            width: 10), // Adds spacing between icon and text
+                        const SizedBox(width: 10),
                       ],
                     ),
                     title: Text(
@@ -180,8 +187,7 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
                               )
                             : const SizedBox(),
                         IconButton(
-                          icon: const Icon(Icons.edit_note,
-                              color: AppColors.blue),
+                          icon: const Icon(Icons.edit, color: AppColors.blue),
                           onPressed: () {
                             _showEditDialog(index); // Pass the index
                           },

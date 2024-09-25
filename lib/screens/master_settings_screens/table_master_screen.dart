@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -133,6 +135,30 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    double cardHeight = MediaQuery.of(context).size.height;
+    int crossAxisCount;
+    double childAspectRatio;
+    log(screenSize.toString(), name: "screenSize");
+
+    if (screenSize.width > 1200) {
+      crossAxisCount = 10;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
+      log(screenSize.toString(), name: "1200");
+    } else if (screenSize.width > 1000) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
+      log(screenSize.toString(), name: "1000");
+    } else if (screenSize.width > 800 || screenSize.width >= 800) {
+      crossAxisCount = 6;
+      childAspectRatio = (cardHeight / crossAxisCount) / 60;
+      log(screenSize.toString(), name: "800");
+    } else {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 250;
+      log(screenSize.toString(), name: "00");
+    }
+
     return Scaffold(
       appBar: MainAppBar(
         title: 'Table Master',
@@ -147,47 +173,54 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
         children: [
           Consumer<SyncProvider>(
             builder: (context, syncProvider, child) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: syncProvider.tablesByGroup.keys.map((groupCode) {
-                    final isSelected = _selectedGroupCode == groupCode;
-                    final groupName = syncProvider.tablegroupList
-                        .firstWhere((group) => group.code == groupCode)
-                        .name; // Get updated group name
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: syncProvider.tablesByGroup.keys.map((groupCode) {
+                      final isSelected = _selectedGroupCode == groupCode;
+                      final groupName = syncProvider.tablegroupList
+                          .firstWhere((group) => group.code == groupCode)
+                          .name;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Material(
-                        child: ChoiceChip(
-                          label: Text(
-                            groupName,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: FontWeight.bold,
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            ChoiceChip(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25),
+                              label: Text(
+                                groupName,
+                                style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.white : Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedGroupCode = groupCode;
+                                  } else {
+                                    _selectedGroupCode = null;
+                                  }
+                                });
+                              },
+                              showCheckmark: false,
+                              backgroundColor: Colors.white,
+                              selectedColor: AppColors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
                             ),
-                          ),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedGroupCode =
-                                    groupCode; // Select the current group code
-                              } else {
-                                _selectedGroupCode = null; // Deselect if needed
-                              }
-                            });
-                          },
-                          showCheckmark: false,
-                          backgroundColor: Colors.white,
-                          selectedColor: AppColors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
+                          ],
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
               );
             },
@@ -208,11 +241,11 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
 
                 return GridView.builder(
                   padding: const EdgeInsets.all(8.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 8.0,
                     mainAxisSpacing: 8.0,
-                    childAspectRatio: 1,
+                    childAspectRatio: childAspectRatio,
                   ),
                   itemCount: groupTables.length,
                   itemBuilder: (context, index) {

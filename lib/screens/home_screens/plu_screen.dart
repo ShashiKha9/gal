@@ -47,50 +47,48 @@ class _PLUScreenState extends State<PLUScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Expanded(
-              flex: 2,
-              child: Container(
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.all(16.0),
-                color: Colors.white.withOpacity(0.5),
-                child: Text(
-                  displayText,
-                  style: const TextStyle(
-                    fontSize: 36.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black, // Display text color
-                  ),
+            Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.all(16.0),
+              color: Colors.white.withOpacity(0.5),
+              child: Text(
+                displayText,
+                style: const TextStyle(
+                  fontSize: 36.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            Expanded(
-              flex: 5,
-              child: GridView.count(
-                crossAxisCount: 4,
-                crossAxisSpacing: 8.0,
-                mainAxisSpacing: 8.0,
-                children: [
-                  _buildButton('7'),
-                  _buildButton('8'),
-                  _buildButton('9'),
-                  _buildButton('X'), // Delete key
-                  _buildButton('4'),
-                  _buildButton('5'),
-                  _buildButton('6'),
-                  _buildButton('+/-'),
-                  _buildButton('1'),
-                  _buildButton('2'),
-                  _buildButton('3'),
-                  _buildButton('PLU'),
-                  _buildButton('0'),
-                  _buildButton('00'),
-                  _buildButton('.'),
-                  _buildButton('Price'),
-                ],
-              ),
+            GridView.count(
+              crossAxisCount: 4,
+              crossAxisSpacing: 8.0,
+              mainAxisSpacing: 8.0,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildButton('7'),
+                _buildButton('8'),
+                _buildButton('9'),
+                _buildButton('X'), // Delete key
+                _buildButton('4'),
+                _buildButton('5'),
+                _buildButton('6'),
+                _buildButton('+/-'),
+                _buildButton('1'),
+                _buildButton('2'),
+                _buildButton('3'),
+                _buildButton('PLU'),
+                _buildButton('0'),
+                _buildButton('00'),
+                _buildButton('.'),
+                _buildButton('Price'),
+              ],
             ),
+            const SizedBox(height: 36),
           ],
         ),
       ),
