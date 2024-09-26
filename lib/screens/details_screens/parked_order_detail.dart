@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/screens/home_screens/parked_orders_screen.dart';
-import 'package:uuid/uuid.dart'; // Add this import
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class ParkedOrderDetail extends StatefulWidget {
   final List<Map<String, dynamic>> items;
@@ -23,7 +25,6 @@ class ParkedOrderDetail extends StatefulWidget {
 class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
   late Map<String, double> quantities;
   late double totalAmount;
-  List<Map<String, dynamic>> parkedOrders = [];
 
   @override
   void initState() {
@@ -199,7 +200,7 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       final currentOrder = {
                         'id': const Uuid().v4(), // Generate unique ID
                         'items': widget.items
@@ -208,21 +209,39 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                             .toList(),
                         'quantities': Map.from(quantities),
                         'totalAmount': totalAmount,
+                        'tableName':
+                            'YourTableName', // Ensure you set the correct table name
                       };
 
-                      setState(() {
-                        parkedOrders.add(currentOrder);
-                        quantities.clear();
-                        totalAmount = 0.0;
-                      });
+                      try {
+                        // Try to add the order
+                        await Provider.of<ParkedOrderProvider>(context,
+                                listen: false)
+                            .addOrder(currentOrder);
 
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ParkedOrderScreen(parkedOrders: parkedOrders),
-                        ),
-                      );
+                        // Clear the quantities and reset total amount only if order is parked successfully
+                        setState(() {
+                          quantities.clear();
+                          totalAmount = 0.0;
+                        });
+
+                        // Show success message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Order parked successfully!'),
+                          ),
+                        );
+
+                        // Optionally, navigate back to the parked order screen or any other action
+                        Navigator.pop(context);
+                      } catch (e) {
+                        // Show error message if the table is already taken
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.toString()),
+                          ),
+                        );
+                      }
                     },
                     child: const Text(
                       'Park',
