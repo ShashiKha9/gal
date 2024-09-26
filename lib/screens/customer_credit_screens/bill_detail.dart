@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_button.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 
 class BillDetailPage extends StatelessWidget {
   final Map<String, dynamic> billData;
@@ -8,19 +10,21 @@ class BillDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bill Detail'),
+      appBar: const MainAppBar(
+        title: 'Bill Detail',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             _buildBillInfo(),
+            const SizedBox(height: 10),
             const Divider(thickness: 2),
             _buildItemList(),
             const Divider(thickness: 2),
             _buildTotalAmount(),
             const Divider(thickness: 2),
+            const SizedBox(height: 10),
             _buildPrintButton(),
           ],
         ),
@@ -29,15 +33,23 @@ class BillDetailPage extends StatelessWidget {
   }
 
   Widget _buildBillInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Bill Number: ${billData['billNumber']}'),
-        Text('Bill Date: ${billData['billDate']}'),
-        Text('Customer Name: ${billData['customerName']}'),
-        Text('Customer Code: ${billData['customerCode']}'),
-        const SizedBox(height: 16),
-      ],
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _textRow('Bill Number:', ' ${billData['billNumber']}'),
+            _textRow('Bill Date:', ' ${billData['billDate']}'),
+            _textRow('Customer Name:', ' ${billData['customerName']}'),
+            _textRow('Bill Code:', ' ${billData['customerCode']}'),
+          ],
+        ),
+      ),
     );
   }
 
@@ -49,29 +61,41 @@ class BillDetailPage extends StatelessWidget {
     return Column(
       children: [
         const Padding(
-          padding: EdgeInsets.symmetric(vertical: 10.0),
+          padding: EdgeInsets.symmetric(vertical: 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                  flex: 2,
-                  child: Text('Item Name',
-                      style: TextStyle(fontWeight: FontWeight.bold))),
+                flex: 2,
+                child: Text(
+                  'Item Name',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
               Expanded(
-                  flex: 1,
-                  child: Text('Qty',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold))),
+                flex: 1,
+                child: Text(
+                  'Qty',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
               Expanded(
-                  flex: 1,
-                  child: Text('Rate',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold))),
+                flex: 1,
+                child: Text(
+                  'Rate',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
               Expanded(
-                  flex: 1,
-                  child: Text('Price',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.bold))),
+                flex: 1,
+                child: Text(
+                  'Price',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
@@ -97,17 +121,26 @@ class BillDetailPage extends StatelessWidget {
                       child: Text(itemName,
                           style: const TextStyle(fontWeight: FontWeight.bold))),
                   Expanded(
-                      flex: 1,
-                      child: Text(quantity.toString(),
-                          textAlign: TextAlign.center)),
+                    flex: 1,
+                    child: Text(
+                      quantity.toString(),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   Expanded(
-                      flex: 1,
-                      child: Text('₹ ${rate.toStringAsFixed(2)}',
-                          textAlign: TextAlign.center)),
+                    flex: 1,
+                    child: Text(
+                      '₹ ${rate.toStringAsFixed(2)}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   Expanded(
-                      flex: 1,
-                      child: Text('₹ ${price.toStringAsFixed(2)}',
-                          textAlign: TextAlign.center)),
+                    flex: 1,
+                    child: Text(
+                      '₹ ${price.toStringAsFixed(2)}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -127,7 +160,7 @@ class BillDetailPage extends StatelessWidget {
     });
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(0),
       child: Text(
         'Total Amount: ₹ ${total.toStringAsFixed(2)}',
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -136,11 +169,29 @@ class BillDetailPage extends StatelessWidget {
   }
 
   Widget _buildPrintButton() {
-    return ElevatedButton(
-      onPressed: () {
+    return AppButton(
+      padding: EdgeInsets.zero,
+      margin: EdgeInsets.zero,
+      onTap: () {
         // Implement print functionality here
       },
-      child: const Text('Print'),
+      buttonText: 'Print',
+    );
+  }
+
+  Widget _textRow(String label, String value, {Color? textColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(
+            value,
+            style: TextStyle(color: textColor),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -35,6 +35,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
     // _syncProvider.getItemsAll();
+    _syncProvider.loadItemsOrder();
   }
 
   @override

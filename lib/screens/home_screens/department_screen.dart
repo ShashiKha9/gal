@@ -38,7 +38,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   @override
   void initState() {
     super.initState();
-    _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider = Provider.of<SyncProvider>(context, listen: false);    
   }
 
   @override

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // For JSON decoding
-import 'customer_credit_detail.dart'; // Ensure this import is correct
+import 'dart:convert';
+import 'customer_credit_detail.dart';
 
 class CustomerCredits extends StatefulWidget {
   const CustomerCredits({super.key});
@@ -12,12 +13,28 @@ class CustomerCredits extends StatefulWidget {
 
 class _CustomerCreditsState extends State<CustomerCredits> {
   List<String> _customerCodes = [];
-  Map<String, String> _customerNames = {}; // Map to hold customer names
+  Map<String, String> _customerNames = {};
+  bool _isDataSynced = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCustomerData(); // Load both customer codes and names
+    _checkIfDataFetched();
+  }
+
+  Future<void> _checkIfDataFetched() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isDataFetched = prefs.getBool('is_customer_credit_fetched') ?? false;
+
+    if (isDataFetched) {
+      // Load data if already fetched
+      _loadCustomerData();
+    } else {
+      setState(() {
+        _customerCodes = []; // No data available
+        _customerNames = {};
+      });
+    }
   }
 
   Future<void> _loadCustomerData() async {
@@ -42,12 +59,12 @@ class _CustomerCreditsState extends State<CustomerCredits> {
       Map<String, String> customerNamesMap =
           Map<String, String>.from(jsonDecode(customerNamesJson));
       setState(() {
-        _customerNames = customerNamesMap; // Store it in a map for easy lookup
+        _customerNames = customerNamesMap;
       });
       debugPrint('Loaded customer names: $customerNamesMap');
     } else {
       setState(() {
-        _customerNames = {}; // Empty map if no names are found
+        _customerNames = {};
       });
     }
   }
@@ -55,59 +72,57 @@ class _CustomerCreditsState extends State<CustomerCredits> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Customer Credits'),
+      appBar: const MainAppBar(
+        title: 'Customer Credits',
       ),
       body: _customerCodes.isEmpty
           ? const Center(child: Text('No customer data available.'))
           : ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: _customerCodes.length,
               itemBuilder: (context, index) {
                 String code = _customerCodes[index];
-                String name = _customerNames[code] ??
-                    'Unknown'; // Use customerNames map to get name
+                String name = _customerNames[code] ?? 'Unknown';
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CustomerCreditDetail(
-                          customerCode: code,
-                          customerName:
-                              name, // Pass the customer name to the next page
-                        ),
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 10),
+                    title: Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.all(8.0),
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                    child: Column(
+                    subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 5),
                         Text(
-                          name, // Display customer name
+                          code,
                           style: const TextStyle(
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Text(
-                          code, // Display customer code
-                          style: const TextStyle(
-                            fontSize: 16.0,
-                            color: Colors.white70,
+                            color: Colors.black54,
                           ),
                         ),
                       ],
                     ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CustomerCreditDetail(
+                            customerCode: code,
+                            customerName: name,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
