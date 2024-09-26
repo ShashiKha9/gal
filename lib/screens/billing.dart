@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:galaxy_mini/components/scaffold_message.dart';
 import 'package:galaxy_mini/models/table_model.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
@@ -72,13 +73,7 @@ class BillPageState extends State<BillPage> {
   void showOrderDetailsDialog(BuildContext context, String selectedCustomerName,
       String selectedCustomerCode) {
     if (selectedCustomerName.isEmpty) {
-      Fluttertoast.showToast(
-        msg: 'Please select a customer',
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-      );
+      scaffoldMessage(message: 'Please select a customer');
       Future.delayed(const Duration(milliseconds: 500), () {
         Navigator.of(context).pop(); // Close any existing dialogs
       });
@@ -243,26 +238,15 @@ class BillPageState extends State<BillPage> {
                 // Ensure totalAmount is properly fetched from widget and is not null or 0
                 double totalAmount = widget.totalAmount;
                 if (totalAmount == 0.0) {
-                  Fluttertoast.showToast(
-                    msg: 'Total amount cannot be zero!',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                  );
-                  return; // Prevent further execution if totalAmount is invalid
+                  scaffoldMessage(message: 'Total amount cannot be zero!');
+                  return; 
                 }
 
                 // Check if advanceAmount is greater than totalAmount (which shouldn't happen)
                 if (advanceAmount > totalAmount) {
-                  Fluttertoast.showToast(
-                    msg: 'Advance amount cannot exceed total amount!',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                  );
-                  return; // Prevent further execution if advanceAmount is greater than totalAmount
+                   scaffoldMessage(
+                      message: 'Advance amount cannot exceed total amount!');
+                  return; 
                 }
 
                 // Calculate remaining amount
@@ -436,20 +420,18 @@ class BillPageState extends State<BillPage> {
       'quantities': Map.from(quantities),
       'rates': Map.from(widget.rates),
       'totalAmount': totalAmount,
+      'tablegroup': table.group,
       'tableName': table.name,
     };
 
     try {
-      // Add the order to the provider
+      // Attempt to add the order to the provider
       Provider.of<ParkedOrderProvider>(context, listen: false)
           .addOrder(currentOrder);
 
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order parked successfully')),
-      );
+ 
     } catch (e) {
-      // Show error message if an order is already parked on the table
+      // Show error message for any exception
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );

@@ -23,13 +23,6 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     super.initState();
     fromDate = DateTime.now();
     toDate = DateTime.now();
-    _loadOrders();
-  }
-
-  Future<void> _loadOrders() async {
-    await Provider.of<UpcomingOrderProvider>(context, listen: false)
-        .loadOrders();
-    setState(() {});
   }
 
   List<Map<String, dynamic>> _filterOrders(List<Map<String, dynamic>> orders) {
@@ -137,7 +130,8 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
               onChanged: (value) {
                 setState(() {
                   selectedOrderStatus = value;
-                  _loadOrders();
+                  // Fetch orders only when order status is changed, if needed
+                  // _loadOrders();
                 });
               },
             ),
@@ -170,7 +164,8 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
                               ),
                             ),
                           ).then((_) {
-                            _loadOrders();
+                            // Optionally reload orders here if necessary
+                            // _loadOrders();
                           });
                         },
                         child: Card(
@@ -250,7 +245,6 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     if (pickedDate != null && pickedDate != fromDate) {
       setState(() {
         fromDate = pickedDate;
-        _loadOrders();
       });
     }
   }
@@ -265,7 +259,6 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
     if (pickedDate != null && pickedDate != toDate) {
       setState(() {
         toDate = pickedDate;
-        _loadOrders();
       });
     }
   }

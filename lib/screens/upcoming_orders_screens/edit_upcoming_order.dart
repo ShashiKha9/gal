@@ -268,10 +268,12 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => AddNewUpcomingItem(
-                                orderId: order!['orderId'],
-                              ),
+                                  orderId: order!['orderId']),
                             ),
-                          );
+                          ).then((_) {
+                            // This will refresh the EditUpcomingOrder screen when the user returns from the AddNewUpcomingItem screen
+                            _loadOrderData();
+                          });
                         },
                       ),
                     ],
