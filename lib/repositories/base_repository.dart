@@ -1,6 +1,10 @@
+// TODO: Remove this line after Login API is updated
+// ignore_for_file: unnecessary_null_comparison
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+// import 'package:galaxy_mini/utils/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../utils/api_urls.dart';
 
@@ -17,6 +21,23 @@ class BaseRepository {
   }) async {
     log(api, name: 'postHttp');
     log(data.toString(), name: 'postHttp');
+
+    // TODO: Uncomment this code & remove Existing headers after Login API is updated
+    // String? accessToken;
+    // String? userId;
+
+    // if (useToken) {
+    //   accessToken =
+    //       await MySharedPreferences.instance.getStringValue("authToken");
+    //   userId = await MySharedPreferences.instance.getStringValue("userId");
+    //   log(accessToken.toString(), name: "authToken");
+    //   log(userId.toString(), name: "userId");
+    // }
+    // final headers = {
+    //   'Content-Type': 'application/json',
+    //   if (accessToken != null) 'Authorization': accessToken,
+    //   if (userId != null) 'UserId': userId,
+    // };
 
     // Set up the headers
     final headers = {
@@ -37,7 +58,25 @@ class BaseRepository {
     required String api,
     bool useToken = false,
   }) async {
+    log(api, name: 'getHttp');
     log(Uri.parse(ApiUrls.baseUrl + api).toString(), name: 'getHttp');
+
+    // TODO: Uncomment this code & remove Existing headers after Login API is updated
+    // String? accessToken;
+    // String? userId;
+
+    // if (useToken) {
+    //   accessToken =
+    //       await MySharedPreferences.instance.getStringValue("authToken");
+    //   userId = await MySharedPreferences.instance.getStringValue("userId");
+    //   log(accessToken.toString(), name: "authToken");
+    //   log(userId.toString(), name: "userId");
+    // }
+    // final headers = {
+    //   'Content-Type': 'application/json',
+    //   if (accessToken != null) 'Authorization': accessToken,
+    //   if (userId != null) 'UserId': userId,
+    // };
 
     // Set up the headers
     final headers = {

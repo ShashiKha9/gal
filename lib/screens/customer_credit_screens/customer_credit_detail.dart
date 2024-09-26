@@ -1,9 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/bill_detail.dart';
-import 'package:galaxy_mini/screens/customer_credit_screens/custom_card.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,7 +82,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   }
 
   // Function to show "Make Payment" dialog
-  void _showMakePaymentDialog(
+  void _makePaymentDialog(
       BuildContext context,
       SyncProvider syncProvider,
       CustomerCreditProvider creditProvider,
@@ -97,8 +98,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     int newPaymentId = currentPaymentId + 1; // Increment the payment ID
 
     // Get the current date in your desired format
-    String paymentDate =
-        DateFormat('yyyy-MM-dd').format(DateTime.now()); // Example format
+    String paymentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     showDialog(
       context: context,
@@ -115,15 +115,12 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
                       labelText: 'Amount',
-                      hintText: 'Enter payment amount',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Payment Mode',
-                      border: OutlineInputBorder(),
                     ),
                     items: syncProvider.paymentList
                         .map((paymentMode) => DropdownMenuItem<String>(
@@ -147,7 +144,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                   },
                   child: const Text('Cancel'),
                 ),
-                ElevatedButton(
+                TextButton(
                   onPressed: () async {
                     if (amountController.text.isNotEmpty &&
                         selectedPaymentModeInDialog != null) {
@@ -191,29 +188,30 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Customer Credit Details'),
+      appBar: const MainAppBar(
+        title: 'Customer Credit Details',
       ),
       body: billData.isEmpty && paymentData.isEmpty
           ? const Center(
               child: CircularProgressIndicator(),
             )
           : SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildCustomerInfo(),
-                  const SizedBox(height: 16),
-                  _buildChoiceChips(), // Add choice chips here
-                  const SizedBox(height: 16),
-                  if (selectedChip == 'All') _buildAllDataList(),
-                  if (selectedChip == 'Bills') _buildBillList(),
-                  if (selectedChip == 'Payments') _buildPaymentList(),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _customerInfo(),
+                    _choiceChips(),
+                    if (selectedChip == 'All') _allDataList(),
+                    if (selectedChip == 'Bills') _billList(),
+                    if (selectedChip == 'Payments') _paymentList(),
+                  ],
+                ),
               ),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showMakePaymentDialog(
+          _makePaymentDialog(
             context, syncProvider, creditProvider,
             widget.customerCode, // Pass the customer code
             widget.customerName,
@@ -224,29 +222,38 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     );
   }
 
-// Widget to display customer code, name, bill number, payment ID, and current balance
-  Widget _buildCustomerInfo() {
-    return CustomCard(
+  Widget _customerInfo() {
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(8.0), // Add padding around the card
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDataRow('Customer Name:', widget.customerName),
-            _buildDataRow('Customer Code:', widget.customerCode),
-            _buildDataRow('Latest Bill Number:',
+            _textRow('Customer Name:', widget.customerName),
+            _textRow('Customer Code:', widget.customerCode),
+            _textRow('Latest Bill Number:',
                 currentBillNumber.isNotEmpty ? currentBillNumber : 'N/A'),
-            _buildDataRow('Latest Payment ID:',
+            _textRow('Latest Payment ID:',
                 currentPaymentId.isNotEmpty ? currentPaymentId : 'N/A'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Current Balance:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Current Balance:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 Text(
                   'Rs. ${currentBalance.toStringAsFixed(2)}',
                   style: const TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold),
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -257,62 +264,104 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   }
 
   // New widget to build choice chips for filtering
-  Widget _buildChoiceChips() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ChoiceChip(
-          label: const Text('All'),
-          selected: selectedChip == 'All',
-          onSelected: (selected) {
-            setState(() {
-              selectedChip = 'All';
-            });
-          },
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          label: const Text('Bills'),
-          selected: selectedChip == 'Bills',
-          onSelected: (selected) {
-            setState(() {
-              selectedChip = 'Bills';
-            });
-          },
-        ),
-        const SizedBox(width: 8),
-        ChoiceChip(
-          label: const Text('Payments'),
-          selected: selectedChip == 'Payments',
-          onSelected: (selected) {
-            setState(() {
-              selectedChip = 'Payments';
-            });
-          },
-        ),
-      ],
+  Widget _choiceChips() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          ChoiceChip(
+            label: Text(
+              'All',
+              style: TextStyle(
+                color: selectedChip == 'All' ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            selected: selectedChip == 'All',
+            onSelected: (selected) {
+              setState(() {
+                selectedChip = 'All';
+              });
+            },
+            avatar: null,
+            showCheckmark: false,
+            backgroundColor: Colors.white,
+            selectedColor: AppColors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ChoiceChip(
+            label: Text(
+              'Bills',
+              style: TextStyle(
+                color: selectedChip == 'Bills' ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            selected: selectedChip == 'Bills',
+            onSelected: (selected) {
+              setState(() {
+                selectedChip = 'Bills';
+              });
+            },
+            avatar: null,
+            showCheckmark: false,
+            backgroundColor: Colors.white,
+            selectedColor: AppColors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ChoiceChip(
+            label: Text(
+              'Payments',
+              style: TextStyle(
+                color: selectedChip == 'Payments' ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            selected: selectedChip == 'Payments',
+            onSelected: (selected) {
+              setState(() {
+                selectedChip = 'Payments';
+              });
+            },
+            avatar: null,
+            showCheckmark: false,
+            backgroundColor: Colors.white,
+            selectedColor: AppColors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildAllDataList() {
+  Widget _allDataList() {
     return Column(
       children: [
-        _buildBillList(),
-        _buildPaymentList(),
+        _billList(),
+        _paymentList(),
       ],
     );
   }
 
-  Widget _buildBillList() {
-    return CustomCard(
+  Widget _billList() {
+    return Padding(
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Bill Data',
+            'Bill Data:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8),
           billData.isNotEmpty
               ? ListView.builder(
                   shrinkWrap: true,
@@ -322,7 +371,6 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                     final bill = billData[index];
                     return GestureDetector(
                       onTap: () {
-                        // Navigate to the Bill Detail Page with complete bill data
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -331,8 +379,8 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                               'billDate': bill['billDate'],
                               'customerName': bill['customerName'],
                               'customerCode': bill['customerCode'],
-                              'totalAmount': (bill['totalAmount'] ?? 0.0)
-                                  .toInt(), // Cast to int
+                              'totalAmount':
+                                  (bill['totalAmount'] ?? 0.0).toInt(),
                               'items': bill['items'],
                               'quantities': bill['quantities'],
                               'rates': bill['rates'],
@@ -340,7 +388,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                           ),
                         );
                       },
-                      child: _buildInfoBox('Bill', bill),
+                      child: _billCard('Bill', bill),
                     );
                   },
                 )
@@ -350,16 +398,16 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     );
   }
 
-  Widget _buildPaymentList() {
-    return CustomCard(
+  Widget _paymentList() {
+    return Padding(
+      padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Payment Data',
+            'Payment Data:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          const SizedBox(height: 8),
           paymentData.isNotEmpty
               ? ListView.builder(
                   shrinkWrap: true,
@@ -369,10 +417,9 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                     final payment = paymentData[index];
                     return GestureDetector(
                       onTap: () {
-                        // Show an Alert Dialog with payment details
-                        _showPaymentDetailsDialog(context, payment);
+                        _paymentDetailsDialog(context, payment);
                       },
-                      child: _buildPaymentInfoBox('Payment', payment),
+                      child: _paymentCard('Payment', payment),
                     );
                   },
                 )
@@ -383,28 +430,31 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   }
 
 // Function to show payment details in an AlertDialog
-  void _showPaymentDetailsDialog(
+  void _paymentDetailsDialog(
       BuildContext context, Map<String, dynamic> payment) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Payment Details'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildDataRow('Payment ID:', payment['paymentId'] ?? 'N/A'),
-              _buildDataRow('Payment Date:', payment['paymentDate'] ?? 'N/A'),
-              _buildDataRow('Amount:',
-                  'Rs. ${(payment['enteredAmount'] ?? 0.0).toStringAsFixed(2)}'),
-              _buildDataRow('Payment Mode:', payment['paymentMode'] ?? 'N/A'),
-            ],
+          content: SizedBox(
+            width: 800,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _textRow('Payment ID:', payment['paymentId'] ?? 'N/A'),
+                _textRow('Payment Date:', payment['paymentDate'] ?? 'N/A'),
+                _textRow('Amount:',
+                    'Rs. ${(payment['enteredAmount'] ?? 0.0).toStringAsFixed(2)}'),
+                _textRow('Payment Mode:', payment['paymentMode'] ?? 'N/A'),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Close'),
             ),
@@ -414,60 +464,78 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     );
   }
 
-  Widget _buildInfoBox(String title, Map<String, dynamic> data) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: Text(
-              'Rs. ${(data['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
-              ),
+  Widget _billCard(String title, Map<String, dynamic> data) {
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$title Number: ${data['billNumber'] ?? 'N/A'}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Rs. ${(data['totalAmount'] ?? 0.0).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            '$title Number: ${data['billNumber'] ?? 'N/A'}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          _buildDataRow('Bill Date:', data['billDate'] ?? 'N/A'),
-        ],
+            const SizedBox(height: 4),
+            _textRow('Bill Date:', data['billDate'] ?? 'N/A'),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildPaymentInfoBox(String title, Map<String, dynamic> data) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Align(
-            alignment: Alignment.topRight,
-            child: Text(
-              'Rs. ${(data['enteredAmount'] ?? 0.0).toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
+  Widget _paymentCard(String title, Map<String, dynamic> data) {
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$title ID: ${data['paymentId'] ?? 'N/A'}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Rs. ${(data['enteredAmount'] ?? 0.0).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            '$title ID: ${data['paymentId'] ?? 'N/A'}',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          _buildDataRow('Payment Date:', data['paymentDate'] ?? 'N/A'),
-          _buildDataRow('Payment Mode:', data['paymentMode'] ?? 'N/A'),
-        ],
+            const SizedBox(height: 4),
+            _textRow('Payment Date:', data['paymentDate'] ?? 'N/A'),
+            _textRow('Payment Mode:', data['paymentMode'] ?? 'N/A'),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDataRow(String label, String value, {Color? textColor}) {
+  Widget _textRow(String label, String value, {Color? textColor}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(

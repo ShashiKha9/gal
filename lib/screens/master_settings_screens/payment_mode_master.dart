@@ -22,14 +22,7 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
 
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   Fluttertoast.showToast(
-    //     msg: "Please select default from the list",
-    //     toastLength: Toast.LENGTH_LONG,
-    //     gravity: ToastGravity.BOTTOM,
-    //     backgroundColor: Colors.black54,
-    //     textColor: Colors.white,
-    //     fontSize: 16.0,
-    //   );
+    // scaffoldMessage(message: 'Please select default from the list');
     // });
   }
 
