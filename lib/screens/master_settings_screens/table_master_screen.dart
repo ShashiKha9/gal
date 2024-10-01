@@ -203,8 +203,6 @@ class _TablemasterScreenState extends State<TablemasterScreen> {
                                 setState(() {
                                   if (selected) {
                                     _selectedGroupCode = groupCode;
-                                  } else {
-                                    _selectedGroupCode = null;
                                   }
                                 });
                               },

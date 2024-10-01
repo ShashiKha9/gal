@@ -21,6 +21,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider.loadCustomerListFromPrefs();
   }
 
   @override

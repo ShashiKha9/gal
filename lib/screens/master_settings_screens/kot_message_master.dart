@@ -18,6 +18,7 @@ class _KotMessageMasterState extends State<KotMessageMaster> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider.loadKotMessageListFromPrefs();
   }
 
   void _showEditDialog(int index) {

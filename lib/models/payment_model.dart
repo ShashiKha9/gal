@@ -28,4 +28,14 @@ class PaymentModel {
         updatedDate: json["updated_date"],
         updatedBy: json["updated_by"],
       );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "type": type,
+        "status": status,
+        "created_date": createdDate.toIso8601String(),
+        "created_by": createdBy,
+        "updated_date": updatedDate,
+        "updated_by": updatedBy,
+      };
 }

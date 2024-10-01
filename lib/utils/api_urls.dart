@@ -1,5 +1,4 @@
-
-class ApiUrls{
+class ApiUrls {
   static const baseUrl = 'https://test17042024.galaxymini.in/mobileapi/api/';
   static const login = 'login';
   static const getItemApi = 'getItem';
@@ -11,6 +10,7 @@ class ApiUrls{
   static const getCustomerApi = 'getcustomer';
   static const getPaymentApi = 'getpaymentDetail';
   static const getOfferApi = 'getofferCoupon';
-  static const getkotmessageApi = 'getkot_message'; 
+  static const getkotmessageApi = 'getkot_message';
   static const postAddCustomerApi = 'customer';
+  static const getUnitApi = 'getunit';
 }

@@ -18,6 +18,7 @@ class _KotGroupMasterState extends State<KotGroupMaster> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider.loadKotGroupOrder();
   }
 
   void _showEditDialog(int index) {

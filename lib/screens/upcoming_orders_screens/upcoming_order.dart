@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_dropdown.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order_details.dart';
@@ -17,12 +18,16 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
   DateTime? toDate;
   String? selectedOrderStatus = 'All'; // Set default status to 'All'
   final DateFormat _dateFormat = DateFormat('d MMMM yyyy');
+  late UpcomingOrderProvider upcomingOrderProvider;
 
   @override
   void initState() {
     super.initState();
     fromDate = DateTime.now();
     toDate = DateTime.now();
+    upcomingOrderProvider =
+        Provider.of<UpcomingOrderProvider>(context, listen: false);
+    upcomingOrderProvider.loadOrders();
   }
 
   List<Map<String, dynamic>> _filterOrders(List<Map<String, dynamic>> orders) {
@@ -101,31 +106,14 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
                 ],
               ),
             ),
-            DropdownButtonFormField<String>(
+            AppDropdown(
+              labelText: "Order Status",
               value: selectedOrderStatus,
-              decoration: InputDecoration(
-                labelText: "Order Status",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
               items: const [
-                DropdownMenuItem(
-                  value: 'All',
-                  child: Text('All'),
-                ),
-                DropdownMenuItem(
-                  value: 'Pending',
-                  child: Text('Pending'),
-                ),
-                DropdownMenuItem(
-                  value: 'Dispatched',
-                  child: Text('Dispatched'),
-                ),
-                DropdownMenuItem(
-                  value: 'Cancelled',
-                  child: Text('Cancelled'),
-                ),
+                "All",
+                "Pending",
+                "Dispatched",
+                "Cancelled",
               ],
               onChanged: (value) {
                 setState(() {

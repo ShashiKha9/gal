@@ -62,4 +62,29 @@ class ItemModel {
         imageUrl: json["imageUrl"],
         isStocked: json["isStocked"],
       );
+
+  // Method to convert ItemModel instance to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      "departmentCode": departmentCode,
+      "rate1": rate1,
+      "rate2": rate2,
+      "gSTCODE": gStcode,
+      "openPrice": openPrice,
+      "shortName": shortName,
+      "unit": unit,
+      "code": code,
+      "name": name,
+      "qtyInDecimal": qtyInDecimal,
+      "barcode": barcode,
+      "hsnCode": hsnCode,
+      "isHot": isHot,
+      "hasKotMessage": hasKotMessage,
+      "kotgroup": kotgroup,
+      "qrcode": qrcode,
+      "displayinselection": displayinselection,
+      "imageUrl": imageUrl,
+      "isStocked": isStocked,
+    };
+  }
 }

@@ -35,7 +35,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
     // _syncProvider.getItemsAll();
-    _syncProvider.loadItemsOrder();
+    _syncProvider.loadItemListFromPrefs();
   }
 
   @override
@@ -164,7 +164,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
       log(screenSize.toString(), name: "800");
     } else {
       crossAxisCount = 3;
-      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      childAspectRatio = (cardHeight / crossAxisCount) / 350;
       log(screenSize.toString(), name: "00");
     }
 

@@ -261,8 +261,6 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
                     children: [
                       AppButton(
                         buttonText: "Add More Items",
-                        padding: EdgeInsets.zero,
-                        margin: EdgeInsets.zero,
                         onTap: () {
                           Navigator.push(
                             context,

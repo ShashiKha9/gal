@@ -24,11 +24,7 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: margin ??
-          const EdgeInsets.symmetric(
-            horizontal: 30,
-            vertical: 15,
-          ),
+      padding: margin ?? EdgeInsets.zero,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppColors.blue,
@@ -38,7 +34,7 @@ class AppButton extends StatelessWidget {
         ),
         onPressed: onTap,
         child: Padding(
-          padding: padding ?? const EdgeInsets.symmetric(vertical: 16),
+          padding: padding ?? const EdgeInsets.symmetric(vertical: 0),
           child: Row(
             mainAxisSize: min ? MainAxisSize.min : MainAxisSize.max,
             crossAxisAlignment: CrossAxisAlignment.center,

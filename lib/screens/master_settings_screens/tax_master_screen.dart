@@ -21,6 +21,7 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider.loadTaxAll();
   }
 
   // Function to show the alert dialog for selecting GST type
@@ -152,7 +153,7 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Total GST Rate: ${tax.rate ?? 'No Rate'}',
+                                'Total GST Rate: ${tax.rate}',
                                 style: const TextStyle(
                                   fontSize: 14.0,
                                   color: Colors.black54,
@@ -160,7 +161,7 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'CGst Rate: ${tax.cGst ?? 'No CGst'}',
+                                'CGst Rate: ${tax.cGst}',
                                 style: const TextStyle(
                                   fontSize: 14.0,
                                   color: Colors.black54,
@@ -168,7 +169,7 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'SGst Rate: ${tax.sgst ?? 'No SGst'}',
+                                'SGst Rate: ${tax.sgst}',
                                 style: const TextStyle(
                                   fontSize: 14.0,
                                   color: Colors.black54,
@@ -176,7 +177,7 @@ class _TaxMasterScreenState extends State<TaxMasterScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'IGst Rate: ${tax.iGst ?? 'No IGst'}',
+                                'IGst Rate: ${tax.iGst}',
                                 style: const TextStyle(
                                   fontSize: 14.0,
                                   color: Colors.black54,

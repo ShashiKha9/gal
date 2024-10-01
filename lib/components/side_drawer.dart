@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/auth/login.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/customer_credits.dart';
 import 'package:galaxy_mini/screens/details_screens/sync_data.dart';
 import 'package:galaxy_mini/screens/setting_screens/settings_screen.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
-class SideDrawer extends StatelessWidget {
+class SideDrawer extends StatefulWidget {
   const SideDrawer({super.key});
+
+  @override
+  State<SideDrawer> createState() => _SideDrawerState();
+}
+
+class _SideDrawerState extends State<SideDrawer> {
+  late SyncProvider syncProvider;
+  @override
+  void initState() {
+    syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,12 +101,14 @@ class SideDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.blue),
             title: const Text('Logout'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
+            onTap: () async {
+              await Provider.of<SyncProvider>(context, listen: false)
+                  .logout(context);
+              // Navigator.pop(context);
+              // Navigator.pushReplacement(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => const LoginScreen()),
+              // );
             },
           ),
         ],

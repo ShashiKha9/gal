@@ -59,7 +59,7 @@ class _ArrangeItemsState extends State<ArrangeItems> {
       log(screenSize.toString(), name: "800");
     } else {
       crossAxisCount = 3;
-      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      childAspectRatio = (cardHeight / crossAxisCount) / 350;
       log(screenSize.toString(), name: "00");
     }
 
