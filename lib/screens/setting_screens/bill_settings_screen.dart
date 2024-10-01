@@ -1,7 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BillSettingsScreen extends StatefulWidget {
   const BillSettingsScreen({super.key});
@@ -13,6 +16,25 @@ class BillSettingsScreen extends StatefulWidget {
 class _BillSettingsScreenState extends State<BillSettingsScreen> {
   bool showPLU = false;
   bool resetBill = false;
+  String? selectedFrequency;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShowPLU();
+  }
+
+  Future<void> _loadShowPLU() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      showPLU = prefs.getBool('showPLU') ?? false; // Load saved state
+    });
+  }
+
+  Future<void> _saveShowPLU(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('showPLU', value);
+  } // To hold the selected frequency
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +53,10 @@ class _BillSettingsScreenState extends State<BillSettingsScreen> {
               onChanged: (bool? newValue) {
                 setState(() {
                   showPLU = newValue!;
+                  _saveShowPLU(newValue);
                 });
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
             ),
             CheckboxListTile(
@@ -45,61 +70,133 @@ class _BillSettingsScreenState extends State<BillSettingsScreen> {
               },
             ),
             if (resetBill == true)
-              Row(
+              Column(
                 children: [
-                  Row(
-                    children: [
-                      Radio(
-                        value: 2,
-                        groupValue: true,
-                        onChanged: (val) {},
-                      ),
-                      const Text(
-                        'Daily',
-                        style: TextStyle(fontSize: 17.0),
-                      ),
-                    ],
+                  ListTile(
+                    title: const Text('Daily'),
+                    leading: Radio<String>(
+                      value: 'Daily',
+                      groupValue: selectedFrequency,
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedFrequency = value;
+                          _setResetFrequency(value);
+                        });
+                      },
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Radio(
-                        value: 2,
-                        groupValue: true,
-                        onChanged: (val) {},
-                      ),
-                      const Text(
-                        'Monthly',
-                        style: TextStyle(fontSize: 17.0),
-                      ),
-                    ],
+                  ListTile(
+                    title: const Text('Monthly'),
+                    leading: Radio<String>(
+                      value: 'Monthly',
+                      groupValue: selectedFrequency,
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedFrequency = value;
+                          _setResetFrequency(value);
+                        });
+                      },
+                    ),
                   ),
-                  Row(
-                    children: [
-                      Radio(
-                        value: 2,
-                        groupValue: true,
-                        onChanged: (val) {},
-                      ),
-                      const Text(
-                        'Yearly',
-                        style: TextStyle(fontSize: 17.0),
-                      ),
-                    ],
+                  ListTile(
+                    title: const Text('Yearly'),
+                    leading: Radio<String>(
+                      value: 'Yearly',
+                      groupValue: selectedFrequency,
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedFrequency = value;
+                          _setResetFrequency(value);
+                        });
+                      },
+                    ),
                   ),
                 ],
               ),
             const SizedBox(height: 20),
             Center(
               child: AppButton(
-                buttonText: 'Reset Bill No. Menually',
+                buttonText: 'Reset Bill No. Manually',
                 padding: const EdgeInsets.all(0),
                 margin: const EdgeInsets.symmetric(horizontal: 15),
-                onTap: () {},
+                onTap: _resetBillNumber, // Call the reset function
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _setResetFrequency(String? frequency) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('billResetFrequency', frequency!);
+
+    // Store the current timestamp as the last reset time
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    await prefs.setInt('lastResetTime', currentTime);
+
+    // Logic to reset the bill number based on frequency
+    if (frequency == 'Daily') {
+      // Schedule a daily reset
+      _scheduleDailyReset();
+    } else if (frequency == 'Monthly') {
+      // Schedule a monthly reset
+      _scheduleMonthlyReset();
+    } else if (frequency == 'Yearly') {
+      // Schedule a yearly reset
+      _scheduleYearlyReset();
+    }
+  }
+
+// Function to check and reset the bill number if daily period has passed
+  Future<void> _scheduleDailyReset() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int lastResetTime = prefs.getInt('lastResetTime') ?? 0;
+
+    // Calculate the difference in days
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    if ((currentTime - lastResetTime) >= 86400000) {
+      // 24 hours in milliseconds
+      await _resetBillNumber(); // Reset bill number to 1
+      await prefs.setInt(
+          'lastResetTime', currentTime); // Update the last reset time
+    }
+  }
+
+// Function to check and reset the bill number if monthly period has passed
+  Future<void> _scheduleMonthlyReset() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int lastResetTime = prefs.getInt('lastResetTime') ?? 0;
+
+    // Check if a month has passed
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    DateTime lastResetDate = DateTime.fromMillisecondsSinceEpoch(lastResetTime);
+    if (DateTime.now().difference(lastResetDate).inDays >= 30) {
+      await _resetBillNumber(); // Reset bill number to 1
+      await prefs.setInt(
+          'lastResetTime', currentTime); // Update the last reset time
+    }
+  }
+
+// Function to check and reset the bill number if yearly period has passed
+  Future<void> _scheduleYearlyReset() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int lastResetTime = prefs.getInt('lastResetTime') ?? 0;
+
+    // Check if a year has passed
+    int currentTime = DateTime.now().millisecondsSinceEpoch;
+    DateTime lastResetDate = DateTime.fromMillisecondsSinceEpoch(lastResetTime);
+    if (DateTime.now().difference(lastResetDate).inDays >= 365) {
+      await _resetBillNumber(); // Reset bill number to 1
+      await prefs.setInt(
+          'lastResetTime', currentTime); // Update the last reset time
+    }
+  }
+
+  Future<void> _resetBillNumber() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('currentBillNumber', 1); // Reset to 1
+    log('Bill number reset to 1'); // Log statement to see the change
   }
 }

@@ -119,7 +119,7 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
                                     order['quantities']),
                                 rates: (order['rates'] as Map?)
                                         ?.cast<String, double>() ?? {},
-                                totalAmount: order['totalAmount'] ?? 0.0,
+                                totalAmount: order['totalAmount'] ?? 0.0, tableName: '', tableGroup: '',
                               ),
                             ),
                           );
