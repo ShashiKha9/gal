@@ -1,6 +1,10 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/provider/customer_credit_provider.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/edit_upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
@@ -23,11 +27,29 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
   bool isUpcomingOrder = false;
   bool isCancelledOrder = false;
   bool isDispatchedOrder = false;
+  late SyncProvider syncProvider;
+  String? selectedPaymentMode;
 
   @override
   void initState() {
     super.initState();
     _loadOrderData();
+    syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    syncProvider.getTaxAll();
+  }
+
+  double _calculateTotalWithTax(double subTotal) {
+    // Fetch tax values, ensuring to handle potential nulls or empty values
+    double cgst = double.tryParse(syncProvider.taxList.first.cGst) ??
+        0.0; // Replace with actual field names from your provider
+    double sgst = double.tryParse(syncProvider.taxList.first.sgst) ?? 0.0;
+    double igst = double.tryParse(syncProvider.taxList.first.iGst) ?? 0.0;
+
+    // Calculate total tax
+    double totalTax = (cgst + sgst + igst);
+
+    // Return the total amount including tax
+    return subTotal + subTotal * (totalTax / 100);
   }
 
   void _loadOrderData() {
@@ -58,6 +80,106 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
         });
       });
     });
+  }
+
+  // Function to display the dispatch alert dialog
+  void _showDispatchDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Payment Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Balance Amount: ₹ ${order!['remainingAmount']}'),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Payment Mode',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12.0,
+                    horizontal: 10.0,
+                  ),
+                ),
+                items: syncProvider.paymentList.map((paymentMode) {
+                  return DropdownMenuItem<String>(
+                    value: paymentMode.type,
+                    child: Text(paymentMode.type),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedPaymentMode = value;
+                  });
+                  // Log the selected payment mode
+                  log('Selected Payment Mode: $selectedPaymentMode');
+                },
+                value: selectedPaymentMode ??
+                    (syncProvider.paymentList.isNotEmpty
+                        ? syncProvider.paymentList
+                            .firstWhere(
+                              (paymentMode) => paymentMode.isDefault,
+                              orElse: () => syncProvider.paymentList.first,
+                            )
+                            .type
+                        : null),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Add the dispatch order logic here
+
+                // Get the customer credit provider to call savedispatchdataWithBillNumber
+                final customerCreditProvider =
+                    Provider.of<CustomerCreditProvider>(context, listen: false);
+
+                // Prepare the data for saving
+                double totalAmount = order![
+                    'remainingAmount']; // Replace with actual total amount
+                String orderDate =
+                    DateTime.now().toString(); // Current order date
+                String paymentUsed =
+                    selectedPaymentMode ?? 'Cash'; // Payment mode
+                String customerCode = order!['customerCode']; // Customer code
+                String customerName = order!['customerName']; // Customer name
+
+                // Log the data before saving
+                log('Saving Dispatch Data: BillNumber (Auto Increment), TotalAmount: $totalAmount, OrderDate: $orderDate, PaymentUsed: $paymentUsed, CustomerCode: $customerCode, CustomerName: $customerName');
+
+                // Call the savedispatchdataWithBillNumber with relevant order details
+                await customerCreditProvider.savedispatchdataWithBillNumber(
+                  totalAmount: totalAmount,
+                  orderDate: orderDate,
+                  paymentUsed: paymentUsed,
+                  customerCode: customerCode,
+                  customerName: customerName,
+                );
+
+                // Dispatch the order
+                log('Dispatching Order ID: ${order!['orderId']}');
+                Provider.of<UpcomingOrderProvider>(context, listen: false)
+                    .dispatchOrder(order!['orderId']);
+
+                Navigator.pop(context); // Close dialog after dispatch
+              },
+              child: const Text('Dispatch'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -222,19 +344,37 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Sub Total
                           Text(
                             'Sub Total: ₹ ${order!['totalAmount']}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          // Display CGST
                           Text(
-                            'Total Amount: ₹ ${order!['totalAmount']}',
+                            'CGST: ${syncProvider.taxList.first.cGst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          // Display SGST
+                          Text(
+                            'SGST: ${syncProvider.taxList.first.sgst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          // Display IGST
+                          Text(
+                            'IGST: ${syncProvider.taxList.first.iGst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          // Updated Total Amount
+                          Text(
+                            'Total Amount: ₹ ${_calculateTotalWithTax(order!['totalAmount'])}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppColors.blue,
                             ),
                           ),
+                          // Advance and Remaining Amount
                           Text(
                             'Advance Amount: ₹ ${order!['advanceAmount']}',
                             style: const TextStyle(
@@ -262,7 +402,6 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
                 children: [
                   AppButton(
                     margin: const EdgeInsets.symmetric(horizontal: 5),
-                    padding: const EdgeInsets.all(0),
                     style: const TextStyle(color: Colors.white),
                     buttonText: "Edit",
                     onTap: () {
@@ -298,18 +437,12 @@ class _UpcomingOrderDetailsState extends State<UpcomingOrderDetails> {
                   ),
                   AppButton(
                     margin: const EdgeInsets.symmetric(horizontal: 5),
-                    padding: const EdgeInsets.all(0),
                     buttonText: "Dispatch",
                     style: const TextStyle(color: Colors.white),
-                    onTap: () {
-                      Provider.of<UpcomingOrderProvider>(context, listen: false)
-                          .dispatchOrder(order!['orderId']);
-                      Navigator.pop(context);
-                    },
+                    onTap: _showDispatchDialog, // Show dispatch dialog
                   ),
                   AppButton(
                     margin: const EdgeInsets.symmetric(horizontal: 5),
-                    padding: const EdgeInsets.all(0),
                     buttonText: "Cancel Order",
                     style: const TextStyle(color: Colors.white),
                     onTap: () {

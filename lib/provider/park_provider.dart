@@ -57,4 +57,14 @@ class ParkedOrderProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('parkedOrders');
   }
+
+    // Remove a parked order by table name and group
+  Future<void> removeParkedOrder(String tableName, String tableGroup) async {
+    _parkedOrders.removeWhere(
+      (order) =>
+          order['tableName'] == tableName && order['tablegroup'] == tableGroup,
+    );
+    notifyListeners();
+    await _saveToSharedPreferences(); // Save the updated list
+  }
 }

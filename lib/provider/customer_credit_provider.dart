@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class CustomerCreditProvider extends ChangeNotifier {
   static const _billNumberKey = 'billNumber';
   static const _paymentIdKey = 'paymentId';
+  List<Map<String, dynamic>> _cashPayments = [];
+  List<Map<String, dynamic>> cardUpiPayments = [];
+  List<Map<String, dynamic>> nonChargeableOrders = [];
   // Method to place the order and store it in SharedPreferences
   Future<void> placeOrder(String paymentMode, double amount) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -132,36 +135,35 @@ class CustomerCreditProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
+  Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  // Fetch the list of bills for this specific customer
-  List<String>? customerBills = prefs.getStringList('${customerCode}_bills');
+    // Fetch the list of bills for this specific customer
+    List<String>? customerBills = prefs.getStringList('${customerCode}_bills');
 
-  if (customerBills == null) {
-    return [];
+    if (customerBills == null) {
+      return [];
+    }
+
+    List<Map<String, dynamic>> bills = customerBills.map((billJson) {
+      Map<String, dynamic> bill = jsonDecode(billJson);
+
+      double totalAmount = double.tryParse(bill['totalAmount'] ?? '0.0') ?? 0.0;
+
+      return {
+        'billNumber': bill['billNumber'] ?? '',
+        'billDate': bill['billDate'] ?? '',
+        'customerName': bill['customerName'] ?? '',
+        'customerCode': bill['customerCode'] ?? '',
+        'totalAmount': totalAmount,
+        'items': bill['items'] ?? [], // Ensure this is a list
+        'quantities': bill['quantities'] ?? {}, // Load quantities
+        'rates': bill['rates'] ?? {}, // Load rates
+      };
+    }).toList();
+
+    return bills;
   }
-
-  List<Map<String, dynamic>> bills = customerBills.map((billJson) {
-    Map<String, dynamic> bill = jsonDecode(billJson);
-
-    double totalAmount = double.tryParse(bill['totalAmount'] ?? '0.0') ?? 0.0;
-
-    return {
-      'billNumber': bill['billNumber'] ?? '',
-      'billDate': bill['billDate'] ?? '',
-      'customerName': bill['customerName'] ?? '',
-      'customerCode': bill['customerCode'] ?? '',
-      'totalAmount': totalAmount,
-      'items': bill['items'] ?? [], // Ensure this is a list
-      'quantities': bill['quantities'] ?? {}, // Load quantities
-      'rates': bill['rates'] ?? {}, // Load rates
-    };
-  }).toList();
-
-  return bills;
-}
-
 
   Future<List<Map<String, dynamic>>> loadAllBillData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -269,39 +271,87 @@ Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
     return payments;
   }
 
-  // Method to store cash payment data
   Future<void> storeCashPaymentData(
-    String selectedCustomerName,
-    String selectedCustomerCode,
+    String customerName,
+    String customerCode,
     double totalAmount,
     double receivedAmount,
     double returnAmount,
+    int billNumber,
+    String? selectedPaymentMode,
   ) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Store customer and cash payment data in SharedPreferences
-    await prefs.setString('cashPaymentCustomerName', selectedCustomerName);
-    await prefs.setString('cashPaymentCustomerCode', selectedCustomerCode);
-    await prefs.setDouble('cashPaymentTotalAmount', totalAmount);
-    await prefs.setDouble('cashReceivedAmount', receivedAmount);
-    await prefs.setDouble('cashReturnAmount', returnAmount);
-
-    // Notify listeners to reflect changes
-    notifyListeners();
-  }
-
-// Method to load cash payment data
-  Future<Map<String, dynamic>> loadCashPaymentData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    // Retrieve cash payment data from SharedPreferences
-    double receivedAmount = prefs.getDouble('cashReceivedAmount') ?? 0.0;
-    double returnAmount = prefs.getDouble('cashReturnAmount') ?? 0.0;
-
-    return {
+    // Create a payment map
+    Map<String, dynamic> paymentData = {
+      'billNumber': billNumber,
+      'customerName': customerName,
+      'customerCode': customerCode,
+      'totalAmount': totalAmount,
       'receivedAmount': receivedAmount,
       'returnAmount': returnAmount,
+      'selectedPaymentMode': selectedPaymentMode,
     };
+
+    // Retrieve existing payments
+    List<String>? existingPayments = prefs.getStringList('cashPayments') ?? [];
+
+    // Add the new payment to the list
+    existingPayments.add(json.encode(paymentData));
+
+    // Store the updated list back to SharedPreferences
+    await prefs.setStringList('cashPayments', existingPayments);
+  }
+
+  // Function to load cash payments from SharedPreferences
+  Future<List<Map<String, dynamic>>> loadCashPaymentData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? storedPayments = prefs.getStringList('cashPayments');
+
+    if (storedPayments != null) {
+      _cashPayments = storedPayments
+          .map((payment) => json.decode(payment) as Map<String, dynamic>)
+          .toList();
+    }
+
+    return _cashPayments;
+  }
+
+  Future<void> storeCardUpiPayment(double totalAmount) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Get the current bill number and increment it
+    int currentBillNumber = await getCurrentBillNumber();
+    int newBillNumber = currentBillNumber + 1;
+
+    // Prepare the payment data
+    Map<String, dynamic> paymentData = {
+      'billNumber': newBillNumber,
+      'totalAmount': totalAmount,
+    };
+
+    // Store the payment data as a JSON string in SharedPreferences
+    List<String>? storedPayments = prefs.getStringList('cardUpiPayments') ?? [];
+    storedPayments.add(json.encode(paymentData));
+    await prefs.setStringList('cardUpiPayments', storedPayments);
+
+    // Update the bill number for the next transaction
+    await setCurrentBillNumber(newBillNumber);
+  }
+
+  Future<List<Map<String, dynamic>>> loadCardUpiPayment() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? storedPayments = prefs.getStringList('cardUpiPayments');
+
+    List<Map<String, dynamic>> cardUpiPayments = [];
+
+    if (storedPayments != null) {
+      cardUpiPayments = storedPayments
+          .map((payment) => json.decode(payment) as Map<String, dynamic>)
+          .toList();
+    }
+
+    return cardUpiPayments;
   }
 
   Future<void> storeCreditPartyData(
@@ -340,6 +390,95 @@ Future<List<Map<String, dynamic>>> loadBillData(String customerCode) async {
       'enteredAmount': enteredAmount ?? '',
       'paymentMode': paymentMode ?? '',
     };
+  }
+
+  Future<void> storeNonChargeableOrder({
+    required String note,
+    required String personName,
+    required double totalAmount,
+    required int billNumber,
+  }) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Create a map to represent the non-chargeable order
+    Map<String, dynamic> nonChargeableOrder = {
+      'billNumber': billNumber,
+      'note': note,
+      'personName': personName,
+      'totalAmount': totalAmount,
+    };
+
+    // Convert the map to a JSON string for storage
+    String nonChargeableOrderJson = jsonEncode(nonChargeableOrder);
+
+    // Retrieve existing non-chargeable orders
+    List<String>? existingOrders =
+        prefs.getStringList('nonChargeableOrders') ?? [];
+
+    // Add the new order to the list
+    existingOrders.add(nonChargeableOrderJson);
+
+    // Store the updated list back to SharedPreferences
+    await prefs.setStringList('nonChargeableOrders', existingOrders);
+  }
+
+  Future<List<Map<String, dynamic>>> loadNonChargeableOrders() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Retrieve the stored non-chargeable orders
+    List<String>? storedOrders = prefs.getStringList('nonChargeableOrders');
+
+    // Parse the stored JSON strings into a list of maps
+
+    if (storedOrders != null) {
+      for (String order in storedOrders) {
+        nonChargeableOrders.add(Map<String, dynamic>.from(jsonDecode(order)));
+      }
+    }
+
+    return nonChargeableOrders; // Return the list of non-chargeable orders
+  }
+
+  Future<void> savedispatchdataWithBillNumber({
+    required double totalAmount,
+    required String orderDate,
+    required String paymentUsed,
+    required String customerCode,
+    required String customerName,
+  }) async {
+    // Get current bill number from customer credit provider
+    int billNumber = await getCurrentBillNumber();
+
+    // Save the dispatch data using the shared preferences
+    await savedispatchdata(
+      billNumber: billNumber,
+      totalAmount: totalAmount,
+      orderDate: orderDate,
+      paymentUsed: paymentUsed,
+      customerCode: customerCode,
+      customerName: customerName,
+    );
+
+    // Increment and store the next bill number
+    await setCurrentBillNumber(billNumber + 1);
+  }
+
+  Future<void> savedispatchdata({
+    required int billNumber,
+    required double totalAmount,
+    required String orderDate,
+    required String paymentUsed,
+    required String customerCode,
+    required String customerName,
+  }) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt('billNumber', billNumber);
+    await prefs.setDouble('totalAmount', totalAmount);
+    await prefs.setString('orderDate', orderDate);
+    await prefs.setString('paymentUsed', paymentUsed);
+    await prefs.setString('customerCode', customerCode);
+    await prefs.setString('customerName', customerName);
   }
 
   Future<void> setCurrentBillNumber(int number) async {

@@ -1,6 +1,5 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:galaxy_mini/components/scaffold_message.dart';
 import 'package:galaxy_mini/models/table_model.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
@@ -11,7 +10,7 @@ import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add
 import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
 import 'package:galaxy_mini/utils/extension.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart'; // Add this import
+import 'package:uuid/uuid.dart';
 
 class BillPage extends StatefulWidget {
   final List<Map<String, dynamic>> items;
@@ -36,10 +35,15 @@ class BillPageState extends State<BillPage> {
   late Map<String, double> quantities;
   late double totalAmount;
   late SyncProvider syncProvider;
+  double updatedTotalAmount = 0.0;
+  double discountedTotalAmount = 0.0;
   late CustomerCreditProvider custprovider;
   String? selectedCustomerName;
   String? selectedCustomerCode;
   String? selectedPaymentMode;
+  bool showTaxDetails = false;
+  bool _isPercentage = false;
+  String _discountValue = '';
 
   @override
   void initState() {
@@ -47,8 +51,70 @@ class BillPageState extends State<BillPage> {
     quantities = Map.from(widget.quantities);
     totalAmount = widget.totalAmount;
     syncProvider = Provider.of<SyncProvider>(context, listen: false);
-    custprovider = Provider.of<CustomerCreditProvider>(context,
-        listen: false); // Initialize _syncProvider
+    custprovider = Provider.of<CustomerCreditProvider>(context, listen: false);
+    fetchTaxDetails(); // Initialize _syncProvider
+  }
+
+  // Method to calculate the discounted total
+  void _calculateDiscountedTotal() {
+    setState(() {
+      double discount = double.tryParse(_discountValue) ?? 0.0;
+
+      if (_isPercentage) {
+        // Discount is in percentage
+        discountedTotalAmount =
+            updatedTotalAmount - (updatedTotalAmount * (discount / 100));
+      } else {
+        // Discount is in flat ₹
+        discountedTotalAmount = updatedTotalAmount - discount;
+      }
+
+      // Ensure the discounted total amount doesn't go below 0
+      if (discountedTotalAmount < 0) {
+        discountedTotalAmount = 0.0;
+      }
+    });
+  }
+
+  Future<void> fetchTaxDetails() async {
+    await syncProvider.getTaxAll(); // Fetch the tax details
+    calculateUpdatedTotalAmount(); // Calculate updated total amount
+  }
+
+  void calculateUpdatedTotalAmount() {
+    double totalGST = 0.0;
+
+    // Check if the tax list is not empty and calculate totalGST
+    if (syncProvider.taxList.isNotEmpty) {
+      // Ensure that you access the correct property for total GST
+      var gstValue = syncProvider
+          .taxList.first.rate; // Replace `rate` with `totalGST` if necessary
+
+      // Check if gstValue is of type String and parse it
+      totalGST =
+          double.tryParse(gstValue) ?? 0.0; // Parse string to double safely
+    }
+
+    // Calculate the updated total amount
+    updatedTotalAmount =
+        widget.totalAmount + widget.totalAmount * (totalGST / 100);
+
+    // Trigger a rebuild to update the UI
+    setState(() {});
+  }
+
+  double _calculateTotalWithTax(double subTotal) {
+    // Fetch tax values, ensuring to handle potential nulls or empty values
+    double cgst = double.tryParse(syncProvider.taxList.first.cGst) ??
+        0.0; // Replace with actual field names from your provider
+    double sgst = double.tryParse(syncProvider.taxList.first.sgst) ?? 0.0;
+    double igst = double.tryParse(syncProvider.taxList.first.iGst) ?? 0.0;
+
+    // Calculate total tax
+    double totalTax = (cgst + sgst + igst);
+
+    // Return the total amount including tax
+    return subTotal + subTotal * (totalTax / 100);
   }
 
   void _increaseQuantity(String itemName) {
@@ -236,21 +302,24 @@ class BillPageState extends State<BillPage> {
                 DateTime orderPlacedTime = DateTime.now();
 
                 // Ensure totalAmount is properly fetched from widget and is not null or 0
-                double totalAmount = widget.totalAmount;
-                if (totalAmount == 0.0) {
+                double subTotalAmount = widget
+                    .totalAmount; // Assuming this is your subtotal before tax
+                double updatedTotalAmount = _calculateTotalWithTax(
+                    subTotalAmount); // Calculate total with tax
+                if (updatedTotalAmount == 0.0) {
                   scaffoldMessage(message: 'Total amount cannot be zero!');
-                  return; 
+                  return;
                 }
 
                 // Check if advanceAmount is greater than totalAmount (which shouldn't happen)
-                if (advanceAmount > totalAmount) {
-                   scaffoldMessage(
+                if (advanceAmount > updatedTotalAmount) {
+                  scaffoldMessage(
                       message: 'Advance amount cannot exceed total amount!');
-                  return; 
+                  return;
                 }
 
                 // Calculate remaining amount
-                double remainingAmount = totalAmount - advanceAmount;
+                double remainingAmount = updatedTotalAmount - advanceAmount;
 
                 // Add the data from the Bill Summary
                 List<Map<String, dynamic>> items = widget.items;
@@ -327,28 +396,44 @@ class BillPageState extends State<BillPage> {
   }
 
   void _showPaymentDialog(
-      BuildContext context, String selectedPaymentMode, double totalAmount) {
+      BuildContext context,
+      String selectedPaymentMode,
+      double updatedTotalAmount,
+      double discountedTotalAmount,
+      bool isDiscountApplied) {
+    final custprovider =
+        Provider.of<CustomerCreditProvider>(context, listen: false);
+
+    // Determine which total amount to pass
+    double amountToBePaid =
+        isDiscountApplied ? discountedTotalAmount : updatedTotalAmount;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Amount to be Paid'),
-          content: Text('Total Amount: \$${totalAmount.toStringAsFixed(2)}'),
+          content:
+              Text('Total Amount: Rs. ${amountToBePaid.toStringAsFixed(2)}'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pop(context); // Close the dialog
               },
             ),
             ElevatedButton(
               child: const Text('Submit'),
-              onPressed: () {
-                // Use the custprovider to place the order
-                custprovider.placeOrder(selectedPaymentMode, totalAmount);
+              onPressed: () async {
+                // Use the custprovider to store payment data
+                if (selectedPaymentMode == 'UPI' ||
+                    selectedPaymentMode == 'Card') {
+                  await custprovider.storeCardUpiPayment(amountToBePaid);
+                }
 
-                // Close the dialog after placing the order
-                Navigator.of(context).pop();
+                // Close the dialog after storing the payment
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
             ),
           ],
@@ -419,7 +504,7 @@ class BillPageState extends State<BillPage> {
           .toList(),
       'quantities': Map.from(quantities),
       'rates': Map.from(widget.rates),
-      'totalAmount': totalAmount,
+      'totalAmount': updatedTotalAmount,
       'tablegroup': table.group,
       'tableName': table.name,
     };
@@ -428,14 +513,179 @@ class BillPageState extends State<BillPage> {
       // Attempt to add the order to the provider
       Provider.of<ParkedOrderProvider>(context, listen: false)
           .addOrder(currentOrder);
-
- 
     } catch (e) {
       // Show error message for any exception
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
     }
+  }
+
+  void _showNonChargeableDialog(BuildContext context, double totalAmount) {
+    final TextEditingController noteController = TextEditingController();
+    final TextEditingController personNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Mark as Non-Chargeable Order"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(labelText: "Enter Note"),
+              ),
+              TextField(
+                controller: personNameController,
+                decoration:
+                    const InputDecoration(labelText: "Enter Person's Name"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("Close"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Handle submit action here
+                String note = noteController.text;
+                String personName = personNameController.text;
+
+                // Get the current bill number
+                int currentBillNumber =
+                    await custprovider.getCurrentBillNumber();
+
+                // Store non-chargeable order details in CustomerCreditProvider
+                await CustomerCreditProvider().storeNonChargeableOrder(
+                  note: note,
+                  personName: personName,
+                  totalAmount: updatedTotalAmount,
+                  billNumber: currentBillNumber,
+                );
+
+                // Increment the bill number for next transaction
+                await custprovider.setCurrentBillNumber(currentBillNumber + 1);
+
+                // Log for debugging
+                log("Note: $note");
+                log("Person's Name: $personName");
+                log("Total Amount: $totalAmount");
+
+                Navigator.of(context)
+                    .pop(); // Close the dialog after submission
+              },
+              child: const Text("Submit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showOfferCouponDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Available Offer Coupons'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Consumer<SyncProvider>(
+              builder: (context, syncProvider, child) {
+                if (syncProvider.offerList.isEmpty) {
+                  return const Text('No offers available.');
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: syncProvider.offerList.length,
+                  itemBuilder: (context, index) {
+                    final offer = syncProvider.offerList[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        leading: const Icon(
+                          Icons.local_offer,
+                          color: Colors.blue,
+                        ),
+                        title: Text(
+                          offer.couponCode ?? 'No Code',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              offer.note ?? 'Unnamed',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Discount: ${offer.discountInPercent ?? 'No data'}%',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Max discount: Rs. ${offer.maxDiscount ?? 'No data'}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Min. order Amt: Rs. ${offer.minBillAmount ?? 'No data'}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Valid until: ${offer.validity ?? 'No data'}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -451,11 +701,29 @@ class BillPageState extends State<BillPage> {
         actions: [
           IconButton(
             icon: const Icon(
+              Icons.local_offer,
+              color: Colors.white,
+            ), // You can replace this icon with any relevant icon
+            onPressed: () {
+              _showOfferCouponDialog(context);
+            },
+          ),
+          IconButton(
+            icon: const Icon(
               Icons.list_alt,
               color: Colors.white,
             ), // You can replace this icon with any relevant icon
             onPressed: () => showOrderDetailsDialog(
                 context, selectedCustomerName!, selectedCustomerCode!),
+          ),
+          IconButton(
+            icon: const Icon(
+              Icons.not_interested,
+              color: Colors.white,
+            ), // You can replace this icon with any relevant icon
+            onPressed: () {
+              _showNonChargeableDialog(context, totalAmount);
+            },
           ),
         ],
       ),
@@ -550,19 +818,65 @@ class BillPageState extends State<BillPage> {
                     style:
                         TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    'Rs. ${totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFC41E3A),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        _discountValue
+                                .isEmpty // Check if discount value is empty
+                            ? 'Rs. ${updatedTotalAmount.toStringAsFixed(2)}' // If no discount, show updated total amount
+                            : 'Rs. ${discountedTotalAmount.toStringAsFixed(2)}', // If discount applied, show discounted total
+                        style: const TextStyle(
+                          fontSize: 22.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFC41E3A),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(showTaxDetails
+                            ? Icons.arrow_drop_up
+                            : Icons.arrow_drop_down),
+                        onPressed: () {
+                          setState(() {
+                            showTaxDetails =
+                                !showTaxDetails; // Toggle visibility
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+
+            // Tax details visibility section
+            if (showTaxDetails)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CGST: ${(double.tryParse(syncProvider.taxList.first.cGst)?.toStringAsFixed(2) ?? '0.00')} %',
+                      style: const TextStyle(fontSize: 18.0),
+                    ),
+                    Text(
+                      'SGST: ${(double.tryParse(syncProvider.taxList.first.sgst)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(fontSize: 18.0),
+                    ),
+                    Text(
+                      'IGST: ${(double.tryParse(syncProvider.taxList.first.iGst)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(fontSize: 18.0),
+                    ),
+                    Text(
+                      'Total GST: ${(double.tryParse(syncProvider.taxList.first.rate)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(
+                          fontSize: 18.0, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding: const EdgeInsets.symmetric(vertical: 7.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -578,29 +892,7 @@ class BillPageState extends State<BillPage> {
                 ],
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  backgroundColor: const Color(0xFFC41E3A),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                onPressed: () {
-                  // Handle payment action here
-                },
-                child: const Text(
-                  'Proceed to Payment',
-                  style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10.0),
+            const SizedBox(height: 4.0),
             Row(
               children: [
                 // Payment Mode Dropdown
@@ -641,24 +933,47 @@ class BillPageState extends State<BillPage> {
                             : null), // Handle the case if the paymentList is empty
                   ),
                 ),
-
                 const SizedBox(width: 16.0), // Add spacing between fields
                 // Discount TextField
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
-                      labelText: 'Discount',
+                      labelText:
+                          'Discount ${_isPercentage ? '%' : '₹'}', // Update label based on toggle
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                           vertical: 12.0, horizontal: 10.0),
                     ),
-                    keyboardType:
-                        TextInputType.number, // Assuming discount is a number
+                    keyboardType: TextInputType.number,
                     onChanged: (value) {
-                      // Handle discount change
+                      setState(() {
+                        _discountValue = value; // Update discount value
+                      });
+                      _calculateDiscountedTotal(); // Recalculate total when discount changes
                     },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isPercentage = !_isPercentage; // Toggle between ₹ and %
+                    });
+                    _calculateDiscountedTotal(); // Recalculate total when discount mode changes
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(10.0),
+                      color: Colors.white,
+                    ),
+                    child: Text(_isPercentage
+                        ? '%'
+                        : '₹'), // Display ₹ or % based on toggle
                   ),
                 ),
               ],
@@ -781,26 +1096,30 @@ class BillPageState extends State<BillPage> {
                     ),
                     onPressed: () {
                       if (selectedPaymentMode == 'Cash') {
+                        double amountToBePaid = _discountValue.isNotEmpty
+                            ? discountedTotalAmount
+                            : updatedTotalAmount;
                         // Show the cash payment dialog
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return CashPaymentDialog(
-                              totalAmount: totalAmount,
+                              totalAmount: amountToBePaid,
+                              selectedPaymentMode: selectedPaymentMode,
                               onConfirm: (receivedAmount) {
-                                final creditPartyProvider =
-                                    Provider.of<CustomerCreditProvider>(
-                                  context,
-                                  listen: false,
-                                );
+                                // final creditPartyProvider =
+                                //     Provider.of<CustomerCreditProvider>(
+                                //   context,
+                                //   listen: false,
+                                // );
 
-                                creditPartyProvider.storeCreditPartyData(
-                                    selectedCustomerName!,
-                                    selectedCustomerCode!,
-                                    totalAmount,
-                                    receivedAmount.toString(),
-                                    'Cash' // Payment mode
-                                    );
+                                // creditPartyProvider.storeCreditPartyData(
+                                //     selectedCustomerName!,
+                                //     selectedCustomerCode!,
+                                //     totalAmount,
+                                //     receivedAmount.toString(),
+                                //     'Cash' // Payment mode
+                                //     );
 
                                 Navigator.of(context).pop(); // Close the dialog
                               },
@@ -813,6 +1132,9 @@ class BillPageState extends State<BillPage> {
                         // Check if a customer is selected
                         if (selectedCustomerName != null &&
                             selectedCustomerCode != null) {
+                          double amountToBePaid = _discountValue.isNotEmpty
+                              ? discountedTotalAmount
+                              : updatedTotalAmount;
                           // Show the payment dialog
                           showDialog(
                             context: context,
@@ -828,7 +1150,7 @@ class BillPageState extends State<BillPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                        'Total Amount: Rs. ${totalAmount.toStringAsFixed(2)}'),
+                                        'Total Amount: Rs. ${amountToBePaid.toStringAsFixed(2)}'),
                                     const SizedBox(height: 16.0),
                                     // Text field for amount
                                     TextField(
@@ -902,7 +1224,7 @@ class BillPageState extends State<BillPage> {
                                       await creditPartyProvider.storeBillData(
                                         billNumber: newBillNumber,
                                         billDate: billDate,
-                                        totalAmount: totalAmount,
+                                        totalAmount: amountToBePaid,
                                         selectedCustomerName:
                                             selectedCustomerName!,
                                         selectedCustomerCode:
@@ -937,6 +1259,7 @@ class BillPageState extends State<BillPage> {
 
                                       // Close the dialog
                                       Navigator.of(context).pop();
+                                      Navigator.pop(context);
                                     },
                                     child: const Text('OK'),
                                   )
@@ -958,13 +1281,17 @@ class BillPageState extends State<BillPage> {
                         if (selectedPaymentMode == 'UPI' ||
                             selectedPaymentMode == 'Card') {
                           _showPaymentDialog(
-                              context, selectedPaymentMode!, totalAmount);
+                              context,
+                              selectedPaymentMode!,
+                              updatedTotalAmount,
+                              discountedTotalAmount,
+                              _discountValue.isNotEmpty);
                         } else {
                           // Handle other payment modes or show a message
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Please proceed with Rs. ${totalAmount.toStringAsFixed(2)} or select another option',
+                                'Please proceed with Rs. ${updatedTotalAmount.toStringAsFixed(2)} or select another option',
                               ),
                             ),
                           );
