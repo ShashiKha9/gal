@@ -19,6 +19,7 @@ class _OfferCouponMasterState extends State<OfferCouponMaster> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    _syncProvider.loadOfferListFromPrefs();
   }
 
   @override

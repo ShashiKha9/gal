@@ -15,4 +15,13 @@ class DepartmentModel {
         description: json["description"] ?? "",
         remark: json["remark"],
       );
+
+  // Method to convert DepartmentModel to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'code': code,
+      'description': description,
+      'remark': remark,
+    };
+  }
 }

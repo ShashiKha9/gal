@@ -6,7 +6,7 @@ class MySharedPreferences {
   MySharedPreferences._privateConstructor();
 
   static final MySharedPreferences instance =
-  MySharedPreferences._privateConstructor();
+      MySharedPreferences._privateConstructor();
 
   setStringValue(String key, String value) async {
     SharedPreferences myPrefs = await SharedPreferences.getInstance();
@@ -31,6 +31,16 @@ class MySharedPreferences {
   setBooleanValue(String key, bool value) async {
     SharedPreferences myPrefs = await SharedPreferences.getInstance();
     myPrefs.setBool(key, value);
+  }
+
+  Future<void> setStringList(String key, List<String> value) async {
+    SharedPreferences myPrefs = await SharedPreferences.getInstance();
+    await myPrefs.setStringList(key, value);
+  }
+
+  Future<List<String>?> getStringList(String key) async {
+    SharedPreferences myPrefs = await SharedPreferences.getInstance();
+    return myPrefs.getStringList(key);
   }
 
   Future<bool> getBooleanValue(String key) async {

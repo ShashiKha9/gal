@@ -170,8 +170,6 @@ class BillDetailPage extends StatelessWidget {
 
   Widget _buildPrintButton() {
     return AppButton(
-      padding: EdgeInsets.zero,
-      margin: EdgeInsets.zero,
       onTap: () {
         // Implement print functionality here
       },

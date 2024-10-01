@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:galaxy_mini/utils/api_urls.dart';
 import 'package:galaxy_mini/repositories/base_repository.dart';
 
-
 class SyncRepository extends BaseRepository {
   // getItem - updated to handle exceptions
   Future<Map<String, dynamic>> getItem() async {
@@ -48,7 +47,7 @@ class SyncRepository extends BaseRepository {
     }
   }
 
-    Future<Map<String, dynamic>> getTableGroup() async {
+  Future<Map<String, dynamic>> getTableGroup() async {
     try {
       final response = await getHttp(
         api: ApiUrls.getTableGroupApi,
@@ -147,7 +146,8 @@ class SyncRepository extends BaseRepository {
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }
-    Future<Map<String, dynamic>> getpayment() async {
+
+  Future<Map<String, dynamic>> getpayment() async {
     try {
       final response = await getHttp(
         api: ApiUrls.getPaymentApi,
@@ -166,7 +166,8 @@ class SyncRepository extends BaseRepository {
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }
-      Future<Map<String, dynamic>> getoffer() async {
+
+  Future<Map<String, dynamic>> getoffer() async {
     try {
       final response = await getHttp(
         api: ApiUrls.getOfferApi,
@@ -185,7 +186,8 @@ class SyncRepository extends BaseRepository {
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }
-        Future<Map<String, dynamic>> getkotmessage() async {
+
+  Future<Map<String, dynamic>> getkotmessage() async {
     try {
       final response = await getHttp(
         api: ApiUrls.getkotmessageApi,
@@ -201,6 +203,26 @@ class SyncRepository extends BaseRepository {
       }
     } catch (e) {
       log(e.toString(), name: 'getkotmessageError');
+      rethrow; // Rethrow the exception to be caught by the caller
+    }
+  }
+
+  Future<Map<String, dynamic>> getUnit() async {
+    try {
+      final response = await getHttp(
+        api: ApiUrls.getUnitApi,
+        useToken: true,
+      );
+      // log(response.body, name: 'getItem');
+
+      // Check if the response is successful (status code 200)
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw const HttpException('Failed to load unit data');
+      }
+    } catch (e) {
+      log(e.toString(), name: 'getUnitError');
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }

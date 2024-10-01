@@ -34,11 +34,28 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   Map<String, double> rates = {};
   late SyncProvider _syncProvider;
   Set<String> selectedItems = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _syncProvider = Provider.of<SyncProvider>(context, listen: false);    
+    _syncProvider = Provider.of<SyncProvider>(context, listen: false);
+
+    // Call your loading function with loader management
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true; // Show loader
+    });
+
+    await _syncProvider.loadDepartmentListFromPrefs();
+    await _syncProvider.loadItemsByDepartmentFromPrefs();
+
+    setState(() {
+      _isLoading = false; // Hide loader
+    });
   }
 
   @override
@@ -288,7 +305,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       log(screenSize.toString(), name: "800");
     } else {
       crossAxisCount = 3;
-      childAspectRatio = (cardHeight / crossAxisCount) / 340;
+      childAspectRatio = (cardHeight / crossAxisCount) / 350;
       log(screenSize.toString(), name: "00");
     }
 
@@ -367,402 +384,430 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
               ),
             )
           : const SizedBox(),
-      body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-        if (syncProvider.departmentList.isEmpty) {
-          return const Center(
-            child: Text('No departments available. Please sync data.'),
-          );
-        }
-        return Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children:
-                    List.generate(syncProvider.departmentList.length, (index) {
-                  final department = syncProvider.departmentList[index];
-                  final isSelected = _selectedDepartmentIndex == index;
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Consumer<SyncProvider>(builder: (context, syncProvider, child) {
+              if (syncProvider.departmentList.isEmpty) {
+                return const Center(
+                  child: Text('No departments available. Please sync data.'),
+                );
+              }
+              return Column(
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(
+                          syncProvider.departmentList.length, (index) {
+                        final department = syncProvider.departmentList[index];
+                        final isSelected = _selectedDepartmentIndex == index;
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Material(
-                      child: ChoiceChip(
-                        label: Text(
-                          department.description,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedDepartmentIndex = index;
-                          });
-                        },
-                        avatar: null,
-                        showCheckmark: false,
-                        backgroundColor: Colors.white,
-                        selectedColor: AppColors.blue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(8.0),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 2,
-                  mainAxisSpacing: 2,
-                  childAspectRatio: childAspectRatio,
-                ),
-                itemCount: syncProvider
-                        .itemsByDepartment[syncProvider
-                            .departmentList[_selectedDepartmentIndex].code]
-                        ?.length ??
-                    0,
-                itemBuilder: (context, itemIndex) {
-                  final items = syncProvider.itemsByDepartment[syncProvider
-                          .departmentList[_selectedDepartmentIndex].code] ??
-                      [];
-                  final item = items[itemIndex];
-                  bool isSelected = selectedItems.contains(item.name) ||
-                      (quantities[item.name] ?? 0) > 0;
-
-                  return GestureDetector(
-                    onTap: () =>
-                        widget.isEdit ? _onTapNavigate(item) : _onItemTap(item),
-                    child: Card(
-                      color: Colors.white,
-                      // surfaceTintColor: AppColors.lightPink,
-                      borderOnForeground: true,
-                      elevation: 2,
-                      semanticContainer: true,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(15),
-                        ),
-                        side: BorderSide(
-                          color:
-                              isSelected ? AppColors.blue : Colors.transparent,
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              // padding: const EdgeInsets.all(10),
-                              width: double.maxFinite,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(10),
-                                ),
-                                // border: Border(
-                                //   bottom: BorderSide(
-                                //     color: AppColors.lightPink,
-                                //     width: 2,
-                                //   ),
-                                // ),
-                              ),
-                              child: item.imageUrl == null ||
-                                      item.imageUrl!.isEmpty
-                                  ? const Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Icon(
-                                        Icons.wallpaper,
-                                        color: AppColors.lightGrey,
-                                        size: 50,
-                                      ),
-                                    )
-                                  : Stack(
-                                      children: [
-                                        Align(
-                                          alignment: Alignment.center,
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            child: ImageFiltered(
-                                              imageFilter: ImageFilter.blur(
-                                                  sigmaX: 10, sigmaY: 10),
-                                              child: Image.network(
-                                                item.imageUrl ?? "",
-                                                height: 70,
-                                                width: double.maxFinite,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Align(
-                                          alignment: Alignment.center,
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                            child: Image.network(
-                                              item.imageUrl ?? "",
-                                              height: 70,
-                                              width: double.maxFinite,
-                                              fit: BoxFit.contain,
-                                            ),
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                            ),
-
-                            SizedBox(
-                              // height: 30,
-                              child: Text(
-                                item.name ?? "NO Name",
-                                style: const TextStyle(
-                                  fontSize: 12,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Material(
+                            child: ChoiceChip(
+                              label: Text(
+                                department.description,
+                                style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.white : Colors.black,
                                   fontWeight: FontWeight.bold,
                                 ),
-                                maxLines: 2,
+                              ),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  _selectedDepartmentIndex = index;
+                                });
+                              },
+                              avatar: null,
+                              showCheckmark: false,
+                              backgroundColor: Colors.white,
+                              selectedColor: AppColors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
                               ),
                             ),
-                            // const SizedBox(height: 8),
-                            Text(
-                              "₹ ${item.rate1}",
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            if (selectedItemName != null)
-              Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Row(
-                      children: [
-                        Flexible(
-                          flex: 5,
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 0, 5, 5),
-                                child: Container(
-                                  width: double.maxFinite,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.lessBlue,
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(8),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.3),
-                                        spreadRadius: 2,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 15,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              "$selectedItemName",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                            Text(
-                                              "₹ $totalAmount",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 10),
-                                        ConstrainedBox(
-                                          constraints: const BoxConstraints(
-                                            minWidth: 100,
-                                            maxWidth: 112,
-                                          ),
-                                          child: Container(
-                                            decoration: const BoxDecoration(
-                                              color: Colors.white,
-                                              // border: Border.all(
-                                              //   color: Colors.black,
-                                              // ),
-                                              borderRadius: BorderRadius.all(
-                                                Radius.circular(50),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                InkWell(
-                                                  onTap: _decreaseQuantity,
-                                                  child: Container(
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                      color: AppColors.blue,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.remove,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 15),
-                                                Text(
-                                                  "${quantities[selectedItemName]}",
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 15),
-                                                InkWell(
-                                                  onTap: _increaseQuantity,
-                                                  child: Container(
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                      color: AppColors.blue,
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.add,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
-                                child: Container(
-                                  width: double.maxFinite,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.blue,
-                                    borderRadius: const BorderRadius.all(
-                                      Radius.circular(8),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.3),
-                                        spreadRadius: 2,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 15,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          "TOTAL:",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            fontSize: 17,
-                                          ),
-                                        ),
-                                        Text(
-                                          "₹ $totalAmount",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                            fontSize: 17,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: InkWell(
-                            onTap: () => _navigateToBillPage(),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.red,
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(8),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 3),
+                        );
+                      }),
+                    ),
+                  ),
+                  Expanded(
+                    child: GridView.builder(
+                      padding: const EdgeInsets.all(8.0),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 2,
+                        mainAxisSpacing: 2,
+                        childAspectRatio: childAspectRatio,
+                      ),
+                      itemCount: syncProvider
+                              .itemsByDepartment[syncProvider
+                                  .departmentList[_selectedDepartmentIndex]
+                                  .code]
+                              ?.length ??
+                          0,
+                      itemBuilder: (context, itemIndex) {
+                        final items = syncProvider.itemsByDepartment[
+                                syncProvider
+                                    .departmentList[_selectedDepartmentIndex]
+                                    .code] ??
+                            [];
+                        final item = items[itemIndex];
+                        bool isSelected = selectedItems.contains(item.name) ||
+                            (quantities[item.name] ?? 0) > 0;
+
+                        return GestureDetector(
+                          onTap: () => widget.isEdit
+                              ? _onTapNavigate(item)
+                              : _onItemTap(item),
+                          child: Card(
+                            color: Colors.white,
+                            // surfaceTintColor: AppColors.lightPink,
+                            borderOnForeground: true,
+                            elevation: 2,
+                            semanticContainer: true,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(15),
+                              ),
+                              side: BorderSide(
+                                color: isSelected
+                                    ? AppColors.blue
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    // padding: const EdgeInsets.all(10),
+                                    width: double.maxFinite,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(10),
+                                      ),
+                                      // border: Border(
+                                      //   bottom: BorderSide(
+                                      //     color: AppColors.lightPink,
+                                      //     width: 2,
+                                      //   ),
+                                      // ),
+                                    ),
+                                    child: item.imageUrl == null ||
+                                            item.imageUrl!.isEmpty
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(10),
+                                            child: Icon(
+                                              Icons.wallpaper,
+                                              color: AppColors.lightGrey,
+                                              size: 50,
+                                            ),
+                                          )
+                                        : Stack(
+                                            children: [
+                                              Align(
+                                                alignment: Alignment.center,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  child: ImageFiltered(
+                                                    imageFilter:
+                                                        ImageFilter.blur(
+                                                            sigmaX: 10,
+                                                            sigmaY: 10),
+                                                    child: Image.network(
+                                                      item.imageUrl ?? "",
+                                                      height: 70,
+                                                      width: double.maxFinite,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Align(
+                                                alignment: Alignment.center,
+                                                child: ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                  child: Image.network(
+                                                    item.imageUrl ?? "",
+                                                    height: 70,
+                                                    width: double.maxFinite,
+                                                    fit: BoxFit.contain,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
+                                          ),
+                                  ),
+
+                                  SizedBox(
+                                    // height: 30,
+                                    child: Text(
+                                      item.name ?? "NO Name",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                  // const SizedBox(height: 8),
+                                  Text(
+                                    "₹ ${item.rate1}",
+                                    style: const TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 50,
-                                ),
-                                child: Icon(
-                                  Icons.print,
-                                  color: Colors.white,
-                                ),
-                              ),
                             ),
                           ),
-                        )
-                      ],
+                        );
+                      },
                     ),
                   ),
+                  if (selectedItemName != null)
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                flex: 5,
+                                child: Column(
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(0, 0, 5, 5),
+                                      child: Container(
+                                        width: double.maxFinite,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.lessBlue,
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(8),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.3),
+                                              spreadRadius: 2,
+                                              blurRadius: 5,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 10,
+                                            horizontal: 15,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    "$selectedItemName",
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "₹ $totalAmount",
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 10),
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  minWidth: 100,
+                                                  maxWidth: 112,
+                                                ),
+                                                child: Container(
+                                                  decoration:
+                                                      const BoxDecoration(
+                                                    color: Colors.white,
+                                                    // border: Border.all(
+                                                    //   color: Colors.black,
+                                                    // ),
+                                                    borderRadius:
+                                                        BorderRadius.all(
+                                                      Radius.circular(50),
+                                                    ),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      InkWell(
+                                                        onTap:
+                                                            _decreaseQuantity,
+                                                        child: Container(
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                            color:
+                                                                AppColors.blue,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.remove,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 15),
+                                                      Text(
+                                                        "${quantities[selectedItemName]}",
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 15),
+                                                      InkWell(
+                                                        onTap:
+                                                            _increaseQuantity,
+                                                        child: Container(
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                            color:
+                                                                AppColors.blue,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          child: const Icon(
+                                                            Icons.add,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                      child: Container(
+                                        width: double.maxFinite,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.blue,
+                                          borderRadius: const BorderRadius.all(
+                                            Radius.circular(8),
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.3),
+                                              spreadRadius: 2,
+                                              blurRadius: 5,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 10,
+                                            horizontal: 15,
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                "TOTAL:",
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                  fontSize: 17,
+                                                ),
+                                              ),
+                                              Text(
+                                                "₹ $totalAmount",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                  fontSize: 17,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: InkWell(
+                                  onTap: () => _navigateToBillPage(),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.red,
+                                      borderRadius: const BorderRadius.all(
+                                        Radius.circular(8),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.3),
+                                          spreadRadius: 2,
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 50,
+                                      ),
+                                      child: Icon(
+                                        Icons.print,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
-              ),
-          ],
-        );
-      }),
+              );
+            }),
     );
   }
 }

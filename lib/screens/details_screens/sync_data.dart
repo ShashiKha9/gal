@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/components/scaffold_message.dart';
+import 'package:galaxy_mini/provider/customer_credit_provider.dart';
+import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SyncData extends StatelessWidget {
   const SyncData({super.key});
@@ -33,6 +37,7 @@ class SyncData extends StatelessWidget {
               await syncProvider.getDepartmentsAll();
               await syncProvider.getItemsAll();
               await syncProvider.getTableMasterAll();
+              await syncProvider.getTableGroupAll();
               await syncProvider.getKotGroupAll();
               await syncProvider.getTaxAll();
               await syncProvider.getCustomerAll();
@@ -41,6 +46,7 @@ class SyncData extends StatelessWidget {
               await syncProvider.getKotMessageAll();
               await upcomingprovider.loadOrders();
               await parkprovider.loadParkedOrders();
+              await syncProvider.getUnitsAll();
 
               if (context.mounted) {
                 scaffoldMessage(message: "Data synchronized successfully!");
@@ -60,8 +66,6 @@ class SyncData extends StatelessWidget {
             icon: Icons.sync,
             title: 'Fetch customer credit from server',
             onTap: () async {
-              Navigator.pop(context);
-
               final customerprovider =
                   Provider.of<CustomerCreditProvider>(context, listen: false);
 
@@ -73,18 +77,17 @@ class SyncData extends StatelessWidget {
               if (customerCodes != null && customerCodes.isNotEmpty) {
                 // Loop through customer codes and fetch their bill data
                 for (String customerCode in customerCodes) {
-                  await customerprovider.loadBillData(customerCode);
+                  await customerprovider
+                      .loadBillData(customerCode)
+                      .then((value) {
+                    scaffoldMessage(
+                        message: "Customer credit data synchronized!");
+                    Navigator.pop(context);
+                  });
                 }
 
                 // After syncing, set the flag to indicate data is fetched
                 await prefs.setBool('is_customer_credit_fetched', true);
-              }
-
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Customer credit data synchronized!')),
-                );
               }
             },
           ),
@@ -124,8 +127,6 @@ class SyncData extends StatelessWidget {
           Center(
             child: AppButton(
               buttonText: 'Remove duplicate customers',
-              padding: const EdgeInsets.all(0),
-              margin: const EdgeInsets.all(0),
               onTap: () {},
             ),
           ),

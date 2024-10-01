@@ -228,16 +228,12 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   AppButton(
-                    margin: const EdgeInsets.all(0),
-                    padding: const EdgeInsets.all(0),
                     onTap: () {
                       Navigator.pop(context);
                     },
                     buttonText: 'Cancel',
                   ),
                   AppButton(
-                    margin: const EdgeInsets.all(0),
-                    padding: const EdgeInsets.all(0),
                     onTap: () => _saveCustomer(),
                     buttonText: 'Save',
                   ),

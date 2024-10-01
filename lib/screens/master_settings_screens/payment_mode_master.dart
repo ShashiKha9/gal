@@ -20,7 +20,7 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
-
+    _syncProvider.loadPaymentListFromPrefs();
     // WidgetsBinding.instance.addPostFrameCallback((_) {
     // scaffoldMessage(message: 'Please select default from the list');
     // });
@@ -130,69 +130,71 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
                 ],
               ),
             ),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _syncProvider.paymentList.length,
-              itemBuilder: (context, index) {
-                final payment = _syncProvider.paymentList[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 10),
-                    leading: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getPaymentIcon(payment.type),
-                          color: AppColors.blue,
-                        ),
-                        const SizedBox(width: 10),
-                      ],
+            Consumer<SyncProvider>(builder: (context, syncProvider, child) {
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: syncProvider.paymentList.length,
+                itemBuilder: (context, index) {
+                  final payment = syncProvider.paymentList[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
-                    title: Text(
-                      payment.type,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 10),
+                      leading: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getPaymentIcon(payment.type),
+                            color: AppColors.blue,
+                          ),
+                          const SizedBox(width: 10),
+                        ],
                       ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _selectedPaymentIndex == index
-                            ? Radio<int>(
-                                value: index,
-                                groupValue: _selectedPaymentIndex,
-                                activeColor: AppColors.blue,
-                                onChanged: (int? value) {
-                                  if (value != null) {
-                                    _showDefaultPaymentDialog(value);
-                                  }
-                                },
-                              )
-                            : const SizedBox(),
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: AppColors.blue),
-                          onPressed: () {
-                            _showEditDialog(index); // Pass the index
-                          },
+                      title: Text(
+                        payment.type,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _selectedPaymentIndex == index
+                              ? Radio<int>(
+                                  value: index,
+                                  groupValue: _selectedPaymentIndex,
+                                  activeColor: AppColors.blue,
+                                  onChanged: (int? value) {
+                                    if (value != null) {
+                                      _showDefaultPaymentDialog(value);
+                                    }
+                                  },
+                                )
+                              : const SizedBox(),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: AppColors.blue),
+                            onPressed: () {
+                              _showEditDialog(index); // Pass the index
+                            },
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        _showDefaultPaymentDialog(index);
+                      },
                     ),
-                    onTap: () {
-                      _showDefaultPaymentDialog(index);
-                    },
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              );
+            }),
             Card(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               elevation: 2,
