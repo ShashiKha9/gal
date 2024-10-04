@@ -37,8 +37,9 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
     // _syncProvider.getItemsAll();
-    _syncProvider.loadItemListFromPrefs();
-    filteredItemList = _syncProvider.itemList;
+    _syncProvider.loadItemListFromPrefs().then((value) {
+      filteredItemList = _syncProvider.itemList;
+    });
   }
 
   @override
@@ -198,7 +199,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
         isSearch: true,
         onSearch: _filterItems,
         actions: true,
-        actionWidget: InkWell(
+        actionWidget: GestureDetector(
           onTap: () {
             setState(() {
               // Toggle the rate between rate1 and rate2
@@ -208,10 +209,10 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
           },
           child: Row(
             children: [
-              const Text(
-                "Rate 1",
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              Text(
+                isRate1 ? 'Rate 1' : 'Rate 2',
+                style: const TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 5),
               Transform.rotate(
