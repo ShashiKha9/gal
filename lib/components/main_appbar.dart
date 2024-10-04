@@ -4,9 +4,8 @@ import '../utils/keys.dart';
 
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
-  final Function(String?)? onSearch;
+  final Function(String?)? onSearch; // Dynamic search function
   final bool isMenu;
-
   final bool isSearch;
   final bool actions;
   final Widget? actionWidget;
@@ -29,8 +28,8 @@ class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _MainAppBarState extends State<MainAppBar> {
-  bool _isSearching = false;
-  late TextEditingController _searchController;
+  bool _isSearching = false; // Whether search mode is active
+  late TextEditingController _searchController; // To manage search input
 
   @override
   void initState() {
@@ -42,20 +41,6 @@ class _MainAppBarState extends State<MainAppBar> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _startSearch() {
-    setState(() {
-      _isSearching = true;
-    });
-  }
-
-  void _stopSearch() {
-    setState(() {
-      _isSearching = false;
-      _searchController.clear();
-      widget.onSearch!('');
-    });
   }
 
   @override
@@ -73,7 +58,12 @@ class _MainAppBarState extends State<MainAppBar> {
                 hintStyle: TextStyle(color: Colors.black54),
               ),
               style: const TextStyle(color: Colors.black, fontSize: 16.0),
-              onChanged: widget.onSearch, // Dynamic search
+              onChanged: (value) {
+                if (widget.onSearch != null) {
+                  widget.onSearch!(
+                      value); // Pass search value to the page's search logic
+                }
+              },
             )
           : Text(
               widget.title ?? "",
@@ -96,22 +86,30 @@ class _MainAppBarState extends State<MainAppBar> {
             child: widget.actionWidget,
           ),
         if (widget.isSearch)
-          if (_isSearching)
-            IconButton(
-              icon: const Icon(
-                Icons.clear,
-                color: Colors.black,
-              ),
-              onPressed: _stopSearch,
-            )
-          else
-            IconButton(
-              icon: const Icon(
-                Icons.search,
-                color: Colors.black,
-              ),
-              onPressed: _startSearch,
-            ),
+          IconButton(
+            icon: _isSearching
+                ? const Icon(
+                    Icons.clear,
+                    color: Colors.black,
+                  )
+                : const Icon(
+                    Icons.search,
+                    color: Colors.black,
+                  ),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _isSearching = false;
+                  _searchController.clear(); // Clear search input
+                  if (widget.onSearch != null) {
+                    widget.onSearch!(null); // Reset search
+                  }
+                } else {
+                  _isSearching = true;
+                }
+              });
+            },
+          ),
       ],
     );
   }

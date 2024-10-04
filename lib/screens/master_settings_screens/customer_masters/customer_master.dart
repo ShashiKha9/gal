@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
@@ -16,6 +15,7 @@ class CustomerMaster extends StatefulWidget {
 
 class _CustomerMasterState extends State<CustomerMaster> {
   late SyncProvider _syncProvider;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -30,7 +30,11 @@ class _CustomerMasterState extends State<CustomerMaster> {
       appBar: MainAppBar(
         title: 'Customer Master',
         isSearch: true,
-        onSearch: (p0) {},
+        onSearch: (query) {
+          setState(() {
+            searchQuery = query!.toLowerCase(); // Update search query
+          });
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -42,13 +46,29 @@ class _CustomerMasterState extends State<CustomerMaster> {
         child: const Icon(Icons.add),
       ),
       body: Consumer<SyncProvider>(builder: (context, syncProvider, child) {
-        log(syncProvider.customerList.length.toString(),
-            name: 'Consumer length');
+        // Check if the customer list is loaded
+        if (syncProvider.customerList.isEmpty) {
+          return const Center(child: Text('No customers available.'));
+        }
+
+        // Filter the customer list based on the search query
+        final filteredList = syncProvider.customerList.where((customer) {
+          final customerName = customer.name?.toLowerCase() ?? '';
+          return customerName.contains(searchQuery);
+        }).toList();
+
+        log(filteredList.length.toString(), name: 'Filtered customer list length');
+
+        // Check if the filtered list is empty
+        if (filteredList.isEmpty) {
+          return const Center(child: Text('No customers found matching the search.'));
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: syncProvider.customerList.length,
+          itemCount: filteredList.length,
           itemBuilder: (context, index) {
-            final customer = syncProvider.customerList[index];
+            final customer = filteredList[index];
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 5),
               elevation: 2,
@@ -56,12 +76,7 @@ class _CustomerMasterState extends State<CustomerMaster> {
                 borderRadius: BorderRadius.circular(12.0),
               ),
               child: ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
-                // leading: const Icon(
-                //   Icons.person,
-                //   color: AppColors.blue,
-                // ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
                 title: Text(
                   "${customer.customerCode ?? 'no code'} : ${customer.name ?? 'Unnamed'}",
                   style: const TextStyle(
@@ -74,14 +89,6 @@ class _CustomerMasterState extends State<CustomerMaster> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 5),
-                    // Text(
-                    //   'Customer Code: ${customer.customerCode ?? 'no code'}',
-                    //   style: const TextStyle(
-                    //     fontSize: 14.0,
-                    //     color: Colors.grey,
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 4.0),
                     Text(
                       'Mobile: ${customer.mobile1 ?? 'no number'}',
                       style: const TextStyle(
@@ -97,10 +104,8 @@ class _CustomerMasterState extends State<CustomerMaster> {
                       MaterialPageRoute(
                         builder: (context) => AddNewCustomer(
                           isEdit: true,
-                          customerName: customer.name ??
-                              '', // Pass the selected customer name
-                          customerMobile: customer.mobile1 ??
-                              '', // Pass the selected customer mobile
+                          customerName: customer.name ?? '',
+                          customerMobile: customer.mobile1 ?? '',
                         ),
                       ),
                     );

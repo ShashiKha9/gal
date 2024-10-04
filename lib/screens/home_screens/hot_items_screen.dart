@@ -29,6 +29,8 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
   Map<String, double> rates = {};
   late SyncProvider _syncProvider;
   Set<String> selectedItems = {};
+  bool isRate1 = true;
+  List<ItemModel> filteredItemList = [];
 
   @override
   void initState() {
@@ -36,6 +38,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
     // _syncProvider.getItemsAll();
     _syncProvider.loadItemListFromPrefs();
+    filteredItemList = _syncProvider.itemList;
   }
 
   @override
@@ -62,10 +65,30 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
         quantities[item.name!] = quantities[item.name]! + 1;
       }
 
-      double rate1 = double.tryParse(item.rate1 ?? '0.0') ?? 0.0;
-      rates[item.name!] = rate1;
-      totalAmount += rate1;
+      double rate = isRate1
+          ? double.tryParse(item.rate1 ?? '0.0') ?? 0.0
+          : double.tryParse(item.rate2 ?? '0.0') ?? 0.0;
+
+      rates[item.name!] = rate;
+      totalAmount += rate;
     });
+  }
+
+  // New search function
+  void _filterItems(String? query) {
+    if (query == null || query.isEmpty) {
+      // If the search query is empty, show all items
+      setState(() {
+        filteredItemList = _syncProvider.itemList;
+      });
+    } else {
+      // Filter the items based on the query
+      setState(() {
+        filteredItemList = _syncProvider.itemList.where((item) {
+          return item.name!.toLowerCase().contains(query.toLowerCase());
+        }).toList();
+      });
+    }
   }
 
   void _increaseQuantity() async {
@@ -123,7 +146,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
         .where((item) => quantities.containsKey(item.name))
         .map((item) => {
               'name': item.name,
-              'rate1': item.rate1,
+              'rate': isRate1 ? item.rate1 : item.rate2,
               // add other fields as needed
             })
         .toList();
@@ -173,10 +196,16 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
         // title: 'Galaxy Mini',
         isMenu: true,
         isSearch: true,
-        onSearch: (p0) {},
+        onSearch: _filterItems,
         actions: true,
         actionWidget: InkWell(
-          onTap: () {},
+          onTap: () {
+            setState(() {
+              // Toggle the rate between rate1 and rate2
+              isRate1 = !isRate1;
+              log("Rate changed to: ${isRate1 ? 'Rate 1' : 'Rate 2'}");
+            });
+          },
           child: Row(
             children: [
               const Text(
@@ -201,7 +230,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
         children: [
           Expanded(
             child: Selector<SyncProvider, List<ItemModel>>(
-              selector: (p0, p1) => p1.itemList,
+              selector: (p0, p1) => filteredItemList,
               builder: (context, itemList, child) {
                 return itemList.isEmpty
                     ? const Center(
@@ -315,7 +344,7 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      "₹ ${item.rate1}",
+                                      "₹ ${isRate1 ? item.rate1 : item.rate2}",
                                       style: const TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.bold,

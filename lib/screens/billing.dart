@@ -44,6 +44,7 @@ class BillPageState extends State<BillPage> {
   bool showTaxDetails = false;
   bool _isPercentage = false;
   String _discountValue = '';
+  // Holds the total after applying discount // Holds the discount value in Rs.
 
   @override
   void initState() {
@@ -51,28 +52,31 @@ class BillPageState extends State<BillPage> {
     quantities = Map.from(widget.quantities);
     totalAmount = widget.totalAmount;
     syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    syncProvider.loadCustomerListFromPrefs();
     custprovider = Provider.of<CustomerCreditProvider>(context, listen: false);
     fetchTaxDetails(); // Initialize _syncProvider
   }
 
-  // Method to calculate the discounted total
-  void _calculateDiscountedTotal() {
+  void _calculateOfferedTotal() {
+    // Get the latest manual discount input
+    double manualDiscount = double.tryParse(_discountValue) ?? 0.0;
+
+    // Use discountedTotalAmount if a coupon has been applied; otherwise, use updatedTotalAmount
+    double baseAmount =
+        discountedTotalAmount > 0 ? discountedTotalAmount : updatedTotalAmount;
+
+    // Check if the discount is a percentage or a fixed amount
+    if (_isPercentage) {
+      // Calculate percentage discount
+      manualDiscount = (manualDiscount / 100) * baseAmount;
+    }
+
+    // Calculate the new total after applying manual discount
+    double newTotal = baseAmount - manualDiscount;
+
+    // Update the state with the new total amount
     setState(() {
-      double discount = double.tryParse(_discountValue) ?? 0.0;
-
-      if (_isPercentage) {
-        // Discount is in percentage
-        discountedTotalAmount =
-            updatedTotalAmount - (updatedTotalAmount * (discount / 100));
-      } else {
-        // Discount is in flat ₹
-        discountedTotalAmount = updatedTotalAmount - discount;
-      }
-
-      // Ensure the discounted total amount doesn't go below 0
-      if (discountedTotalAmount < 0) {
-        discountedTotalAmount = 0.0;
-      }
+      discountedTotalAmount = newTotal; // Update the discounted total
     });
   }
 
@@ -607,6 +611,11 @@ class BillPageState extends State<BillPage> {
                   itemCount: syncProvider.offerList.length,
                   itemBuilder: (context, index) {
                     final offer = syncProvider.offerList[index];
+
+                    // Safely parse minBillAmount from the offer
+                    double minBillAmount =
+                        double.tryParse(offer.minBillAmount.toString()) ?? 0.0;
+
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 5),
                       elevation: 2,
@@ -616,6 +625,49 @@ class BillPageState extends State<BillPage> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 15, vertical: 10),
+                        onTap: () {
+                          final totalBill = discountedTotalAmount > 0
+                              ? discountedTotalAmount
+                              : updatedTotalAmount; // Use the current bill amount after coupon
+
+                          // Check if the total bill is greater than or equal to the minimum amount for the coupon
+                          if (totalBill >= minBillAmount) {
+                            // Safely parse discount percentage from the offer
+                            double discountPercent = double.tryParse(
+                                    offer.discountInPercent.toString()) ??
+                                0.0;
+                            double discount =
+                                (discountPercent / 100) * totalBill;
+
+                            // Safely parse max discount
+                            double maxDiscount =
+                                double.tryParse(offer.maxDiscount.toString()) ??
+                                    double.infinity;
+                            discount =
+                                discount > maxDiscount ? maxDiscount : discount;
+
+                            // Calculate the discounted total amount
+                            double discountedTotal = totalBill - discount;
+
+                            setState(() {
+                              discountedTotalAmount =
+                                  discountedTotal; // Update the discounted total
+                              _discountValue = discount.toStringAsFixed(
+                                  2); // Store the discount value
+                            });
+
+                            // Close the dialog after selecting the coupon
+                            Navigator.of(context).pop();
+                          } else {
+                            // Show a message if the total bill doesn't meet the minimum order amount
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Minimum order amount of Rs. ${minBillAmount.toStringAsFixed(2)} is required to apply this coupon.'),
+                              ),
+                            );
+                          }
+                        },
                         leading: const Icon(
                           Icons.local_offer,
                           color: Colors.blue,
@@ -639,21 +691,21 @@ class BillPageState extends State<BillPage> {
                               ),
                             ),
                             Text(
-                              'Discount: ${offer.discountInPercent ?? 'No data'}%',
+                              'Discount: ${offer.discountInPercent?.toString() ?? 'No data'}%',
                               style: const TextStyle(
                                 color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
-                              'Max discount: Rs. ${offer.maxDiscount ?? 'No data'}',
+                              'Max discount: Rs. ${double.tryParse(offer.maxDiscount.toString())?.toStringAsFixed(2) ?? 'No data'}',
                               style: const TextStyle(
                                 color: Colors.black54,
                                 fontSize: 14.0,
                               ),
                             ),
                             Text(
-                              'Min. order Amt: Rs. ${offer.minBillAmount ?? 'No data'}',
+                              'Min. order Amt: Rs. ${minBillAmount.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 color: Colors.black54,
                                 fontSize: 14.0,
@@ -938,8 +990,7 @@ class BillPageState extends State<BillPage> {
                 Expanded(
                   child: TextField(
                     decoration: InputDecoration(
-                      labelText:
-                          'Discount ${_isPercentage ? '%' : '₹'}', // Update label based on toggle
+                      labelText: 'Discount ${_isPercentage ? '%' : '₹'}',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
@@ -951,7 +1002,7 @@ class BillPageState extends State<BillPage> {
                       setState(() {
                         _discountValue = value; // Update discount value
                       });
-                      _calculateDiscountedTotal(); // Recalculate total when discount changes
+                      _calculateOfferedTotal(); // Recalculate total when discount changes
                     },
                   ),
                 ),
@@ -961,7 +1012,7 @@ class BillPageState extends State<BillPage> {
                     setState(() {
                       _isPercentage = !_isPercentage; // Toggle between ₹ and %
                     });
-                    _calculateDiscountedTotal(); // Recalculate total when discount mode changes
+                    _calculateOfferedTotal(); // Recalculate total when discount mode changes
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -1023,33 +1074,37 @@ class BillPageState extends State<BillPage> {
                             title: const Text("Customer Data"),
                             content: SizedBox(
                               width: double.maxFinite,
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: syncProvider.customerList.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final customer =
-                                      syncProvider.customerList[index];
-                                  return ListTile(
-                                    title: Text(
-                                      '${customer.customerCode ?? 'No Code'} - ${customer.name ?? 'Unnamed'}',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight
-                                              .bold), // Optional styling
-                                    ),
-                                    subtitle: Text(
-                                      'Mobile: ${customer.mobile1 ?? 'No Number'}',
-                                    ),
-                                    onTap: () {
-                                      setState(() {
-                                        selectedCustomerName = customer.name;
-                                        selectedCustomerCode = customer
-                                            .customerCode; // Update selected customer name
-                                      });
-                                      Navigator.of(context)
-                                          .pop(); // Close the dialog
+                              child: Consumer<SyncProvider>(
+                                builder: (context, syncProvider, child) {
+                                  return ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: syncProvider.customerList.length,
+                                    itemBuilder: (BuildContext context, int index) {
+                                      final customer =
+                                          syncProvider.customerList[index];
+                                      return ListTile(
+                                        title: Text(
+                                          '${customer.customerCode ?? 'No Code'} - ${customer.name ?? 'Unnamed'}',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight
+                                                  .bold), // Optional styling
+                                        ),
+                                        subtitle: Text(
+                                          'Mobile: ${customer.mobile1 ?? 'No Number'}',
+                                        ),
+                                        onTap: () {
+                                          setState(() {
+                                            selectedCustomerName = customer.name;
+                                            selectedCustomerCode = customer
+                                                .customerCode; // Update selected customer name
+                                          });
+                                          Navigator.of(context)
+                                              .pop(); // Close the dialog
+                                        },
+                                      );
                                     },
                                   );
-                                },
+                                }
                               ),
                             ),
                             actions: [
