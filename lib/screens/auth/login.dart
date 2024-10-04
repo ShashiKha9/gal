@@ -126,6 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: AppButton(
                         buttonText: "Login",
                         margin: const EdgeInsets.all(0),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         onTap: () {
                           Navigator.pushReplacement(
                             context,

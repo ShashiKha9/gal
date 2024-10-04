@@ -19,7 +19,8 @@ class _CustomerCreditsState extends State<CustomerCredits> {
   @override
   void initState() {
     super.initState();
-    _checkIfDataFetched();
+    _loadCustomerData();
+    // _checkIfDataFetched();
   }
 
   Future<void> _checkIfDataFetched() async {
@@ -72,8 +73,10 @@ class _CustomerCreditsState extends State<CustomerCredits> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const MainAppBar(
+      appBar: MainAppBar(
         title: 'Customer Credits',
+        isSearch: true,
+        onSearch: (p0) {},
       ),
       body: _customerCodes.isEmpty
           ? const Center(child: Text('No customer data available.'))

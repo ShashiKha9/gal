@@ -227,15 +227,20 @@ class _AddNewCustomerState extends State<AddNewCustomer> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  AppButton(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    buttonText: 'Cancel',
+                  Expanded(
+                    child: AppButton(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      buttonText: 'Cancel',
+                    ),
                   ),
-                  AppButton(
-                    onTap: () => _saveCustomer(),
-                    buttonText: 'Save',
+                  const SizedBox(width: 25),
+                  Expanded(
+                    child: AppButton(
+                      onTap: () => _saveCustomer(),
+                      buttonText: 'Save',
+                    ),
                   ),
                 ],
               ),

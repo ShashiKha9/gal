@@ -31,7 +31,13 @@ class _AppState extends State<App> {
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      final isReprintSelected = showPLU ? index == 4 : index == 3;
+
+      if (isReprintSelected) {
+        showModal(context);
+      } else {
+        _selectedIndex = index;
+      }
     });
   }
 

@@ -4,6 +4,7 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:galaxy_mini/screens/details_screens/parked_order_detail.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 
 class ParkedOrderScreen extends StatefulWidget {
   const ParkedOrderScreen({super.key});
@@ -18,10 +19,8 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
   @override
   void initState() {
     super.initState();
-    // Since parked orders are now loaded via SyncData, remove loadParkedOrders from here
-    // Instead, log or handle the loaded parked orders as needed
     Future.microtask(() async {
-      final parkedOrders = 
+      final parkedOrders =
           Provider.of<ParkedOrderProvider>(context, listen: false).parkedOrders;
 
       log('Parked Orders: $parkedOrders');
@@ -30,7 +29,7 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
       final uniqueGroups = parkedOrders
           .map((order) => order['tablegroup'] as String?)
           .where((group) => group != null)
-          .cast<String>() 
+          .cast<String>()
           .toSet()
           .toList();
 
@@ -40,6 +39,42 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
         });
       }
     });
+  }
+
+  // Show dialog to edit order details
+  void _showEditDialog(Map<String, dynamic> order) {
+    final orderNameController = TextEditingController(text: order['tableName']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Order Details'),
+          content: TextField(
+            controller: orderNameController,
+            decoration: const InputDecoration(
+              labelText: 'Order Name',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Handle saving the edited order name here
+                // Update your provider state if necessary
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -67,25 +102,54 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
       ),
       body: Column(
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: uniqueGroups.map((group) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: ChoiceChip(
-                    label: Text(group),
-                    selected: selectedGroup == group,
-                    onSelected: (selected) {
-                      setState(() {
-                        selectedGroup = selected ? group : null;
-                      });
-                    },
+          Consumer<ParkedOrderProvider>(
+            builder: (context, parkProvider, child) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: uniqueGroups.map((group) {
+                      final isSelected = selectedGroup == group;
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: [
+                            ChoiceChip(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25),
+                              label: Text(
+                                group,
+                                style: TextStyle(
+                                  color:
+                                      isSelected ? Colors.white : Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedGroup = selected ? group : group;
+                                });
+                              },
+                              showCheckmark: false,
+                              backgroundColor: Colors.white,
+                              selectedColor: AppColors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            },
           ),
+          const SizedBox(height: 8),
           Expanded(
             child: filteredOrders.isEmpty
                 ? const Center(
@@ -95,13 +159,13 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
                     ),
                   )
                 : GridView.builder(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(8.0),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, 
-                      childAspectRatio: 1, 
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
+                      crossAxisCount: 3, // Adjust as needed for your layout
+                      crossAxisSpacing: 8.0,
+                      mainAxisSpacing: 8.0,
+                      childAspectRatio: 1.0,
                     ),
                     itemCount: filteredOrders.length,
                     itemBuilder: (context, index) {
@@ -118,24 +182,30 @@ class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
                                 quantities: Map<String, double>.from(
                                     order['quantities']),
                                 rates: (order['rates'] as Map?)
-                                        ?.cast<String, double>() ?? {},
-                                totalAmount: order['totalAmount'] ?? 0.0, tableName: '', tableGroup: '',
+                                        ?.cast<String, double>() ??
+                                    {},
+                                totalAmount: order['totalAmount'] ?? 0.0,
+                                tableName: '',
+                                tableGroup: '',
                               ),
                             ),
                           );
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blueAccent,
+                        child: Card(
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Table: ${order['tableName']}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          elevation: 2,
+                          child: Center(
+                            child: Text(
+                              order['tableName'] ?? 'Unnamed order',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),

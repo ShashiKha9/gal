@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/change_login_user_dialog.dart';
+import 'package:galaxy_mini/components/change_pass_dialog.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
-import 'package:galaxy_mini/screens/home_screens/example_page.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/screens/auth/login.dart';
+import 'package:galaxy_mini/screens/setting_screens/manage_login_user/manage_login_user.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -43,33 +48,59 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             context,
             icon: Icons.key,
             title: 'Manage Login User',
-            page: const ExamplePage(),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ManageLoginUser()),
+              );
+            },
           ),
           _buildListTile(
             context,
             icon: Icons.settings,
             title: 'Change Login User',
-            page: const ExamplePage(),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const ChangeLoginUserDialog();
+                },
+              );
+            },
           ),
           _buildListTile(
             context,
             icon: Icons.key,
             title: 'Change Password',
-            page: const ExamplePage(),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return const ChangePasswordDialog();
+                },
+              );
+            },
           ),
           _buildListTile(
             context,
             icon: Icons.logout,
             title: 'Logout',
-            page: const AccountSettingsScreen(),
+            onTap: () {
+              showLogoutDialog(context);
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildListTile(BuildContext context,
-      {required IconData icon, required String title, required Widget page}) {
+  Widget _buildListTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 5),
       elevation: 2,
@@ -90,12 +121,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        },
+        onTap: onTap,
       ),
     );
   }
@@ -116,6 +142,40 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> showLogoutDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Do you really want to Logout?'),
+          content: const Text(
+            'If you logout, internal storage data should be deleted.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await Provider.of<SyncProvider>(context, listen: false)
+                    .logout(context);
+
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (Route<dynamic> route) => false,
+                );
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
