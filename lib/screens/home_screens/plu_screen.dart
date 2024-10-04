@@ -10,10 +10,32 @@ class PLUScreen extends StatefulWidget {
 
 class _PLUScreenState extends State<PLUScreen> {
   String displayText = '0';
+  String operator = '';
+  double firstOperand = 0;
 
   void _onButtonPressed(String value) {
     setState(() {
-      if (value == 'X') {
+      if (value == 'X' || value == '+') {
+        // Set operator and store the first operand
+        operator = value == 'X' ? '*' : '+';
+        firstOperand = double.tryParse(displayText) ?? 0;
+        displayText = '0';
+      } else if (value == 'PLU') {
+        // Calculate the result when PLU is pressed
+        double secondOperand = double.tryParse(displayText) ?? 0;
+        switch (operator) {
+          case '*':
+            displayText = (firstOperand * secondOperand).toString();
+            break;
+          case '+':
+            displayText = (firstOperand + secondOperand).toString();
+            break;
+          default:
+            break;
+        }
+        operator = ''; // Reset operator after calculation
+      } else if (value == 'backspace') {
+        // Handle backspace
         if (displayText.isNotEmpty) {
           displayText = displayText.substring(0, displayText.length - 1);
         }
@@ -21,12 +43,12 @@ class _PLUScreenState extends State<PLUScreen> {
           displayText = '0';
         }
       } else if (value == '+/-') {
+        // Toggle negative/positive
         displayText = displayText.startsWith('-')
             ? displayText.substring(1)
             : '-$displayText';
-      } else if (value == 'PLU' || value == 'Price') {
-        // Implement PLU and Price functionality here
       } else {
+        // Handle number input
         if (displayText == '0') {
           displayText = value;
         } else {
@@ -56,7 +78,7 @@ class _PLUScreenState extends State<PLUScreen> {
               child: Text(
                 displayText,
                 style: const TextStyle(
-                  fontSize: 36.0,
+                  fontSize: 48.0, // Increased font size
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
@@ -73,19 +95,19 @@ class _PLUScreenState extends State<PLUScreen> {
                 _buildButton('7'),
                 _buildButton('8'),
                 _buildButton('9'),
-                _buildButton('X'), // Delete key
+                _buildButton('backspace'), // Backspace button
                 _buildButton('4'),
                 _buildButton('5'),
                 _buildButton('6'),
-                _buildButton('+/-'),
+                _buildButton('X'), // Use for multiplication
                 _buildButton('1'),
                 _buildButton('2'),
                 _buildButton('3'),
-                _buildButton('PLU'),
+                _buildButton('+/-'), // Use for addition
                 _buildButton('0'),
                 _buildButton('00'),
                 _buildButton('.'),
-                _buildButton('Price'),
+                _buildButton('PLU'), // Use for equals
               ],
             ),
             const SizedBox(height: 36),
@@ -100,14 +122,16 @@ class _PLUScreenState extends State<PLUScreen> {
       onPressed: () => _onButtonPressed(label),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.all(20.0),
-        backgroundColor: Colors.white, // Button background color
-        foregroundColor: Colors.black, // Button text color
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         textStyle: const TextStyle(
-          fontSize: 16.0,
+          fontSize: 25.0, // Increased button font size
           fontWeight: FontWeight.bold,
         ),
       ),
-      child: Text(label),
+      child: label == 'backspace'
+          ? const Icon(Icons.backspace) // Display backspace icon
+          : Text(label),
     );
   }
 }

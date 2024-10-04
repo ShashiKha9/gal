@@ -1,7 +1,10 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 
 class ItemDetail extends StatefulWidget {
@@ -50,7 +53,7 @@ class _ItemDetailState extends State<ItemDetail> {
   String? selectedDepartment;
   String? selectedKOTGroup;
   String? selectedGST;
-  // String? selectedUnit;
+  String? selectedUnit;
 
   bool displayInSelection = false;
   bool isHotItem = false;
@@ -64,7 +67,7 @@ class _ItemDetailState extends State<ItemDetail> {
       TextEditingController(text: '');
   late TextEditingController rate1Controller;
   late TextEditingController rate2Controller;
-  // late TextEditingController descriptionController;
+
   late TextEditingController barcodeController;
   late TextEditingController qrCodeController;
   late TextEditingController hsnCodeController;
@@ -84,11 +87,10 @@ class _ItemDetailState extends State<ItemDetail> {
     qrCodeController = TextEditingController(text: widget.itemQRcode ?? '');
     hsnCodeController = TextEditingController(text: widget.itemHSN ?? '');
 
-    // Pre-select the department and KOT group based on item data
     selectedDepartment = widget.itemDepartmentCode;
     selectedKOTGroup = widget.itemKotGroup;
     selectedGST = widget.itemGST;
-    // selectedUnit = widget.itemUnit;
+    selectedUnit = widget.itemUnit;
     displayInSelection =
         (widget.itemDisplayInSelection?.toLowerCase() == 'true');
     isHotItem = (widget.itemIsHotItem?.toLowerCase() == 'true');
@@ -100,228 +102,213 @@ class _ItemDetailState extends State<ItemDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Item Detail'),
+      appBar: const MainAppBar(
+        title: 'Item Detail',
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Name TextField
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: nameController,
-                labelText: "Name",
-              ),
+            const SizedBox(height: 5),
+            AppTextfield(
+              controller: nameController,
+              labelText: "Name",
             ),
-
-            // Short Name TextField
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: shortNameController,
-                labelText: 'Short Name',
-              ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: shortNameController,
+              labelText: 'Short Name',
             ),
-
-            // Department Dropdown
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: DropdownButtonFormField<String>(
-                value: selectedDepartment,
-                decoration: const InputDecoration(
-                  labelText: 'Select Department',
-                  border: OutlineInputBorder(),
+            const SizedBox(height: 15),
+            DropdownButtonFormField<String>(
+              value: selectedDepartment,
+              decoration: InputDecoration(
+                labelText: "Select Department",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                items: syncProvider.departmentList.map((department) {
-                  return DropdownMenuItem<String>(
-                    value: department.code,
-                    child: Text(department.description),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedDepartment = value;
-                  });
-                  log('Selected Department Code: $selectedDepartment');
-                },
               ),
-            ),
-
-            // KOT Group Dropdown
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: DropdownButtonFormField<String>(
-                value: selectedKOTGroup,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedKOTGroup = newValue;
-                  });
-                  log('Selected KOT Group: $selectedKOTGroup');
-                },
-                decoration:
-                    const InputDecoration(labelText: 'Select KOT Group'),
-                items: syncProvider.kotgroupList.map((kotGroup) {
-                  return DropdownMenuItem<String>(
-                    value: kotGroup.code,
-                    child: Text(kotGroup.name),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            // Rate 1 AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: rate1Controller,
-                labelText: 'Rate 1',
-                keyBoardType: TextInputType.number,
-              ),
-            ),
-
-            // Rate 2 AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: rate2Controller,
-                labelText: 'Rate 2',
-                keyBoardType: TextInputType.number,
-              ),
-            ),
-
-            // GST Dropdown
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: DropdownButtonFormField<String>(
-                value: selectedGST,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedGST = newValue;
-                  });
-                  log('Selected GST: $selectedGST');
-                },
-                decoration: const InputDecoration(labelText: 'Select GST'),
-                items: syncProvider.taxList.map((tax) {
-                  return DropdownMenuItem<String>(
-                    value: tax.code,
-                    child: Text(tax.name ?? 'Unknown GST'),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            // Checkboxes
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: CheckboxListTile(
-                title: const Text('Display in Selection'),
-                value: displayInSelection,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    displayInSelection = newValue!;
-                  });
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: CheckboxListTile(
-                title: const Text('Is Hot Item'),
-                value: isHotItem,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    isHotItem = newValue!;
-                  });
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: CheckboxListTile(
-                title: const Text('Qty in Decimal'),
-                value: qtyInDecimal,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    qtyInDecimal = newValue!;
-                  });
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: CheckboxListTile(
-                title: const Text('Is Open Price'),
-                value: isOpenPrice,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    isOpenPrice = newValue!;
-                  });
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: CheckboxListTile(
-                title: const Text('Has KOT Message'),
-                value: hasKOTMessage,
-                onChanged: (bool? newValue) {
-                  setState(() {
-                    hasKOTMessage = newValue!;
-                  });
-                },
-              ),
-            ),
-
-            // Description AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: descriptionController,
-                labelText: 'Description',
-              ),
-            ),
-
-            // Barcode AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: barcodeController,
-                labelText: 'Barcode',
-              ),
-            ),
-
-            // QR Code AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: qrCodeController,
-                labelText: 'QR Code',
-              ),
-            ),
-
-            // HSN Code AppTextfield
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: AppTextfield(
-                controller: hsnCodeController,
-                labelText: 'HSN Code',
-              ),
-            ),
-
-            // Save Button
-            ElevatedButton(
-              onPressed: () {
-                // Save logic here
+              items: syncProvider.departmentList.map((department) {
+                return DropdownMenuItem<String>(
+                  value: department.code,
+                  child: Text(department.description),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedDepartment = value;
+                });
+                log('Selected Department Code: $selectedDepartment');
               },
-              child: const Text('Save'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                // Save logic here
+            const SizedBox(height: 15),
+            DropdownButtonFormField<String>(
+              value: selectedKOTGroup,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedKOTGroup = newValue;
+                });
+                log('Selected KOT Group: $selectedKOTGroup');
               },
-              child: const Text('Cancel'),
+              decoration: InputDecoration(
+                labelText: "Select KOT Group",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: syncProvider.kotgroupList.map((kotGroup) {
+                return DropdownMenuItem<String>(
+                  value: kotGroup.code,
+                  child: Text(kotGroup.name),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: rate1Controller,
+              labelText: 'Rate 1',
+              keyBoardType: TextInputType.number,
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: rate2Controller,
+              labelText: 'Rate 2',
+              keyBoardType: TextInputType.number,
+            ),
+            const SizedBox(height: 15),
+            DropdownButtonFormField<String>(
+              value: selectedGST,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedGST = newValue;
+                });
+                log('Selected GST: $selectedGST');
+              },
+              decoration: InputDecoration(
+                labelText: "Select GST",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: syncProvider.taxList.map((tax) {
+                return DropdownMenuItem<String>(
+                  value: tax.code,
+                  child: Text(tax.name ?? 'Unknown GST'),
+                );
+              }).toList(),
+            ),
+            CheckboxListTile(
+              title: const Text('Display in Selection'),
+              value: displayInSelection,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  displayInSelection = newValue!;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Is Hot Item'),
+              value: isHotItem,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  isHotItem = newValue!;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Qty in Decimal'),
+              value: qtyInDecimal,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  qtyInDecimal = newValue!;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Is Open Price'),
+              value: isOpenPrice,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  isOpenPrice = newValue!;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Has KOT Message'),
+              value: hasKOTMessage,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  hasKOTMessage = newValue!;
+                });
+              },
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: descriptionController,
+              labelText: 'Description',
+            ),
+            const SizedBox(height: 15),
+            DropdownButtonFormField<String>(
+              value: selectedUnit,
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedUnit = newValue;
+                });
+                log('Selected unit: $selectedUnit');
+              },
+              decoration: InputDecoration(
+                labelText: 'Select unit',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              items: syncProvider.unitList.map((unit) {
+                return DropdownMenuItem<String>(
+                  value: unit.code,
+                  child: Text(unit.unit ?? 'Unknown unit'),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: barcodeController,
+              labelText: 'Barcode',
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: qrCodeController,
+              labelText: 'QR Code',
+            ),
+            const SizedBox(height: 15),
+            AppTextfield(
+              controller: hsnCodeController,
+              labelText: 'HSN Code',
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: AppButton(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    buttonText: 'Cancel',
+                  ),
+                ),
+                const SizedBox(width: 25),
+                Expanded(
+                  child: AppButton(
+                    onTap: () {},
+                    buttonText: 'Save',
+                  ),
+                ),
+              ],
             ),
           ],
         ),
