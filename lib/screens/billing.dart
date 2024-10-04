@@ -140,16 +140,11 @@ class BillPageState extends State<BillPage> {
     });
   }
 
-  void showOrderDetailsDialog(BuildContext context, String selectedCustomerName,
-      String selectedCustomerCode) {
-    if (selectedCustomerName.isEmpty) {
-      scaffoldMessage(message: 'Please select a customer');
-      Future.delayed(const Duration(milliseconds: 500), () {
-        Navigator.of(context).pop(); // Close any existing dialogs
-      });
-      return; // Exit the function early
-    }
-
+  void showOrderDetailsDialog(
+    BuildContext context,
+    String? selectedCustomerName,
+    String selectedCustomerCode,
+  ) {
     DateTime now = DateTime.now();
     DateTime orderDateTime = now.add(const Duration(minutes: 10));
 
@@ -761,13 +756,21 @@ class BillPageState extends State<BillPage> {
             },
           ),
           IconButton(
-            icon: const Icon(
-              Icons.list_alt,
-              color: Colors.white,
-            ), // You can replace this icon with any relevant icon
-            onPressed: () => showOrderDetailsDialog(
-                context, selectedCustomerName!, selectedCustomerCode!),
-          ),
+              icon: const Icon(
+                Icons.list_alt,
+                color: Colors.white,
+              ), // You can replace this icon with any relevant icon
+              onPressed: () {
+                if (selectedCustomerCode == null) {
+                  scaffoldMessage(message: 'Please select a customer code');
+                  return;
+                }
+                showOrderDetailsDialog(
+                  context,
+                  selectedCustomerName,
+                  selectedCustomerCode!,
+                );
+              }),
           IconButton(
             icon: const Icon(
               Icons.not_interested,
@@ -1075,37 +1078,37 @@ class BillPageState extends State<BillPage> {
                             content: SizedBox(
                               width: double.maxFinite,
                               child: Consumer<SyncProvider>(
-                                builder: (context, syncProvider, child) {
-                                  return ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: syncProvider.customerList.length,
-                                    itemBuilder: (BuildContext context, int index) {
-                                      final customer =
-                                          syncProvider.customerList[index];
-                                      return ListTile(
-                                        title: Text(
-                                          '${customer.customerCode ?? 'No Code'} - ${customer.name ?? 'Unnamed'}',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight
-                                                  .bold), // Optional styling
-                                        ),
-                                        subtitle: Text(
-                                          'Mobile: ${customer.mobile1 ?? 'No Number'}',
-                                        ),
-                                        onTap: () {
-                                          setState(() {
-                                            selectedCustomerName = customer.name;
-                                            selectedCustomerCode = customer
-                                                .customerCode; // Update selected customer name
-                                          });
-                                          Navigator.of(context)
-                                              .pop(); // Close the dialog
-                                        },
-                                      );
-                                    },
-                                  );
-                                }
-                              ),
+                                  builder: (context, syncProvider, child) {
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: syncProvider.customerList.length,
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    final customer =
+                                        syncProvider.customerList[index];
+                                    return ListTile(
+                                      title: Text(
+                                        '${customer.customerCode ?? 'No Code'} - ${customer.name ?? 'Unnamed'}',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight
+                                                .bold), // Optional styling
+                                      ),
+                                      subtitle: Text(
+                                        'Mobile: ${customer.mobile1 ?? 'No Number'}',
+                                      ),
+                                      onTap: () {
+                                        setState(() {
+                                          selectedCustomerName = customer.name;
+                                          selectedCustomerCode = customer
+                                              .customerCode; // Update selected customer name
+                                        });
+                                        Navigator.of(context)
+                                            .pop(); // Close the dialog
+                                      },
+                                    );
+                                  },
+                                );
+                              }),
                             ),
                             actions: [
                               TextButton(
