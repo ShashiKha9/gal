@@ -26,7 +26,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   bool _printGSTNo = false;
   bool _printGreetingMessage = false;
   bool _extraHeader = false;
-  bool _extraFooter = false;
+  bool _extraFooter = true;
   bool _printBillNo = false;
   bool _printDateTime = false;
   bool _printSerialNo = false;
@@ -86,6 +86,10 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     _feedEndLineController = TextEditingController();
     _billNoController = TextEditingController();
     _taxPercentageController = TextEditingController();
+
+    _extraFooterController = TextEditingController(
+      text: 'Thank You... Visit Again!',
+    );
   }
 
   @override

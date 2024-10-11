@@ -98,19 +98,19 @@ class _SideDrawerState extends State<SideDrawer> {
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: AppColors.blue),
-            title: const Text('Logout'),
-            onTap: () async {
-              await Provider.of<SyncProvider>(context, listen: false)
-                  .logout(context);
-              // Navigator.pop(context);
-              // Navigator.pushReplacement(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => const LoginScreen()),
-              // );
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.logout, color: AppColors.blue),
+          //   title: const Text('Logout'),
+          //   onTap: () async {
+          //     await Provider.of<SyncProvider>(context, listen: false)
+          //         .logout(context);
+          //     // Navigator.pop(context);
+          //     // Navigator.pushReplacement(
+          //     //   context,
+          //     //   MaterialPageRoute(builder: (context) => const LoginScreen()),
+          //     // );
+          //   },
+          // ),
         ],
       ),
     );

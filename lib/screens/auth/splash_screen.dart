@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:galaxy_mini/app.dart';
 import 'package:galaxy_mini/screens/auth/login.dart';
 import 'package:galaxy_mini/theme/app_assets.dart';
+import 'package:galaxy_mini/utils/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,16 +16,20 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 1)).then(
-      (value) => Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) {
-            // TODO: Update this after Login API thing is implemented
-            return isLogin ? const App() : const LoginScreen();
-          },
-        ),
-      ),
+    Future.delayed(const Duration(seconds: 2)).then((value) => redirect());
+  }
+
+  Future<void> redirect() async {
+    await MySharedPreferences.instance.getStringValue("access_token").then(
+      (value) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  value == null ? const LoginScreen() : const App(),
+            ),
+            (route) => false);
+      },
     );
   }
 

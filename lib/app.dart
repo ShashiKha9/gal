@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/scaffold_message.dart';
 import 'package:galaxy_mini/screens/home_screens/department_screen.dart';
 import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
 import 'package:galaxy_mini/screens/home_screens/parked_orders_screen.dart';
@@ -34,7 +35,7 @@ class _AppState extends State<App> {
       final isReprintSelected = showPLU ? index == 4 : index == 3;
 
       if (isReprintSelected) {
-        showModal(context);
+        scaffoldMessage(message: "Unable to Connect Printer!");
       } else {
         _selectedIndex = index;
       }
@@ -122,23 +123,6 @@ class _AppState extends State<App> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void showModal(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        content: const Text('Example Dialog'),
-        actions: <TextButton>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Close'),
-          )
-        ],
       ),
     );
   }

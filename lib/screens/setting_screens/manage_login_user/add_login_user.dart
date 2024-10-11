@@ -5,7 +5,9 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
 class AddLoginUser extends StatefulWidget {
-  const AddLoginUser({super.key});
+  const AddLoginUser({super.key, this.isEdit = false});
+
+  final bool isEdit;
 
   @override
   State<AddLoginUser> createState() => _AddLoginUserState();
@@ -26,7 +28,8 @@ class _AddLoginUserState extends State<AddLoginUser> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const MainAppBar(title: "Add Login User"),
+      appBar: MainAppBar(
+          title: widget.isEdit ? "Edit Login User" : "Add Login User"),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

@@ -20,6 +20,7 @@ class _AppCheckboxTileState extends State<AppCheckboxTile> {
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
+      controlAffinity: ListTileControlAffinity.leading,
       contentPadding: const EdgeInsets.symmetric(horizontal: 3),
       activeColor: AppColors.blue,
       value: widget.value,
