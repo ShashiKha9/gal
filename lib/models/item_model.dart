@@ -87,4 +87,49 @@ class ItemModel {
       "isStocked": isStocked,
     };
   }
+
+  // New copyWith method to return a copy of the object with modified fields
+  ItemModel copyWith({
+    String? departmentCode,
+    String? rate1,
+    String? rate2,
+    String? gStcode,
+    String? openPrice,
+    String? shortName,
+    String? unit,
+    String? code,
+    String? name,
+    String? qtyInDecimal,
+    String? barcode,
+    String? hsnCode,
+    String? isHot,
+    String? hasKotMessage,
+    String? kotgroup,
+    String? qrcode,
+    String? displayinselection,
+    String? imageUrl,
+    String? isStocked,
+  }) {
+    return ItemModel(
+      departmentCode: departmentCode ?? this.departmentCode,
+      rate1: rate1 ?? this.rate1,
+      rate2: rate2 ?? this.rate2,
+      gStcode: gStcode ?? this.gStcode,
+      openPrice: openPrice ?? this.openPrice,
+      shortName: shortName ?? this.shortName,
+      unit: unit ?? this.unit,
+      code: code ?? this.code,
+      name: name ?? this.name, // Allows updating 'name'
+      qtyInDecimal: qtyInDecimal ?? this.qtyInDecimal,
+      barcode: barcode ?? this.barcode,
+      hsnCode: hsnCode ?? this.hsnCode,
+      isHot: isHot ?? this.isHot, // Allows updating 'isHot'
+      hasKotMessage: hasKotMessage ?? this.hasKotMessage,
+      kotgroup: kotgroup ?? this.kotgroup,
+      qrcode: qrcode ?? this.qrcode,
+      displayinselection: displayinselection ?? this.displayinselection,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isStocked: isStocked ?? this.isStocked,
+    );
+  }
 }

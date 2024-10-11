@@ -141,10 +141,36 @@ class SyncProvider extends ChangeNotifier {
       Map<String, dynamic> decodedMap = jsonDecode(jsonString);
       itemsByDepartment.clear();
 
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      log("SharedPreferences instance loaded");
+
       decodedMap.forEach((departmentCode, items) {
         List<ItemModel> itemList = List<ItemModel>.from(
-          (items as List)
-              .map((jsonItem) => ItemModel.fromJson(jsonDecode(jsonItem))),
+          (items as List).map((jsonItem) {
+            ItemModel item = ItemModel.fromJson(jsonDecode(jsonItem));
+            String itemCode = item.code ?? 'unknown_item';
+
+            // Retrieve the edited name from SharedPreferences
+            String? editedName = prefs.getString('name_$itemCode');
+
+            // Retrieve the edited rate1 from SharedPreferences and cast it as a String?
+            String? editedRate1 = prefs.getString('rate1_$itemCode');
+
+            // Fallback to item's original rate1 if the editedRate1 is null or invalid
+            String? rate1 = editedRate1 != null && editedRate1.isNotEmpty
+                ? num.tryParse(editedRate1)?.toString() ?? item.rate1
+                : item.rate1;
+
+            // Use the copyWith method to create a new item with the updated name and rate1
+            if (editedName != null && editedName.isNotEmpty) {
+              item = item.copyWith(name: editedName, rate1: rate1);
+            } else {
+              // Only update rate1 if the name isn't edited
+              item = item.copyWith(rate1: rate1);
+            }
+
+            return item;
+          }),
         );
         itemsByDepartment[departmentCode] = itemList;
       });
@@ -470,6 +496,18 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
+  // Save the selected payment index to SharedPreferences
+  Future<void> saveSelectedPaymentIndex(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('selectedPaymentIndex', index);
+  }
+
+  // Load the selected payment index from SharedPreferences
+  Future<int> loadSelectedPaymentIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('selectedPaymentIndex') ?? -1;
+  }
+
   Future<void> getOfferAll() async {
     try {
       final response = await syncRepo.getoffer();
@@ -556,6 +594,7 @@ class SyncProvider extends ChangeNotifier {
             response['body'].map((e) => UnitModel.fromJson(e)),
           );
           log(unitList.toString(), name: 'Updated unitList');
+          await saveUnitAll(unitList);
           notifyListeners();
         } else {
           log('Body is null or not a list', name: 'Body Issue');
@@ -565,6 +604,22 @@ class SyncProvider extends ChangeNotifier {
       }
     } catch (e, s) {
       log(e.toString(), name: 'error getItemsAll', stackTrace: s);
+    }
+  }
+
+  Future<void> saveUnitAll(List<UnitModel> unitListAll) async {
+    List<String> jsonList =
+        unitListAll.map((unitAll) => jsonEncode(unitAll.toJson())).toList();
+    await mySharedPreferences.setStringList('UnitAll', jsonList);
+  }
+
+  Future<void> loadUnitAll() async {
+    List<String>? unitAll = await mySharedPreferences.getStringList('UnitAll');
+    if (unitAll != null) {
+      unitList = unitAll
+          .map((unitList) => UnitModel.fromJson(jsonDecode(unitList)))
+          .toList();
+      notifyListeners();
     }
   }
 
@@ -732,19 +787,55 @@ class SyncProvider extends ChangeNotifier {
     await mySharedPreferences.setStringList('items_order', orderedItemNames);
   }
 
-  // Method to load itemList from SharedPreferences
+// Method to load itemList from SharedPreferences
   Future<void> loadItemListFromPrefs() async {
     List<String>? jsonList =
         await mySharedPreferences.getStringList('itemList');
     List<String>? orderedItemNames =
         await mySharedPreferences.getStringList('items_order');
+
     if (jsonList != null) {
-      itemList = jsonList
-          .map((jsonItem) => ItemModel.fromJson(jsonDecode(jsonItem)))
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      log("SharedPreferences instance loaded");
+
+      // Map jsonList to ItemModel and apply edits from SharedPreferences
+      itemList = jsonList.map((jsonItem) {
+        ItemModel item = ItemModel.fromJson(jsonDecode(jsonItem));
+        String itemCode = item.code ?? 'unknown_item';
+
+        // Retrieve the edited name and rate1 from SharedPreferences, if available
+        String? editedName = prefs.getString('name_$itemCode');
+        String? editedRate1 = prefs.getString('rate1_$itemCode');
+
+        // Handle the isHot field - convert String 'true'/'false' to a boolean
+        bool isHot = prefs.getBool('is_hot_item_$itemCode') ??
+            (item.isHot?.toLowerCase() == 'true');
+
+        // Apply the edited values only if they exist, else use original values
+        String? rate1 = editedRate1 != null && editedRate1.isNotEmpty
+            ? num.tryParse(editedRate1)?.toString() ?? item.rate1
+            : item.rate1;
+
+        // Use the edited name if available; otherwise, keep the original name
+        String? name = editedName != null && editedName.isNotEmpty
+            ? editedName
+            : item.name;
+
+        // Update the item using copyWith for the name, rate1, and isHot
+        item = item.copyWith(name: name, rate1: rate1, isHot: isHot.toString());
+
+        // Return the item regardless of edits, but filter by isHot later
+        return item;
+      }).toList();
+
+      // Filter the itemList to only include hot items
+      itemList = itemList
+          .where((item) => item.isHot?.toLowerCase() == 'true')
           .toList();
 
       notifyListeners(); // Notify listeners if itemList is updated
     }
+
     if (orderedItemNames != null) {
       itemList.sort((a, b) => orderedItemNames
           .indexOf(a.name!)
@@ -757,18 +848,18 @@ class SyncProvider extends ChangeNotifier {
   Future<void> logout(BuildContext context) async {
     try {
       // Clear the SharedPreferences
-      await mySharedPreferences.removeAll();
+      // await mySharedPreferences.removeAll();
 
-      // Clear the local itemList as well
-      itemList = [];
-      customerList = [];
-      offerList = [];
-      paymentList = [];
-      kotgroupList = [];
-      kotmessageList = [];
-      departmentList = [];
-      tablemasterList = [];
-      tablegroupList = [];
+      // // Clear the local itemList as well
+      // itemList = [];
+      // customerList = [];
+      // offerList = [];
+      // paymentList = [];
+      // kotgroupList = [];
+      // kotmessageList = [];
+      // departmentList = [];
+      // tablemasterList = [];
+      // tablegroupList = [];
 
       // Notify listeners to update UI
       notifyListeners();

@@ -20,10 +20,24 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
-    _syncProvider.loadPaymentListFromPrefs();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    // scaffoldMessage(message: 'Please select default from the list');
-    // });
+    // Load payment list and selected payment index from SharedPreferences
+    _syncProvider.loadPaymentListFromPrefs().then((_) async {
+      // Load the saved payment index from SharedPreferences
+      int savedIndex = await _syncProvider.loadSelectedPaymentIndex();
+      if (_syncProvider.paymentList.isNotEmpty) {
+        setState(() {
+          _selectedPaymentIndex = savedIndex >= 0 ? savedIndex : 0;
+        });
+      }
+    });
+  }
+
+  void _setDefaultPayment(int index) async {
+    setState(() {
+      _selectedPaymentIndex = index; // Update the selected payment index
+    });
+    // Save the selected payment index to SharedPreferences
+    await _syncProvider.saveSelectedPaymentIndex(index);
   }
 
   void _showDefaultPaymentDialog(int index) {
@@ -43,9 +57,7 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  _selectedPaymentIndex = index;
-                });
+                _setDefaultPayment(index); // Set as default only if "Yes"
                 Navigator.pop(context);
               },
               child: const Text('Yes'),
@@ -167,18 +179,17 @@ class _PaymentModeMasterScreenState extends State<PaymentModeMasterScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _selectedPaymentIndex == index
-                              ? Radio<int>(
-                                  value: index,
-                                  groupValue: _selectedPaymentIndex,
-                                  activeColor: AppColors.blue,
-                                  onChanged: (int? value) {
-                                    if (value != null) {
-                                      _showDefaultPaymentDialog(value);
-                                    }
-                                  },
-                                )
-                              : const SizedBox(),
+                          if (_selectedPaymentIndex == index)
+                            Radio<int>(
+                              value: index,
+                              groupValue: _selectedPaymentIndex,
+                              activeColor: AppColors.blue,
+                              onChanged: (int? value) {
+                                if (value != null) {
+                                  _showDefaultPaymentDialog(value);
+                                }
+                              },
+                            ),
                           IconButton(
                             icon: const Icon(Icons.edit, color: AppColors.blue),
                             onPressed: () {

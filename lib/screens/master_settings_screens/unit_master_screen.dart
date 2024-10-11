@@ -18,6 +18,7 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
   void initState() {
     super.initState();
     syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    syncProvider.loadUnitAll();
   }
 
   void _showEditDialog(int index) {

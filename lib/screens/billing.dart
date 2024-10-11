@@ -44,6 +44,8 @@ class BillPageState extends State<BillPage> {
   bool showTaxDetails = false;
   bool _isPercentage = false;
   String _discountValue = '';
+  bool isCouponApplied = false;
+  int? selectedIndex;
   // Holds the total after applying discount // Holds the discount value in Rs.
 
   @override
@@ -54,16 +56,38 @@ class BillPageState extends State<BillPage> {
     syncProvider = Provider.of<SyncProvider>(context, listen: false);
     syncProvider.loadCustomerListFromPrefs();
     custprovider = Provider.of<CustomerCreditProvider>(context, listen: false);
-    fetchTaxDetails(); // Initialize _syncProvider
+    loadData();
+    fetchTaxDetails();
+  }
+
+  Future<void> loadData() async {
+    syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    await syncProvider.loadPaymentListFromPrefs();
+
+    int savedIndex = await syncProvider.loadSelectedPaymentIndex();
+    if (savedIndex != -1 && savedIndex < syncProvider.paymentList.length) {
+      setState(() {
+        selectedIndex = savedIndex;
+        selectedPaymentMode = syncProvider.paymentList[savedIndex].type;
+      });
+    } else if (syncProvider.paymentList.isNotEmpty) {
+      setState(() {
+        selectedIndex = 0; // Default to the first payment mode
+        selectedPaymentMode = syncProvider.paymentList.first.type;
+      });
+    }
   }
 
   void _calculateOfferedTotal() {
+    if (isCouponApplied) {
+      return; // Skip discount calculation if a coupon is applied
+    }
+
     // Get the latest manual discount input
     double manualDiscount = double.tryParse(_discountValue) ?? 0.0;
 
-    // Use discountedTotalAmount if a coupon has been applied; otherwise, use updatedTotalAmount
-    double baseAmount =
-        discountedTotalAmount > 0 ? discountedTotalAmount : updatedTotalAmount;
+    // Always use the updated total amount if no coupon is applied
+    double baseAmount = updatedTotalAmount;
 
     // Check if the discount is a percentage or a fixed amount
     if (_isPercentage) {
@@ -76,7 +100,18 @@ class BillPageState extends State<BillPage> {
 
     // Update the state with the new total amount
     setState(() {
-      discountedTotalAmount = newTotal; // Update the discounted total
+      discountedTotalAmount =
+          newTotal; // Update the final total with the discount applied
+    });
+  }
+
+  void applyCoupon() {
+    setState(() {
+      isCouponApplied = true; // Disable discount field when coupon is applied
+      _discountValue = ''; // Optionally clear the discount field
+      // You might want to recalculate discountedTotalAmount here if needed
+      discountedTotalAmount = updatedTotalAmount;
+      log("Coupon applied: $isCouponApplied"); // Reset to original total or keep it as the new total
     });
   }
 
@@ -644,12 +679,21 @@ class BillPageState extends State<BillPage> {
                             // Calculate the discounted total amount
                             double discountedTotal = totalBill - discount;
 
+                            // Update the state and log the discount
                             setState(() {
                               discountedTotalAmount =
                                   discountedTotal; // Update the discounted total
                               _discountValue = discount.toStringAsFixed(
                                   2); // Store the discount value
+                              isCouponApplied =
+                                  true; // Mark that a coupon is applied
                             });
+
+                            // Log discount details
+                            log('Coupon applied: ${offer.couponCode}');
+                            log('Total bill: $totalBill');
+                            log('Discount: $discount');
+                            log('New discounted total: $discountedTotal');
 
                             // Close the dialog after selecting the coupon
                             Navigator.of(context).pop();
@@ -658,7 +702,8 @@ class BillPageState extends State<BillPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                    'Minimum order amount of Rs. ${minBillAmount.toStringAsFixed(2)} is required to apply this coupon.'),
+                                  'Minimum order amount of Rs. ${minBillAmount.toStringAsFixed(2)} is required to apply this coupon.',
+                                ),
                               ),
                             );
                           }
@@ -876,10 +921,11 @@ class BillPageState extends State<BillPage> {
                   Row(
                     children: [
                       Text(
-                        _discountValue
-                                .isEmpty // Check if discount value is empty
-                            ? 'Rs. ${updatedTotalAmount.toStringAsFixed(2)}' // If no discount, show updated total amount
-                            : 'Rs. ${discountedTotalAmount.toStringAsFixed(2)}', // If discount applied, show discounted total
+                        // Check if discount or offer coupon has been applied
+                        discountedTotalAmount >
+                                0 // If a coupon or discount is applied
+                            ? 'Rs. ${discountedTotalAmount.toStringAsFixed(2)}' // Show the discounted/offer-applied total
+                            : 'Rs. ${updatedTotalAmount.toStringAsFixed(2)}', // Otherwise, show original total amount
                         style: const TextStyle(
                           fontSize: 22.0,
                           fontWeight: FontWeight.bold,
@@ -887,13 +933,15 @@ class BillPageState extends State<BillPage> {
                         ),
                       ),
                       IconButton(
-                        icon: Icon(showTaxDetails
-                            ? Icons.arrow_drop_up
-                            : Icons.arrow_drop_down),
+                        icon: Icon(
+                          showTaxDetails
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                        ),
                         onPressed: () {
                           setState(() {
                             showTaxDetails =
-                                !showTaxDetails; // Toggle visibility
+                                !showTaxDetails; // Toggle visibility of tax details
                           });
                         },
                       ),
@@ -969,22 +1017,14 @@ class BillPageState extends State<BillPage> {
                         child: Text(paymentMode.type),
                       );
                     }).toList(),
-                    onChanged: (value) {
+                    onChanged: (value) async {
                       setState(() {
                         selectedPaymentMode = value;
                       });
-                      // Handle payment mode selection
-                      log('Selected Payment Mode: $selectedPaymentMode');
                     },
                     value: selectedPaymentMode ??
                         (syncProvider.paymentList.isNotEmpty
-                            ? syncProvider.paymentList
-                                .firstWhere(
-                                  (paymentMode) => paymentMode.isDefault,
-                                  orElse: () => syncProvider.paymentList
-                                      .first, // Fallback to the first item
-                                )
-                                .type
+                            ? syncProvider.paymentList[selectedIndex ?? 0].type
                             : null), // Handle the case if the paymentList is empty
                   ),
                 ),
@@ -998,17 +1038,34 @@ class BillPageState extends State<BillPage> {
                         borderRadius: BorderRadius.circular(10.0),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12.0, horizontal: 10.0),
+                        vertical: 12.0,
+                        horizontal: 10.0,
+                      ),
                     ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
+                      if (isCouponApplied) {
+                        return; // Do nothing if a coupon is applied
+                      }
+
                       setState(() {
                         _discountValue = value; // Update discount value
+                        discountedTotalAmount =
+                            updatedTotalAmount; // Reset to original total
+
+                        if (_discountValue.isNotEmpty) {
+                          _calculateOfferedTotal(); // Recalculate total if discount is entered
+                        } else {
+                          discountedTotalAmount =
+                              updatedTotalAmount; // Reset to original total if discount field is cleared
+                        }
                       });
-                      _calculateOfferedTotal(); // Recalculate total when discount changes
                     },
+                    enabled:
+                        !isCouponApplied, // Disable the field when coupon is active
                   ),
                 ),
+
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: () {
