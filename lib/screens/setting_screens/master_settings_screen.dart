@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/customer_master.dart';
@@ -64,39 +66,98 @@ class MasterSettingsScreen extends StatelessWidget {
       },
     ];
 
+    final screenSize = MediaQuery.of(context).size;
+    double cardHeight = MediaQuery.of(context).size.height;
+    int crossAxisCount;
+    double childAspectRatio;
+    log(screenSize.toString(), name: "screenSize");
+
+    if (screenSize.width > 1200) {
+      crossAxisCount = 10;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
+      log(screenSize.toString(), name: "1200");
+    } else if (screenSize.width > 1000) {
+      crossAxisCount = 8;
+      childAspectRatio = (cardHeight / crossAxisCount) / 95;
+      log(screenSize.toString(), name: "1000");
+    } else if (screenSize.width > 800 || screenSize.width >= 800) {
+      crossAxisCount = 4;
+      childAspectRatio = (cardHeight / crossAxisCount) / 250;
+      log(screenSize.toString(), name: "800");
+    } else {
+      crossAxisCount = 3;
+      childAspectRatio = (cardHeight / crossAxisCount) / 300;
+      log(screenSize.toString(), name: "00");
+    }
+
     return Scaffold(
       appBar: const MainAppBar(
         title: 'Master Settings',
       ),
-      body: ListView.builder(
+      body: GridView.builder(
         padding: const EdgeInsets.all(16.0),
         itemCount: options.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 2,
+          childAspectRatio: childAspectRatio,
+        ),
         itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 5),
-            elevation: 2,
-            child: ListTile(
-              leading: Icon(
-                options[index]['icon'],
-                color: AppColors.blue,
-              ),
-              title: Text(
-                options[index]['title'],
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => options[index]['page'],
                 ),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => options[index]['page'],
+              );
+            },
+            child: Card(
+              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+              elevation: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    options[index]['icon'],
+                    color: AppColors.blue,
+                    size: 35,
                   ),
-                );
-              },
+                  const SizedBox(height: 10),
+                  Text(
+                    options[index]['title'],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              // child: ListTile(
+              //   leading: Icon(
+              //     options[index]['icon'],
+              //     color: AppColors.blue,
+              //   ),
+              //   title: Text(
+              //     options[index]['title'],
+              //     style: const TextStyle(
+              //       color: Colors.black,
+              //       fontWeight: FontWeight.w600,
+              //     ),
+              //   ),
+              //   contentPadding:
+              //       const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(
+              //         builder: (context) => options[index]['page'],
+              //       ),
+              //     );
+              //   },
+              // ),
             ),
           );
         },

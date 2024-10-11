@@ -23,6 +23,63 @@ class _ManageLoginUserState extends State<ManageLoginUser> {
         },
         child: const Icon(Icons.add),
       ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ListView.builder(
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            // final kotgroup = syncProvider.kotgroupList[index];
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddLoginUser(
+                      isEdit: true,
+                    ),
+                  ),
+                );
+              },
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 5),
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Username: Aditi',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        'Type: cashier',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        'Created On: 12-10-2024',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

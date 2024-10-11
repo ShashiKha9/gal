@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'customer_credit_detail.dart';
@@ -87,45 +88,108 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                 String code = _customerCodes[index];
                 String name = _customerNames[code] ?? 'Unknown';
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 5),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 10),
-                    title: Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CustomerCreditDetail(
+                          customerCode: code,
+                          customerName: name,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "$name - 1234567890",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Text(
+                                "₹ 300",
+                                style: TextStyle(
+                                  color: AppColors.red,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            "Customer Code - #$code",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Text(
+                            "Last Bill - 1 (Date, Time)",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const Text(
+                            "Last Payment - 4 (Date, Time)",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 5),
-                        Text(
-                          code,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CustomerCreditDetail(
-                            customerCode: code,
-                            customerName: name,
-                          ),
-                        ),
-                      );
-                    },
+
+                    // ListTile(
+                    //   contentPadding: const EdgeInsets.symmetric(
+                    //       horizontal: 15, vertical: 10),
+                    //   title: Text(
+                    //     name,
+                    //     style: const TextStyle(
+                    //       fontWeight: FontWeight.bold,
+                    //       color: Colors.black,
+                    //     ),
+                    //   ),
+                    //   subtitle: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       const SizedBox(height: 5),
+                    //       Text(
+                    //         code,
+                    //         style: const TextStyle(
+                    //           color: Colors.black54,
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => CustomerCreditDetail(
+                    //           customerCode: code,
+                    //           customerName: name,
+                    //         ),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
                   ),
                 );
               },

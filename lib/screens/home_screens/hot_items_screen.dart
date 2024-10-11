@@ -308,10 +308,25 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
                                                               sigmaX: 10,
                                                               sigmaY: 10),
                                                       child: Image.network(
-                                                        item.imageUrl ?? "",
+                                                        item.imageUrl!,
                                                         height: 70,
                                                         width: double.maxFinite,
                                                         fit: BoxFit.cover,
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          // Show icon if the image fails to load
+                                                          return const Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    10),
+                                                            child: Icon(
+                                                              Icons.wallpaper,
+                                                              color: AppColors
+                                                                  .lightGrey,
+                                                              size: 50,
+                                                            ),
+                                                          );
+                                                        },
                                                       ),
                                                     ),
                                                   ),
@@ -323,10 +338,24 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
                                                         BorderRadius.circular(
                                                             10),
                                                     child: Image.network(
-                                                      item.imageUrl ?? "",
+                                                      item.imageUrl!,
                                                       height: 70,
                                                       width: double.maxFinite,
                                                       fit: BoxFit.contain,
+                                                      errorBuilder: (context,
+                                                          error, stackTrace) {
+                                                        return const Padding(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          child: Icon(
+                                                            Icons.wallpaper,
+                                                            color: AppColors
+                                                                .lightGrey,
+                                                            size: 50,
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
                                                   ),
                                                 )

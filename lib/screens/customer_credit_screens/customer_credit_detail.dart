@@ -224,42 +224,95 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
 
   Widget _customerInfo() {
     return Card(
-      elevation: 4.0,
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12.0),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _textRow('Customer Name:', widget.customerName),
-            _textRow('Customer Code:', widget.customerCode),
-            _textRow('Latest Bill Number:',
-                currentBillNumber.isNotEmpty ? currentBillNumber : 'N/A'),
-            _textRow('Latest Payment ID:',
-                currentPaymentId.isNotEmpty ? currentPaymentId : 'N/A'),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Current Balance:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                Text(
+                  "${widget.customerName} - 1234567890",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  'Rs. ${currentBalance.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Colors.red,
+                const Text(
+                  "₹ 300",
+                  style: TextStyle(
+                    color: AppColors.red,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
+            Text(
+              "Customer Code - #${widget.customerCode}",
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Text(
+              "Last Bill - 1 (Date, Time)",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Text(
+              "Last Payment - 4 (Date, Time)",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ),
+
+      // ListTile(
+      //   contentPadding: const EdgeInsets.symmetric(
+      //       horizontal: 15, vertical: 10),
+      //   title: Text(
+      //     name,
+      //     style: const TextStyle(
+      //       fontWeight: FontWeight.bold,
+      //       color: Colors.black,
+      //     ),
+      //   ),
+      //   subtitle: Column(
+      //     crossAxisAlignment: CrossAxisAlignment.start,
+      //     children: [
+      //       const SizedBox(height: 5),
+      //       Text(
+      //         code,
+      //         style: const TextStyle(
+      //           color: Colors.black54,
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      //   onTap: () {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (context) => CustomerCreditDetail(
+      //           customerCode: code,
+      //           customerName: name,
+      //         ),
+      //       ),
+      //     );
+      //   },
+      // ),
     );
   }
 
@@ -359,7 +412,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Bill Data:',
+            'Bills:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           billData.isNotEmpty
@@ -405,7 +458,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Payment Data:',
+            'Payments:',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           paymentData.isNotEmpty

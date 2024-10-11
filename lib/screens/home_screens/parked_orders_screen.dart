@@ -15,13 +15,16 @@ class ParkedOrderScreen extends StatefulWidget {
 
 class _ParkedOrderScreenState extends State<ParkedOrderScreen> {
   String? selectedGroup;
+  late ParkedOrderProvider parkProvider;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
+      parkProvider = Provider.of<ParkedOrderProvider>(context, listen: false);
       final parkedOrders =
           Provider.of<ParkedOrderProvider>(context, listen: false).parkedOrders;
+      await parkProvider.loadParkedOrders();
 
       log('Parked Orders: $parkedOrders');
 
