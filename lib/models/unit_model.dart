@@ -17,4 +17,11 @@ class UnitModel {
         unit: json["unit"],
         status: json["status"],
       );
+
+  Map<String, dynamic> toJson() => {
+        "code": code,
+        "remarks": remarks,
+        "unit": unit,
+        "status": status,
+      };
 }

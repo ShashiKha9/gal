@@ -6,6 +6,7 @@ import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ItemDetail extends StatefulWidget {
   const ItemDetail({
@@ -26,6 +27,7 @@ class ItemDetail extends StatefulWidget {
     this.itemQtyInDecimal,
     this.itemIsOpenPrice,
     this.itemHasKOTMessage,
+    this.itemCode,
   });
 
   final String? itemName;
@@ -44,6 +46,7 @@ class ItemDetail extends StatefulWidget {
   final String? itemQtyInDecimal;
   final String? itemIsOpenPrice;
   final String? itemHasKOTMessage;
+  final String? itemCode;
 
   @override
   _ItemDetailState createState() => _ItemDetailState();
@@ -97,6 +100,71 @@ class _ItemDetailState extends State<ItemDetail> {
     qtyInDecimal = (widget.itemQtyInDecimal?.toLowerCase() == 'true');
     isOpenPrice = (widget.itemIsOpenPrice?.toLowerCase() == 'true');
     hasKOTMessage = (widget.itemHasKOTMessage?.toLowerCase() == 'true');
+
+    _loadPreferences();
+  }
+
+  // Load the preferences from SharedPreferences
+  Future<void> _loadPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String itemCode = widget.itemCode ?? 'unknown_item';
+
+    setState(() {
+      // Check if the preference exists before setting the state
+      if (prefs.containsKey('display_in_selection_$itemCode')) {
+        displayInSelection = prefs.getBool('display_in_selection_$itemCode') ??
+            displayInSelection;
+      }
+      if (prefs.containsKey('is_hot_item_$itemCode')) {
+        isHotItem = prefs.getBool('is_hot_item_$itemCode') ?? isHotItem;
+      }
+      if (prefs.containsKey('qty_in_decimal_$itemCode')) {
+        qtyInDecimal =
+            prefs.getBool('qty_in_decimal_$itemCode') ?? qtyInDecimal;
+      }
+      if (prefs.containsKey('is_open_price_$itemCode')) {
+        isOpenPrice = prefs.getBool('is_open_price_$itemCode') ?? isOpenPrice;
+      }
+      if (prefs.containsKey('has_kot_message_$itemCode')) {
+        hasKOTMessage =
+            prefs.getBool('has_kot_message_$itemCode') ?? hasKOTMessage;
+      }
+    });
+  }
+
+// Inside the _ItemDetailState class
+  void _saveEditItem() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String itemCode = widget.itemCode ?? 'unknown_item';
+
+    // Log for debugging
+    log('Saving data for itemCode: $itemCode');
+
+    // Save each field
+    await prefs.setString('name_$itemCode', nameController.text);
+    log('Saved name for $itemCode: ${nameController.text}');
+
+    // Continue saving other fields
+    await prefs.setString('short_name_$itemCode', shortNameController.text);
+    await prefs.setString('department_$itemCode', selectedDepartment ?? '');
+    await prefs.setString('kot_group_$itemCode', selectedKOTGroup ?? '');
+    await prefs.setString('rate1_$itemCode', rate1Controller.text);
+    await prefs.setString('rate2_$itemCode', rate2Controller.text);
+    await prefs.setString('barcode_$itemCode', barcodeController.text);
+    await prefs.setString('qrcode_$itemCode', qrCodeController.text);
+    await prefs.setString('hsn_$itemCode', hsnCodeController.text);
+    await prefs.setString('gst_$itemCode', selectedGST ?? '');
+    await prefs.setString('unit_$itemCode', selectedUnit ?? '');
+
+    // Save boolean values for checkbox options
+    await prefs.setBool('display_in_selection_$itemCode', displayInSelection);
+    await prefs.setBool('is_hot_item_$itemCode', isHotItem);
+    await prefs.setBool('qty_in_decimal_$itemCode', qtyInDecimal);
+    await prefs.setBool('is_open_price_$itemCode', isOpenPrice);
+    await prefs.setBool('has_kot_message_$itemCode', hasKOTMessage);
+
+    log('Item changes saved to SharedPreferences for itemCode: $itemCode.');
   }
 
   @override
@@ -144,12 +212,6 @@ class _ItemDetailState extends State<ItemDetail> {
             const SizedBox(height: 15),
             DropdownButtonFormField<String>(
               value: selectedKOTGroup,
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedKOTGroup = newValue;
-                });
-                log('Selected KOT Group: $selectedKOTGroup');
-              },
               decoration: InputDecoration(
                 labelText: "Select KOT Group",
                 border: OutlineInputBorder(
@@ -162,6 +224,12 @@ class _ItemDetailState extends State<ItemDetail> {
                   child: Text(kotGroup.name),
                 );
               }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedKOTGroup = newValue;
+                });
+                log('Selected KOT Group: $selectedKOTGroup');
+              },
             ),
             const SizedBox(height: 15),
             AppTextfield(
@@ -201,9 +269,9 @@ class _ItemDetailState extends State<ItemDetail> {
               title: const Text('Display in Selection'),
               value: displayInSelection,
               activeColor: AppColors.blue,
-              onChanged: (bool? newValue) {
+              onChanged: (bool? value) {
                 setState(() {
-                  displayInSelection = newValue!;
+                  displayInSelection = value ?? false;
                 });
               },
             ),
@@ -211,9 +279,9 @@ class _ItemDetailState extends State<ItemDetail> {
               title: const Text('Is Hot Item'),
               value: isHotItem,
               activeColor: AppColors.blue,
-              onChanged: (bool? newValue) {
+              onChanged: (bool? value) {
                 setState(() {
-                  isHotItem = newValue!;
+                  isHotItem = value ?? false;
                 });
               },
             ),
@@ -221,9 +289,9 @@ class _ItemDetailState extends State<ItemDetail> {
               title: const Text('Qty in Decimal'),
               value: qtyInDecimal,
               activeColor: AppColors.blue,
-              onChanged: (bool? newValue) {
+              onChanged: (bool? value) {
                 setState(() {
-                  qtyInDecimal = newValue!;
+                  qtyInDecimal = value ?? false;
                 });
               },
             ),
@@ -231,9 +299,9 @@ class _ItemDetailState extends State<ItemDetail> {
               title: const Text('Is Open Price'),
               value: isOpenPrice,
               activeColor: AppColors.blue,
-              onChanged: (bool? newValue) {
+              onChanged: (bool? value) {
                 setState(() {
-                  isOpenPrice = newValue!;
+                  isOpenPrice = value ?? false;
                 });
               },
             ),
@@ -241,9 +309,9 @@ class _ItemDetailState extends State<ItemDetail> {
               title: const Text('Has KOT Message'),
               value: hasKOTMessage,
               activeColor: AppColors.blue,
-              onChanged: (bool? newValue) {
+              onChanged: (bool? value) {
                 setState(() {
-                  hasKOTMessage = newValue!;
+                  hasKOTMessage = value ?? false;
                 });
               },
             ),
@@ -302,12 +370,13 @@ class _ItemDetailState extends State<ItemDetail> {
                   ),
                 ),
                 const SizedBox(width: 25),
-                Expanded(
-                  child: AppButton(
-                    onTap: () {},
-                    buttonText: 'Save',
-                  ),
-                ),
+                AppButton(
+                  onTap: () {
+                    _saveEditItem(); // Save the changes
+                    Navigator.pop(context); // Close the page after saving
+                  },
+                  buttonText: 'Save',
+                )
               ],
             ),
           ],

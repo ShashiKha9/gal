@@ -16,7 +16,10 @@ import 'package:provider/provider.dart';
 import '../../components/main_appbar.dart';
 
 class DepartmentScreen extends StatefulWidget {
-  const DepartmentScreen({super.key, this.isEdit = false});
+  const DepartmentScreen({
+    super.key,
+    this.isEdit = false,
+  });
   final bool isEdit;
 
   @override
@@ -28,13 +31,17 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   int _selectedDepartmentIndex = 0;
-  String? selectedItemName;
+  String? selectedItemName; // Assume this will be set somewhere in your code
   double totalAmount = 0.0;
   Map<String, double> quantities = {};
   Map<String, double> rates = {};
   late SyncProvider _syncProvider;
   Set<String> selectedItems = {};
   bool _isLoading = false;
+  Map<String, String> editedNames = {};
+  final List<ItemModel> _items = [];
+  final TextEditingController nameController = TextEditingController();
+  String? selectedDepartment;
 
   @override
   void initState() {
@@ -69,23 +76,43 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     await _audioPlayer.play(AssetSource(beepSound));
 
     setState(() {
-      selectedItemName = item.name;
+      selectedItemName = item.name; // Store the selected item name
       if (selectedItems.contains(item.name)) {
         selectedItems.remove(item.name);
       } else {
         selectedItems.add(item.name!);
       }
 
+      // Update quantities
       if (!quantities.containsKey(item.name)) {
         quantities[item.name!] = 1;
       } else {
         quantities[item.name!] = quantities[item.name]! + 1;
       }
 
+      // Update rates
       double rate1 = double.tryParse(item.rate1 ?? '0.0') ?? 0.0;
       rates[item.name!] = rate1;
+
+      // Update total amount
       totalAmount += rate1;
     });
+
+    // Only navigate to DepartmentScreen if we are in edit mode
+    if (widget.isEdit) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const DepartmentScreen(
+            isEdit: true, // Pass this flag as needed
+          ),
+        ),
+      );
+    } else {
+      // Add your logic here to handle the item tap without navigating
+      // This is where the item would be added to the bill or cart, without changing the screen.
+      log('Item tapped and added to bill: ${item.name}');
+    }
   }
 
   void _onTapNavigate(ItemModel item) {
@@ -93,23 +120,25 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => ItemDetail(
-            // item: item,
-            itemName: item.name,
-            itemShortName: item.shortName,
-            itemDepartmentCode: item.departmentCode,
-            itemKotGroup: item.kotgroup,
-            itemRate1: item.rate1,
-            itemRate2: item.rate2,
-            itemGST: item.gStcode,
-            itemUnit: item.unit,
-            itemBarcode: item.barcode,
-            itemQRcode: item.qrcode,
-            itemHSN: item.hsnCode,
-            itemDisplayInSelection: item.displayinselection,
-            itemIsHotItem: item.isHot,
-            itemQtyInDecimal: item.qtyInDecimal,
-            itemIsOpenPrice: item.openPrice,
-            itemHasKOTMessage: item.hasKotMessage),
+          // item: item,
+          itemName: item.name,
+          itemShortName: item.shortName,
+          itemDepartmentCode: item.departmentCode,
+          itemKotGroup: item.kotgroup,
+          itemRate1: item.rate1,
+          itemRate2: item.rate2,
+          itemGST: item.gStcode,
+          itemUnit: item.unit,
+          itemBarcode: item.barcode,
+          itemQRcode: item.qrcode,
+          itemHSN: item.hsnCode,
+          itemDisplayInSelection: item.displayinselection,
+          itemIsHotItem: item.isHot,
+          itemQtyInDecimal: item.qtyInDecimal,
+          itemIsOpenPrice: item.openPrice,
+          itemHasKOTMessage: item.hasKotMessage,
+          itemCode: item.code,
+        ),
       ),
     );
   }
@@ -455,6 +484,11 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                     .code] ??
                             [];
                         final item = items[itemIndex];
+                        String itemCode = item.code ??
+                            'unknown_item'; // Get item code for logging
+
+                        // Log the name being displayed for this item
+                        log("Displaying item with code $itemCode, name: ${editedNames[itemCode]}");
                         bool isSelected = selectedItems.contains(item.name) ||
                             (quantities[item.name] ?? 0) > 0;
 
@@ -523,7 +557,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                                             sigmaX: 10,
                                                             sigmaY: 10),
                                                     child: Image.network(
-                                                      item.imageUrl ?? "",
+                                                      item.imageUrl!,
                                                       height: 70,
                                                       width: double.maxFinite,
                                                       fit: BoxFit.cover,
@@ -541,6 +575,19 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                                     height: 70,
                                                     width: double.maxFinite,
                                                     fit: BoxFit.contain,
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      return const Padding(
+                                                        padding:
+                                                            EdgeInsets.all(10),
+                                                        child: Icon(
+                                                          Icons.wallpaper,
+                                                          color: AppColors
+                                                              .lightGrey,
+                                                          size: 50,
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
                                                 ),
                                               )
@@ -549,14 +596,17 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                   ),
 
                                   SizedBox(
-                                    // height: 30,
                                     child: Text(
-                                      item.name ?? "NO Name",
+                                      editedNames[itemCode] ??
+                                          (item.name ??
+                                              "NO Name"), // Display edited or original name
                                       style: const TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
                                       maxLines: 2,
+                                      overflow: TextOverflow
+                                          .ellipsis, // Optional: to handle overflow gracefully
                                     ),
                                   ),
                                   // const SizedBox(height: 8),
