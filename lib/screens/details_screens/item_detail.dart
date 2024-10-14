@@ -373,7 +373,7 @@ class _ItemDetailState extends State<ItemDetail> {
                 AppButton(
                   onTap: () {
                     _saveEditItem(); // Save the changes
-                    Navigator.pop(context); // Close the page after saving
+                    Navigator.pop(context,true); // Close the page after saving
                   },
                   buttonText: 'Save',
                 )

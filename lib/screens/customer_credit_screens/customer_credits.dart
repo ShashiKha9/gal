@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'customer_credit_detail.dart';
+// Import your provider
 
 class CustomerCredits extends StatefulWidget {
   const CustomerCredits({super.key});
@@ -15,28 +17,13 @@ class CustomerCredits extends StatefulWidget {
 class _CustomerCreditsState extends State<CustomerCredits> {
   List<String> _customerCodes = [];
   Map<String, String> _customerNames = {};
-  bool _isDataSynced = false;
+  Map<String, dynamic> _lastBillMap = {}; // Store last bill data
+  Map<String, dynamic> _lastPaymentMap = {}; // Store last payment data
 
   @override
   void initState() {
     super.initState();
     _loadCustomerData();
-    // _checkIfDataFetched();
-  }
-
-  Future<void> _checkIfDataFetched() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isDataFetched = prefs.getBool('is_customer_credit_fetched') ?? false;
-
-    if (isDataFetched) {
-      // Load data if already fetched
-      _loadCustomerData();
-    } else {
-      setState(() {
-        _customerCodes = []; // No data available
-        _customerNames = {};
-      });
-    }
   }
 
   Future<void> _loadCustomerData() async {
@@ -69,6 +56,54 @@ class _CustomerCreditsState extends State<CustomerCredits> {
         _customerNames = {};
       });
     }
+
+    // For each customer code, load the last bill and payment details
+    for (String customerCode in _customerCodes) {
+      // Fetch last bill and payment details
+      await _loadLastBillAndPayment(customerCode);
+    }
+  }
+
+  Future<void> _loadLastBillAndPayment(String customerCode) async {
+    CustomerCreditProvider provider = CustomerCreditProvider();
+
+    // Fetch the bill data for this customer
+    List<Map<String, dynamic>> bills =
+        await provider.loadBillData(customerCode);
+    double totalBillAmount = 0.0;
+
+    if (bills.isNotEmpty) {
+      setState(() {
+        _lastBillMap[customerCode] = bills.last; // Store the last bill
+      });
+      // Calculate total bill amount
+      for (var bill in bills) {
+        totalBillAmount += bill['totalAmount'] ?? 0.0;
+      }
+    }
+
+    // Fetch the payment data for this customer
+    List<Map<String, dynamic>> payments =
+        await provider.loadPaymentData(customerCode);
+    double totalPaymentAmount = 0.0;
+
+    if (payments.isNotEmpty) {
+      setState(() {
+        _lastPaymentMap[customerCode] = payments.last; // Store the last payment
+      });
+      // Calculate total payment amount
+      for (var payment in payments) {
+        totalPaymentAmount += payment['enteredAmount'] ?? 0.0;
+      }
+    }
+
+    // Calculate the current balance: Total bills - Total payments
+    double currentBalance = totalBillAmount - totalPaymentAmount;
+
+    // Store the current balance in the customer map
+    setState(() {
+      _lastBillMap[customerCode]['currentBalance'] = currentBalance;
+    });
   }
 
   @override
@@ -87,6 +122,11 @@ class _CustomerCreditsState extends State<CustomerCredits> {
               itemBuilder: (context, index) {
                 String code = _customerCodes[index];
                 String name = _customerNames[code] ?? 'Unknown';
+
+                // Fetch last bill, payment data, and current balance for this customer
+                Map<String, dynamic> lastBill = _lastBillMap[code] ?? {};
+                Map<String, dynamic> lastPayment = _lastPaymentMap[code] ?? {};
+                double currentBalance = lastBill['currentBalance'] ?? 0.0;
 
                 return GestureDetector(
                   onTap: () {
@@ -115,15 +155,16 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "$name - 1234567890",
+                                "$name - 1234567890", // Sample phone number
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              const Text(
-                                "₹ 300",
-                                style: TextStyle(
+                              // Display the calculated balance here
+                              Text(
+                                "₹ ${currentBalance.toStringAsFixed(2)}", // Display the current balance
+                                style: const TextStyle(
                                   color: AppColors.red,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -138,16 +179,16 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Text(
-                            "Last Bill - 1 (Date, Time)",
-                            style: TextStyle(
+                          Text(
+                            "Last Bill: ${lastBill['billNumber'] ?? 'N/A'}",
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          const Text(
-                            "Last Payment - 4 (Date, Time)",
-                            style: TextStyle(
+                          Text(
+                            "Last Payment: ${lastPayment['paymentId'] ?? 'N/A'}",
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -155,41 +196,6 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                         ],
                       ),
                     ),
-
-                    // ListTile(
-                    //   contentPadding: const EdgeInsets.symmetric(
-                    //       horizontal: 15, vertical: 10),
-                    //   title: Text(
-                    //     name,
-                    //     style: const TextStyle(
-                    //       fontWeight: FontWeight.bold,
-                    //       color: Colors.black,
-                    //     ),
-                    //   ),
-                    //   subtitle: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       const SizedBox(height: 5),
-                    //       Text(
-                    //         code,
-                    //         style: const TextStyle(
-                    //           color: Colors.black54,
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    //   onTap: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => CustomerCreditDetail(
-                    //           customerCode: code,
-                    //           customerName: name,
-                    //         ),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
                   ),
                 );
               },

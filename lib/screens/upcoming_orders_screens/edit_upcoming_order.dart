@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/add_new_upcoming_item.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
@@ -21,11 +22,28 @@ class EditUpcomingOrder extends StatefulWidget {
 
 class EditUpcomingOrderState extends State<EditUpcomingOrder> {
   Map<String, dynamic>? order;
+  late SyncProvider syncProvider;
 
   @override
   void initState() {
     super.initState();
     _loadOrderData();
+    syncProvider = Provider.of<SyncProvider>(context, listen: false);
+    syncProvider.getTaxAll();
+  }
+
+  double _calculateTotalWithTax(double subTotal) {
+    // Fetch tax values, ensuring to handle potential nulls or empty values
+    double cgst = double.tryParse(syncProvider.taxList.first.cGst) ??
+        0.0; // Replace with actual field names from your provider
+    double sgst = double.tryParse(syncProvider.taxList.first.sgst) ?? 0.0;
+    double igst = double.tryParse(syncProvider.taxList.first.iGst) ?? 0.0;
+
+    // Calculate total tax
+    double totalTax = (cgst + sgst + igst);
+
+    // Return the total amount including tax
+    return subTotal + subTotal * (totalTax / 100);
   }
 
   void _loadOrderData() {
@@ -295,7 +313,21 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
                             ),
                           ),
                           Text(
-                            'Total Amount: ₹ ${order!['totalAmount']}',
+                            'CGST: ${syncProvider.taxList.first.cGst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          // Display SGST
+                          Text(
+                            'SGST: ${syncProvider.taxList.first.sgst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          // Display IGST
+                          Text(
+                            'IGST: ${syncProvider.taxList.first.iGst}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Total Amount: ₹ ${_calculateTotalWithTax(order!['totalAmount'])}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppColors.blue,
@@ -308,7 +340,7 @@ class EditUpcomingOrderState extends State<EditUpcomingOrder> {
                             ),
                           ),
                           Text(
-                            'Balance Amount: ₹ ${order!['remainingAmount']}',
+                            'Balance Amount: ₹ ${(_calculateTotalWithTax(order?['totalAmount'] ?? 0)) - (order?['advanceAmount'] ?? 0)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppColors.blue,

@@ -31,15 +31,33 @@ class _HotItemsScreenState extends State<HotItemsScreen> {
   Set<String> selectedItems = {};
   bool isRate1 = true;
   List<ItemModel> filteredItemList = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _syncProvider = Provider.of<SyncProvider>(context, listen: false);
-    // _syncProvider.getItemsAll();
-    _syncProvider.loadItemListFromPrefs().then((value) {
-      filteredItemList = _syncProvider.itemList;
+
+    // Load the hot items when the screen initializes
+    _loadHotItemData();
+  }
+
+  Future<void> _loadHotItemData() async {
+    setState(() {
+      _isLoading = true; // Show loader
     });
+
+    try {
+      await _syncProvider
+          .loadItemListFromPrefs(); // Load hot items from preferences
+      setState(() {
+        filteredItemList = _syncProvider.itemList; // Update your item list
+      });
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loader
+      });
+    }
   }
 
   @override

@@ -5,9 +5,11 @@ import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/bill_detail.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:galaxy_mini/utils/extension.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class CustomerCreditDetail extends StatefulWidget {
   final String customerName;
@@ -32,6 +34,9 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   late SyncProvider syncProvider;
   late CustomerCreditProvider creditProvider;
   final currentDate = DateTime.now();
+  String lastBillDate = 'N/A'; // Initialize with a default value
+  String lastPaymentDate = 'N/A';
+  String customerMobileNumber = 'No Number';
 
   // State variable for the selected chip
   String selectedChip = 'All';
@@ -45,26 +50,41 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
         Provider.of<CustomerCreditProvider>(context, listen: false);
   }
 
+// Import the intl package at the top of your file
+
   Future<void> _loadData() async {
     final creditProvider =
         Provider.of<CustomerCreditProvider>(context, listen: false);
 
-    // Load all bills and payments for this specific customer
     billData = await creditProvider.loadBillData(widget.customerCode);
     paymentData = await creditProvider.loadPaymentData(widget.customerCode);
 
-    // Set the latest bill number and payment ID
+    // Set the latest bill number, bill date, payment ID, and payment date
     if (billData.isNotEmpty) {
-      currentBillNumber = billData.last['billNumber'].toString();
+      final lastBill = billData.last;
+      currentBillNumber = lastBill['billNumber'].toString();
+
+      // Get the mobile number from the last bill
+      customerMobileNumber = lastBill['mobileNumber'] ?? 'No Number';
+
+      // Parse the last bill date using intl package
+      lastBillDate = DateFormat("dd, MMM yyyy, hh:mm a").format(
+        DateFormat("dd, MMM yyyy, hh:mm a").parse(lastBill['billDate']),
+      );
     }
+
     if (paymentData.isNotEmpty) {
-      currentPaymentId = paymentData.last['paymentId'].toString();
+      final lastPayment = paymentData.last;
+      currentPaymentId = lastPayment['paymentId'].toString();
+
+      // Parse the last payment date using intl package
+      lastPaymentDate = DateFormat("dd, MMM yyyy, hh:mm a").format(
+        DateFormat("dd, MMM yyyy, hh:mm a").parse(lastPayment['paymentDate']),
+      );
     }
 
-    // Calculate the current balance
     currentBalance = _calculateCurrentBalance();
-
-    setState(() {}); // Update the UI after data is loaded
+    setState(() {});
   }
 
   double _calculateTotalBillAmount() {
@@ -238,15 +258,15 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "${widget.customerName} - 1234567890",
+                  "${widget.customerName} - $customerMobileNumber", // Display the mobile number
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const Text(
-                  "₹ 300",
-                  style: TextStyle(
+                Text(
+                  "₹ $currentBalance",
+                  style: const TextStyle(
                     color: AppColors.red,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -261,16 +281,16 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const Text(
-              "Last Bill - 1 (Date, Time)",
-              style: TextStyle(
+            Text(
+              "Last Bill - ${currentBillNumber.isNotEmpty ? currentBillNumber : 'N/A'} (Date: $lastBillDate)",
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const Text(
-              "Last Payment - 4 (Date, Time)",
-              style: TextStyle(
+            Text(
+              "Last Payment - ${currentPaymentId.isNotEmpty ? currentPaymentId : 'N/A'} (Date: $lastPaymentDate)",
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -278,41 +298,6 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
           ],
         ),
       ),
-
-      // ListTile(
-      //   contentPadding: const EdgeInsets.symmetric(
-      //       horizontal: 15, vertical: 10),
-      //   title: Text(
-      //     name,
-      //     style: const TextStyle(
-      //       fontWeight: FontWeight.bold,
-      //       color: Colors.black,
-      //     ),
-      //   ),
-      //   subtitle: Column(
-      //     crossAxisAlignment: CrossAxisAlignment.start,
-      //     children: [
-      //       const SizedBox(height: 5),
-      //       Text(
-      //         code,
-      //         style: const TextStyle(
-      //           color: Colors.black54,
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      //   onTap: () {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //         builder: (context) => CustomerCreditDetail(
-      //           customerCode: code,
-      //           customerName: name,
-      //         ),
-      //       ),
-      //     );
-      //   },
-      // ),
     );
   }
 

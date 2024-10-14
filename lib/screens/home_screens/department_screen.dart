@@ -55,14 +55,47 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true; // Show loader
+      log("Loading started: Showing loader...");
     });
 
-    await _syncProvider.loadDepartmentListFromPrefs();
-    await _syncProvider.loadItemsByDepartmentFromPrefs();
+    try {
+      log("Loading department list from preferences...");
+      await _syncProvider.loadDepartmentListFromPrefs();
+      log("Department list loaded successfully.");
 
-    setState(() {
-      _isLoading = false; // Hide loader
-    });
+      if (widget.isEdit) {
+        log("isEdit is true, loading all items for editing...");
+        await _syncProvider.loadItemsForEdit();
+        log("All items loaded for editing.");
+
+        // Log the loaded items
+        _syncProvider.itemsByDepartment.forEach((departmentCode, itemList) {
+          log("Department: $departmentCode");
+          for (var item in itemList) {
+            log("Item: ${item.name}, Rate: ${item.rate1}, Code: ${item.code}");
+          }
+        });
+      } else {
+        log("isEdit is false, loading filtered items...");
+        await _syncProvider.loadItemsWithFilter();
+        log("Filtered items loaded successfully.");
+
+        // Log the filtered items
+        _syncProvider.itemsByDepartment.forEach((departmentCode, itemList) {
+          log("Department: $departmentCode");
+          for (var item in itemList) {
+            log("Item: ${item.name}, Rate: ${item.rate1}, Code: ${item.code}, DisplayInSelection: ${item.displayinselection}");
+          }
+        });
+      }
+    } catch (e) {
+      log("Error occurred during data loading: $e");
+    } finally {
+      setState(() {
+        _isLoading = false; // Hide loader
+        log("Loading finished: Hiding loader.");
+      });
+    }
   }
 
   @override
@@ -115,12 +148,13 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     }
   }
 
-  void _onTapNavigate(ItemModel item) {
-    Navigator.push(
+  void _onTapNavigate(ItemModel item) async {
+    // Navigate to the Item Detail page and wait for the result
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ItemDetail(
-          // item: item,
+          // Pass all the item details
           itemName: item.name,
           itemShortName: item.shortName,
           itemDepartmentCode: item.departmentCode,
@@ -141,6 +175,12 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         ),
       ),
     );
+
+    // Check if the result indicates that the item was updated
+    if (result == true) {
+      // Reload the department items to reflect the changes
+      await _loadData(); // This will refresh the department screen
+    }
   }
 
   void _increaseQuantity() async {
@@ -463,165 +503,173 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                     ),
                   ),
                   Expanded(
-                    child: GridView.builder(
-                      padding: const EdgeInsets.all(8.0),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 2,
-                        mainAxisSpacing: 2,
-                        childAspectRatio: childAspectRatio,
-                      ),
-                      itemCount: syncProvider
-                              .itemsByDepartment[syncProvider
-                                  .departmentList[_selectedDepartmentIndex]
-                                  .code]
-                              ?.length ??
-                          0,
-                      itemBuilder: (context, itemIndex) {
+                    child: Builder(
+                      builder: (context) {
+                        // Get the items for the selected department
                         final items = syncProvider.itemsByDepartment[
                                 syncProvider
                                     .departmentList[_selectedDepartmentIndex]
                                     .code] ??
                             [];
-                        final item = items[itemIndex];
-                        String itemCode = item.code ??
-                            'unknown_item'; // Get item code for logging
 
-                        // Log the name being displayed for this item
-                        log("Displaying item with code $itemCode, name: ${editedNames[itemCode]}");
-                        bool isSelected = selectedItems.contains(item.name) ||
-                            (quantities[item.name] ?? 0) > 0;
+                        // Filter items based on 'displayinselection' and 'isEdit' conditions
+                        final filteredItems = items.where((item) {
+                          bool shouldDisplayItem = widget.isEdit ||
+                              item.displayinselection == 'true';
+                          return shouldDisplayItem;
+                        }).toList();
 
-                        return GestureDetector(
-                          onTap: () => widget.isEdit
-                              ? _onTapNavigate(item)
-                              : _onItemTap(item),
-                          child: Card(
-                            color: Colors.white,
-                            // surfaceTintColor: AppColors.lightPink,
-                            borderOnForeground: true,
-                            elevation: 2,
-                            semanticContainer: true,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(15),
-                              ),
-                              side: BorderSide(
-                                color: isSelected
-                                    ? AppColors.blue
-                                    : Colors.transparent,
-                              ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    // padding: const EdgeInsets.all(10),
-                                    width: double.maxFinite,
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.all(
-                                        Radius.circular(10),
-                                      ),
-                                      // border: Border(
-                                      //   bottom: BorderSide(
-                                      //     color: AppColors.lightPink,
-                                      //     width: 2,
-                                      //   ),
-                                      // ),
-                                    ),
-                                    child: item.imageUrl == null ||
-                                            item.imageUrl!.isEmpty
-                                        ? const Padding(
-                                            padding: EdgeInsets.all(10),
-                                            child: Icon(
-                                              Icons.wallpaper,
-                                              color: AppColors.lightGrey,
-                                              size: 50,
-                                            ),
-                                          )
-                                        : Stack(
-                                            children: [
-                                              Align(
-                                                alignment: Alignment.center,
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  child: ImageFiltered(
-                                                    imageFilter:
-                                                        ImageFilter.blur(
-                                                            sigmaX: 10,
-                                                            sigmaY: 10),
-                                                    child: Image.network(
-                                                      item.imageUrl!,
-                                                      height: 70,
-                                                      width: double.maxFinite,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Align(
-                                                alignment: Alignment.center,
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  child: Image.network(
-                                                    item.imageUrl ?? "",
-                                                    height: 70,
-                                                    width: double.maxFinite,
-                                                    fit: BoxFit.contain,
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      return const Padding(
-                                                        padding:
-                                                            EdgeInsets.all(10),
-                                                        child: Icon(
-                                                          Icons.wallpaper,
-                                                          color: AppColors
-                                                              .lightGrey,
-                                                          size: 50,
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
+                        // Build the GridView using the filtered items list
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(8.0),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 2,
+                            mainAxisSpacing: 2,
+                            childAspectRatio: childAspectRatio,
+                          ),
+                          itemCount:
+                              filteredItems.length, // Use filteredItems length
+                          itemBuilder: (context, itemIndex) {
+                            final item = filteredItems[
+                                itemIndex]; // Access filtered items
+                            String itemCode = item.code ?? 'unknown_item';
+
+                            // Log the name being displayed for this item
+                            log("Displaying item with code $itemCode, name: ${editedNames[itemCode]}");
+
+                            // Determine if the item is selected based on name or quantities
+                            bool isSelected =
+                                selectedItems.contains(item.name) ||
+                                    (quantities[item.name] ?? 0) > 0;
+
+                            // Continue with your UI rendering logic
+                            return GestureDetector(
+                              onTap: () => widget.isEdit
+                                  ? _onTapNavigate(item)
+                                  : _onItemTap(item),
+                              child: Card(
+                                color: Colors.white,
+                                borderOnForeground: true,
+                                elevation: 2,
+                                semanticContainer: true,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(15),
+                                  ),
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? AppColors.blue
+                                        : Colors.transparent,
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        width: double.maxFinite,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.all(
+                                            Radius.circular(10),
+                                          ),
+                                        ),
+                                        child: item.imageUrl == null ||
+                                                item.imageUrl!.isEmpty
+                                            ? const Padding(
+                                                padding: EdgeInsets.all(10),
+                                                child: Icon(
+                                                  Icons.wallpaper,
+                                                  color: AppColors.lightGrey,
+                                                  size: 50,
                                                 ),
                                               )
-                                            ],
-                                          ),
-                                  ),
-
-                                  SizedBox(
-                                    child: Text(
-                                      editedNames[itemCode] ??
-                                          (item.name ??
-                                              "NO Name"), // Display edited or original name
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                                            : Stack(
+                                                children: [
+                                                  Align(
+                                                    alignment: Alignment.center,
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      child: ImageFiltered(
+                                                        imageFilter:
+                                                            ImageFilter.blur(
+                                                                sigmaX: 10,
+                                                                sigmaY: 10),
+                                                        child: Image.network(
+                                                          item.imageUrl!,
+                                                          height: 70,
+                                                          width:
+                                                              double.maxFinite,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Align(
+                                                    alignment: Alignment.center,
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      child: Image.network(
+                                                        item.imageUrl ?? "",
+                                                        height: 70,
+                                                        width: double.maxFinite,
+                                                        fit: BoxFit.contain,
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          return const Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                    10),
+                                                            child: Icon(
+                                                              Icons.wallpaper,
+                                                              color: AppColors
+                                                                  .lightGrey,
+                                                              size: 50,
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  )
+                                                ],
+                                              ),
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow
-                                          .ellipsis, // Optional: to handle overflow gracefully
-                                    ),
+                                      SizedBox(
+                                        child: Text(
+                                          editedNames[itemCode] ??
+                                              (item.name ?? "NO Name"),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text(
+                                        "₹ ${item.rate1}",
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  // const SizedBox(height: 8),
-                                  Text(
-                                    "₹ ${item.rate1}",
-                                    style: const TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       },
                     ),

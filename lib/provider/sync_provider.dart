@@ -133,7 +133,50 @@ class SyncProvider extends ChangeNotifier {
     await mySharedPreferences.setStringValue('itemsByDepartment', jsonString);
   }
 
-  Future<void> loadItemsByDepartmentFromPrefs() async {
+// Function to load all items (for isEdit = true)
+  Future<void> loadItemsForEdit() async {
+    String? jsonString =
+        await mySharedPreferences.getStringValue('itemsByDepartment');
+
+    if (jsonString != null) {
+      Map<String, dynamic> decodedMap = jsonDecode(jsonString);
+      itemsByDepartment.clear();
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      log("SharedPreferences instance loaded");
+
+      decodedMap.forEach((departmentCode, items) {
+        List<ItemModel> itemList = List<ItemModel>.from(
+          (items as List).map((jsonItem) {
+            ItemModel item = ItemModel.fromJson(jsonDecode(jsonItem));
+            String itemCode = item.code ?? 'unknown_item';
+
+            // Retrieve the edited name from SharedPreferences
+            String? editedName = prefs.getString('name_$itemCode');
+
+            // Retrieve the edited rate1 from SharedPreferences
+            String? editedRate1 = prefs.getString('rate1_$itemCode');
+            String? rate1 = editedRate1 != null && editedRate1.isNotEmpty
+                ? num.tryParse(editedRate1)?.toString() ?? item.rate1
+                : item.rate1;
+
+            // Apply changes and return updated item
+            if (editedName != null && editedName.isNotEmpty) {
+              item = item.copyWith(name: editedName, rate1: rate1);
+            } else {
+              item = item.copyWith(rate1: rate1);
+            }
+            return item;
+          }),
+        );
+        itemsByDepartment[departmentCode] = itemList;
+      });
+
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadItemsWithFilter() async {
     String? jsonString =
         await mySharedPreferences.getStringValue('itemsByDepartment');
 
@@ -156,21 +199,28 @@ class SyncProvider extends ChangeNotifier {
             // Retrieve the edited rate1 from SharedPreferences and cast it as a String?
             String? editedRate1 = prefs.getString('rate1_$itemCode');
 
+            // Retrieve the displayInSelection boolean value correctly
+            bool displayInSelection =
+                prefs.getBool('display_in_selection_$itemCode') ??
+                    (item.displayinselection?.toLowerCase() == 'true');
+
             // Fallback to item's original rate1 if the editedRate1 is null or invalid
             String? rate1 = editedRate1 != null && editedRate1.isNotEmpty
                 ? num.tryParse(editedRate1)?.toString() ?? item.rate1
                 : item.rate1;
 
-            // Use the copyWith method to create a new item with the updated name and rate1
-            if (editedName != null && editedName.isNotEmpty) {
-              item = item.copyWith(name: editedName, rate1: rate1);
-            } else {
-              // Only update rate1 if the name isn't edited
-              item = item.copyWith(rate1: rate1);
-            }
+            String? name = (editedName != null && editedName.isNotEmpty)
+                ? editedName
+                : item.name;
+
+            item = item.copyWith(
+              name: name,
+              rate1: rate1,
+              displayinselection: displayInSelection.toString(),
+            );
 
             return item;
-          }),
+          }).toList(), // Remove any skipped (null) items
         );
         itemsByDepartment[departmentCode] = itemList;
       });
@@ -807,30 +857,39 @@ class SyncProvider extends ChangeNotifier {
         String? editedName = prefs.getString('name_$itemCode');
         String? editedRate1 = prefs.getString('rate1_$itemCode');
 
-        // Handle the isHot field - convert String 'true'/'false' to a boolean
+        // Handle the isHot and displayinselection fields - default to 'false' if missing
         bool isHot = prefs.getBool('is_hot_item_$itemCode') ??
             (item.isHot?.toLowerCase() == 'true');
+        bool displayinselection =
+            prefs.getBool('display_in_selection_$itemCode') ??
+                (item.displayinselection?.toLowerCase() == 'true');
 
         // Apply the edited values only if they exist, else use original values
-        String? rate1 = editedRate1 != null && editedRate1.isNotEmpty
+        String? rate1 = (editedRate1 != null && editedRate1.isNotEmpty)
             ? num.tryParse(editedRate1)?.toString() ?? item.rate1
             : item.rate1;
 
         // Use the edited name if available; otherwise, keep the original name
-        String? name = editedName != null && editedName.isNotEmpty
+        String? name = (editedName != null && editedName.isNotEmpty)
             ? editedName
             : item.name;
 
-        // Update the item using copyWith for the name, rate1, and isHot
-        item = item.copyWith(name: name, rate1: rate1, isHot: isHot.toString());
+        // Update the item using copyWith for name, rate1, isHot, and displayinselection
+        item = item.copyWith(
+          name: name,
+          rate1: rate1,
+          isHot: isHot.toString(),
+          displayinselection: displayinselection.toString(),
+        );
 
-        // Return the item regardless of edits, but filter by isHot later
-        return item;
+        return item; // Return the item regardless of edits
       }).toList();
 
-      // Filter the itemList to only include hot items
+      // Filter the itemList to only include hot items that should be displayed
       itemList = itemList
-          .where((item) => item.isHot?.toLowerCase() == 'true')
+          .where((item) =>
+              item.isHot?.toLowerCase() == 'true' &&
+              item.displayinselection?.toLowerCase() == 'true')
           .toList();
 
       notifyListeners(); // Notify listeners if itemList is updated
