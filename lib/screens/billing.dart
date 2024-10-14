@@ -1,5 +1,9 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_button.dart';
+import 'package:galaxy_mini/components/app_dropdown.dart';
+import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/components/scaffold_message.dart';
 import 'package:galaxy_mini/models/table_model.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
@@ -8,6 +12,7 @@ import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
 import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:galaxy_mini/utils/extension.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -787,45 +792,44 @@ class BillPageState extends State<BillPage> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bill Summary'),
-        backgroundColor: const Color(0xFFC41E3A),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.local_offer,
-              color: Colors.white,
-            ), // You can replace this icon with any relevant icon
-            onPressed: () {
-              _showOfferCouponDialog(context);
-            },
-          ),
-          IconButton(
+      appBar: MainAppBar(
+        title: "Bill Summary",
+        actions: true,
+        actionWidget: Row(
+          children: [
+            IconButton(
               icon: const Icon(
-                Icons.list_alt,
-                color: Colors.white,
-              ), // You can replace this icon with any relevant icon
+                Icons.local_offer,
+              ),
               onPressed: () {
-                if (selectedCustomerCode == null) {
-                  scaffoldMessage(message: 'Please select a customer code');
-                  return;
-                }
-                showOrderDetailsDialog(
-                  context,
-                  selectedCustomerName,
-                  selectedCustomerCode!,
-                );
-              }),
-          IconButton(
-            icon: const Icon(
-              Icons.not_interested,
-              color: Colors.white,
-            ), // You can replace this icon with any relevant icon
-            onPressed: () {
-              _showNonChargeableDialog(context, totalAmount);
-            },
-          ),
-        ],
+                _showOfferCouponDialog(context);
+              },
+            ),
+            IconButton(
+                icon: const Icon(
+                  Icons.list_alt,
+                ),
+                onPressed: () {
+                  if (selectedCustomerCode == null) {
+                    scaffoldMessage(message: 'Please select a customer code');
+                    return;
+                  }
+                  showOrderDetailsDialog(
+                    context,
+                    selectedCustomerName,
+                    selectedCustomerCode!,
+                  );
+                }),
+            IconButton(
+              icon: const Icon(
+                Icons.not_interested,
+              ),
+              onPressed: () {
+                _showNonChargeableDialog(context, totalAmount);
+              },
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -833,7 +837,7 @@ class BillPageState extends State<BillPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Your Order',
+              'Your Orders',
               style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 13.0),
@@ -848,13 +852,13 @@ class BillPageState extends State<BillPage> {
                   final itemTotal = itemRate * itemQuantity;
 
                   return Card(
-                    elevation: 3,
+                    elevation: 2,
                     margin: const EdgeInsets.symmetric(vertical: 8.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(15),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -895,7 +899,6 @@ class BillPageState extends State<BillPage> {
                                 style: const TextStyle(
                                   fontSize: 14.0,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFC41E3A),
                                 ),
                               ),
                             ],
@@ -907,29 +910,27 @@ class BillPageState extends State<BillPage> {
                 },
               ),
             ),
-            const Divider(thickness: 2.0),
+            const Divider(thickness: 2),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Total Amount:',
-                    style:
-                        TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   Row(
                     children: [
                       Text(
                         // Check if discount or offer coupon has been applied
-                        discountedTotalAmount >
-                                0 // If a coupon or discount is applied
+                        discountedTotalAmount > 0
                             ? 'Rs. ${discountedTotalAmount.toStringAsFixed(2)}' // Show the discounted/offer-applied total
                             : 'Rs. ${updatedTotalAmount.toStringAsFixed(2)}', // Otherwise, show original total amount
                         style: const TextStyle(
-                          fontSize: 22.0,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFC41E3A),
+                          color: AppColors.blue,
                         ),
                       ),
                       IconButton(
@@ -954,68 +955,38 @@ class BillPageState extends State<BillPage> {
             // Tax details visibility section
             if (showTaxDetails)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'CGST: ${(double.tryParse(syncProvider.taxList.first.cGst)?.toStringAsFixed(2) ?? '0.00')} %',
-                      style: const TextStyle(fontSize: 18.0),
+                      style: const TextStyle(fontSize: 16),
                     ),
                     Text(
                       'SGST: ${(double.tryParse(syncProvider.taxList.first.sgst)?.toStringAsFixed(2) ?? '0.00')}%',
-                      style: const TextStyle(fontSize: 18.0),
+                      style: const TextStyle(fontSize: 16),
                     ),
                     Text(
                       'IGST: ${(double.tryParse(syncProvider.taxList.first.iGst)?.toStringAsFixed(2) ?? '0.00')}%',
-                      style: const TextStyle(fontSize: 18.0),
+                      style: const TextStyle(fontSize: 16),
                     ),
                     Text(
                       'Total GST: ${(double.tryParse(syncProvider.taxList.first.rate)?.toStringAsFixed(2) ?? '0.00')}%',
                       style: const TextStyle(
-                          fontSize: 18.0, fontWeight: FontWeight.bold),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    selectedCustomerName != null
-                        ? 'Selected Customer: $selectedCustomerName, $selectedCustomerCode'
-                        : '',
-                    style: const TextStyle(
-                      fontSize: 16.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4.0),
+
             Row(
               children: [
-                // Payment Mode Dropdown
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Payment Mode',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 10.0,
-                      ),
-                    ),
+                  child: AppDropdown(
+                    labelText: "Payment Mode",
                     items: syncProvider.paymentList.map((paymentMode) {
-                      return DropdownMenuItem<String>(
-                        value: paymentMode.type,
-                        child: Text(paymentMode.type),
-                      );
+                      return paymentMode.type;
                     }).toList(),
                     onChanged: (value) async {
                       setState(() {
@@ -1025,108 +996,99 @@ class BillPageState extends State<BillPage> {
                     value: selectedPaymentMode ??
                         (syncProvider.paymentList.isNotEmpty
                             ? syncProvider.paymentList[selectedIndex ?? 0].type
-                            : null), // Handle the case if the paymentList is empty
+                            : null),
                   ),
                 ),
-                const SizedBox(width: 16.0), // Add spacing between fields
-                // Discount TextField
+                const SizedBox(width: 16.0),
                 Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Discount ${_isPercentage ? '%' : '₹'}',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12.0,
-                        horizontal: 10.0,
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
+                  child: AppTextfield(
+                    labelText: 'Discount ${_isPercentage ? '%' : '₹'}',
+                    keyBoardType: TextInputType.number,
                     onChanged: (value) {
                       if (isCouponApplied) {
-                        return; // Do nothing if a coupon is applied
+                        return;
                       }
-
                       setState(() {
-                        _discountValue = value; // Update discount value
-                        discountedTotalAmount =
-                            updatedTotalAmount; // Reset to original total
+                        _discountValue = value;
+                        discountedTotalAmount = updatedTotalAmount;
 
                         if (_discountValue.isNotEmpty) {
-                          _calculateOfferedTotal(); // Recalculate total if discount is entered
+                          _calculateOfferedTotal();
                         } else {
-                          discountedTotalAmount =
-                              updatedTotalAmount; // Reset to original total if discount field is cleared
+                          discountedTotalAmount = updatedTotalAmount;
                         }
                       });
                     },
-                    enabled:
-                        !isCouponApplied, // Disable the field when coupon is active
+                    enabled: !isCouponApplied,
                   ),
                 ),
-
                 const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () {
+                IconButton(
+                  onPressed: () {
                     setState(() {
-                      _isPercentage = !_isPercentage; // Toggle between ₹ and %
+                      _isPercentage = !_isPercentage;
                     });
-                    _calculateOfferedTotal(); // Recalculate total when discount mode changes
+                    _calculateOfferedTotal();
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(10.0),
-                      color: Colors.white,
-                    ),
-                    child: Text(_isPercentage
-                        ? '%'
-                        : '₹'), // Display ₹ or % based on toggle
+                  icon: Text(
+                    _isPercentage ? '%' : '₹',
+                    style: const TextStyle(fontSize: 25),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16.0),
+            // const SizedBox(height: 16.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  RichText(
+                    text: selectedCustomerName != null
+                        ? TextSpan(
+                            text: '',
+                            children: [
+                              const TextSpan(
+                                text: 'Selected Customer: ',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              TextSpan(
+                                text:
+                                    '$selectedCustomerName, $selectedCustomerCode',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.blue,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          )
+                        : const TextSpan(text: ''),
+                  ),
+                ],
+              ),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      backgroundColor: const Color(0xFFC41E3A),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                    onPressed: () {
-                      // Show table selection dialog
+                  child: AppButton(
+                    buttonText: "Park",
+                    onTap: () {
+                      // TODO: Update this Popup with Header and SubTitle
                       _showTableSelectionDialog(context);
                     },
-                    child: const Text(
-                      'Park',
-                      style: TextStyle(
-                        fontSize: 14.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 10.0),
+                const SizedBox(width: 5),
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      backgroundColor: const Color(0xFFC41E3A),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                    onPressed: () async {
+                  child: AppButton(
+                    buttonText: "Customer",
+                    onTap: () async {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -1147,8 +1109,7 @@ class BillPageState extends State<BillPage> {
                                       title: Text(
                                         '${customer.customerCode ?? 'No Code'} - ${customer.name ?? 'Unnamed'}',
                                         style: const TextStyle(
-                                            fontWeight: FontWeight
-                                                .bold), // Optional styling
+                                            fontWeight: FontWeight.bold),
                                       ),
                                       subtitle: Text(
                                         'Mobile: ${customer.mobile1 ?? 'No Number'}',
@@ -1156,11 +1117,10 @@ class BillPageState extends State<BillPage> {
                                       onTap: () {
                                         setState(() {
                                           selectedCustomerName = customer.name;
-                                          selectedCustomerCode = customer
-                                              .customerCode; // Update selected customer name
+                                          selectedCustomerCode =
+                                              customer.customerCode;
                                         });
-                                        Navigator.of(context)
-                                            .pop(); // Close the dialog
+                                        Navigator.of(context).pop();
                                       },
                                     );
                                   },
@@ -1178,10 +1138,12 @@ class BillPageState extends State<BillPage> {
                               TextButton(
                                 onPressed: () {
                                   Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AddNewCustomer())); // Close the dialog
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const AddNewCustomer(),
+                                    ),
+                                  );
                                 },
                                 child: const Text("Add new customer"),
                               ),
@@ -1190,26 +1152,13 @@ class BillPageState extends State<BillPage> {
                         },
                       );
                     },
-                    child: const Text(
-                      'Customer',
-                      style: TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 10.0),
+                const SizedBox(width: 5),
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      backgroundColor: const Color(0xFFC41E3A),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                    ),
-                    onPressed: () {
+                  child: AppButton(
+                    buttonText: "Checkout",
+                    onTap: () {
                       if (selectedPaymentMode == 'Cash') {
                         double amountToBePaid = _discountValue.isNotEmpty
                             ? discountedTotalAmount
@@ -1236,7 +1185,7 @@ class BillPageState extends State<BillPage> {
                                 //     'Cash' // Payment mode
                                 //     );
 
-                                Navigator.of(context).pop(); // Close the dialog
+                                Navigator.of(context).pop();
                               },
                               customerName: '',
                               customerCode: '',
@@ -1254,10 +1203,8 @@ class BillPageState extends State<BillPage> {
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              String?
-                                  enteredAmount; // Variable to store entered amount
-                              String?
-                                  selectedPaymentModeInDialog; // Variable for selected payment mode in dialog
+                              String? enteredAmount;
+                              String? selectedPaymentModeInDialog;
 
                               return AlertDialog(
                                 title: const Text('Payment Confirmation'),
@@ -1344,9 +1291,8 @@ class BillPageState extends State<BillPage> {
                                             selectedCustomerName!,
                                         selectedCustomerCode:
                                             selectedCustomerCode!,
-                                        items: widget.items, // Pass the items
-                                        quantities: widget
-                                            .quantities, // Pass the quantities
+                                        items: widget.items,
+                                        quantities: widget.quantities,
                                         rates: widget.rates,
                                       );
 
@@ -1384,12 +1330,7 @@ class BillPageState extends State<BillPage> {
                           );
                         } else {
                           // Show message to select a customer
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Please select a customer before proceeding.'),
-                            ),
-                          );
+                          scaffoldMessage(message: 'Please select a customer');
                         }
                       } else {
                         // Proceed with other payment modes
@@ -1413,14 +1354,6 @@ class BillPageState extends State<BillPage> {
                         }
                       }
                     },
-                    child: const Text(
-                      'Checkout',
-                      style: TextStyle(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
                   ),
                 ),
               ],
