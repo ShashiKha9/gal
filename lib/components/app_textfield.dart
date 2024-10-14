@@ -11,7 +11,7 @@ class AppTextfield extends StatelessWidget {
     this.isSuffixIcon = false,
     this.suffixIcon,
     this.obscureText = false,
-    this.enabled = false,
+    this.enabled = true,
     this.onChanged,
   });
 
