@@ -158,7 +158,8 @@ class CustomerCreditProvider extends ChangeNotifier {
         'totalAmount': totalAmount,
         'items': bill['items'] ?? [], // Ensure this is a list
         'quantities': bill['quantities'] ?? {}, // Load quantities
-        'rates': bill['rates'] ?? {}, // Load rates
+        'rates': bill['rates'] ?? {},
+        'mobileNumber': bill['mobileNumber'] ?? 'No Number', // Load rates
       };
     }).toList();
 
