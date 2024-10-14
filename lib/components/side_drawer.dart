@@ -77,6 +77,18 @@ class _SideDrawerState extends State<SideDrawer> {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.inventory, color: AppColors.blue),
+            title: const Text('Inventory'),
+            onTap: () {
+              // Navigator.pop(context);
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(
+              //       builder: (context) => const CustomerCredits()),
+              // );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.sync, color: AppColors.blue),
             title: const Text('Sync data'),
             onTap: () {

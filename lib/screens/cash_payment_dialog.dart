@@ -40,8 +40,7 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
     int currentBillNumber = await creditPartyProvider.getCurrentBillNumber();
 
     setState(() {
-      billNumber =
-          currentBillNumber + 1; // Use the current bill number directly
+      billNumber = currentBillNumber + 1;
     });
   }
 
@@ -49,8 +48,7 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
   Future<void> _updateBillNumber() async {
     final creditPartyProvider =
         Provider.of<CustomerCreditProvider>(context, listen: false);
-    await creditPartyProvider
-        .setCurrentBillNumber(billNumber); // Increment for the next bill
+    await creditPartyProvider.setCurrentBillNumber(billNumber);
   }
 
   @override
@@ -59,10 +57,14 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
       title: const Text('Cash Payment'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Total Amount: Rs. ${widget.totalAmount.toStringAsFixed(2)}'),
+          Text(
+            'Total Amount: Rs. ${widget.totalAmount.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 16),
+          ),
           const SizedBox(height: 16.0),
-          // Text field for received amount
+
           TextField(
             decoration: const InputDecoration(
               labelText: 'Received Amount',
