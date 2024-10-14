@@ -36,7 +36,6 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   final currentDate = DateTime.now();
   String lastBillDate = 'N/A'; // Initialize with a default value
   String lastPaymentDate = 'N/A';
-  String customerMobileNumber = 'No Number';
 
   // State variable for the selected chip
   String selectedChip = 'All';
@@ -63,9 +62,6 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     if (billData.isNotEmpty) {
       final lastBill = billData.last;
       currentBillNumber = lastBill['billNumber'].toString();
-
-      // Get the mobile number from the last bill
-      customerMobileNumber = lastBill['mobileNumber'] ?? 'No Number';
 
       // Parse the last bill date using intl package
       lastBillDate = DateFormat("dd, MMM yyyy, hh:mm a").format(
@@ -117,8 +113,9 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     int currentPaymentId = await creditProvider.getCurrentPaymentId();
     int newPaymentId = currentPaymentId + 1; // Increment the payment ID
 
-    // Get the current date in your desired format
-    String paymentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    // Get the current date in the desired format using your custom method
+    String paymentDate =
+        toStandardDtTime(); // Call your custom method to format date
 
     showDialog(
       context: context,
@@ -205,6 +202,28 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
     );
   }
 
+// Your toStandardDtTime method
+  String toStandardDtTime() {
+    // Get the current date in UTC and convert to local time
+    DateTime localDateTime =
+        DateTime.now(); // Assuming this is your current local time
+
+    // Extract date and time components
+    int hour = localDateTime.hour;
+    int minute = localDateTime.minute;
+    int day = localDateTime.day;
+    int month = localDateTime.month;
+    int year = localDateTime.year;
+
+    // Convert to 12-hour format
+    int hour0 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+
+    // Format the date and time
+    return '${day < 10 ? '0$day' : day}, ${month.intToMonth()} $year, '
+        '${hour0 < 10 ? '0$hour0' : hour0}:${minute < 10 ? '0$minute' : minute} '
+        '${hour < 12 ? 'AM' : 'PM'}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -258,7 +277,7 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "${widget.customerName} - $customerMobileNumber", // Display the mobile number
+                  "${widget.customerName} - 1234567890",
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
