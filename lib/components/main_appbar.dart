@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
-import '../utils/keys.dart';
+import 'package:galaxy_mini/utils/keys.dart';
 
 class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
@@ -9,6 +9,8 @@ class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
   final bool isSearch;
   final bool actions;
   final Widget? actionWidget;
+  final bool isLeading;
+  final Widget? leadingWidget;
 
   const MainAppBar({
     super.key,
@@ -18,6 +20,8 @@ class MainAppBar extends StatefulWidget implements PreferredSizeWidget {
     this.isSearch = false,
     this.actions = false,
     this.actionWidget,
+    this.isLeading = false,
+    this.leadingWidget,
   });
 
   @override
@@ -73,13 +77,14 @@ class _MainAppBarState extends State<MainAppBar> {
           ? IconButton(
               icon: const Icon(
                 Icons.menu,
-                color: Colors.black,
               ),
               onPressed: () {
                 scaffoldKey.currentState!.openDrawer();
               },
             )
-          : null,
+          : widget.isLeading
+              ? widget.leadingWidget
+              : null,
       actions: <Widget>[
         if (widget.actions)
           SizedBox(

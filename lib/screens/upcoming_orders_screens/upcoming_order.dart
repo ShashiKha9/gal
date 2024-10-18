@@ -73,40 +73,38 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
       appBar: const MainAppBar(
         title: 'Upcoming Orders',
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: Column(
+        children: [
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('From Date'),
-                      ElevatedButton(
-                        onPressed: () => _selectFromDate(context),
-                        child:
-                            Text(DateFormat('dd MMMM yyyy').format(fromDate!)),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('To Date'),
-                      ElevatedButton(
-                        onPressed: () => _selectToDate(context),
-                        child: Text(DateFormat('dd MMMM yyyy').format(toDate!)),
-                      ),
-                    ],
+                  const Text('From Date'),
+                  ElevatedButton(
+                    onPressed: () => _selectFromDate(context),
+                    child: Text(DateFormat('dd MMMM yyyy').format(fromDate!)),
                   ),
                 ],
               ),
-            ),
-            AppDropdown(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('To Date'),
+                  ElevatedButton(
+                    onPressed: () => _selectToDate(context),
+                    child: Text(DateFormat('dd MMMM yyyy').format(toDate!)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AppDropdown(
               labelText: "Order Status",
               value: selectedOrderStatus,
               items: const [
@@ -123,102 +121,103 @@ class _UpcomingOrdersPageState extends State<UpcomingOrdersPage> {
                 });
               },
             ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Consumer<UpcomingOrderProvider>(
-                builder: (context, provider, child) {
-                  final displayedOrders = _getDisplayedOrders(provider);
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Consumer<UpcomingOrderProvider>(
+              builder: (context, provider, child) {
+                final displayedOrders = _getDisplayedOrders(provider);
 
-                  if (displayedOrders.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No Orders Available',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                    );
-                  }
+                if (displayedOrders.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No Orders Available',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  );
+                }
 
-                  return ListView.builder(
-                    itemCount: displayedOrders.length,
-                    itemBuilder: (context, index) {
-                      final order = displayedOrders[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => UpcomingOrderDetails(
-                                orderId: order['orderId'],
-                              ),
+                return ListView.builder(
+                  itemCount: displayedOrders.length,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemBuilder: (context, index) {
+                    final order = displayedOrders[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UpcomingOrderDetails(
+                              orderId: order['orderId'],
                             ),
-                          ).then((_) {
-                            // Optionally reload orders here if necessary
-                            // _loadOrders();
-                          });
-                        },
-                        child: Card(
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0),
                           ),
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Order ID: ${order['orderId']}',
-                                  style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                        ).then((_) {
+                          // Optionally reload orders here if necessary
+                          // _loadOrders();
+                        });
+                      },
+                      child: Card(
+                        elevation: 3,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Order ID: ${order['orderId']}',
+                                style: const TextStyle(
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Order Date: ${order['orderDate'] ?? 'No Date'}',
-                                  style: const TextStyle(
-                                    fontSize: 14.0,
-                                    color: Colors.black54,
-                                  ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Order Date: ${order['orderDate'] ?? 'No Date'}',
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black54,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Customer Code: ${order['customerCode'] ?? 'No Code'}',
-                                  style: const TextStyle(
-                                    fontSize: 14.0,
-                                    color: Colors.black54,
-                                  ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Customer Code: ${order['customerCode'] ?? 'No Code'}',
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black54,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Order Placed on: ${order['orderPlacedTime'] ?? 'No Time'}',
-                                  style: const TextStyle(
-                                    fontSize: 14.0,
-                                    color: Colors.black54,
-                                  ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Order Placed on: ${order['orderPlacedTime'] ?? 'No Time'}',
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black54,
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Note: ${order['note'] ?? 'No Note'}',
-                                  style: const TextStyle(
-                                    fontSize: 14.0,
-                                    color: Colors.black54,
-                                  ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Note: ${order['note'] ?? 'No Note'}',
+                                style: const TextStyle(
+                                  fontSize: 14.0,
+                                  color: Colors.black54,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
