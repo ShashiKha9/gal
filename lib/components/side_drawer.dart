@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/screens/customer_credit_screens/customer_credits.dart';
 import 'package:galaxy_mini/screens/details_screens/sync_data.dart';
+import 'package:galaxy_mini/screens/inventory_screens/inventory_head_screen.dart';
+import 'package:galaxy_mini/screens/report_screens/report_main_screens.dart';
 import 'package:galaxy_mini/screens/setting_screens/settings_screen.dart';
 import 'package:galaxy_mini/screens/upcoming_orders_screens/upcoming_order.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
@@ -57,11 +59,11 @@ class _SideDrawerState extends State<SideDrawer> {
             leading: const Icon(Icons.insert_chart, color: AppColors.blue),
             title: const Text('Reports'),
             onTap: () {
-              // Navigator.pop(context);
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(builder: (context) => CreditPartyDataPage()),
-              // );
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReportSceens()),
+              );
             },
           ),
           ListTile(
@@ -80,12 +82,12 @@ class _SideDrawerState extends State<SideDrawer> {
             leading: const Icon(Icons.inventory, color: AppColors.blue),
             title: const Text('Inventory'),
             onTap: () {
-              // Navigator.pop(context);
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //       builder: (context) => const CustomerCredits()),
-              // );
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const InventoryHeadScreen()),
+              );
             },
           ),
           ListTile(
