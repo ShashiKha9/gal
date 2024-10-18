@@ -1,10 +1,16 @@
+import 'dart:developer';
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/app_checkbox_tile.dart';
 import 'package:galaxy_mini/components/app_dropdown.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/screens/setting_screens/ble_controller.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -18,6 +24,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   String _printerType = 'Bluetooth';
   String _connectionType = 'Bluetooth';
+  BluetoothDevice? _selectedDevice;
 
   bool _printBill = false;
   bool _printShopName = false;
@@ -55,6 +62,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   bool _showReverseQuantity = false;
   bool _printTwoBillCopies = false;
   bool _autoCutPaper = false;
+  final bool _isScanning = false;
+  // Track scanning state
 
   late TextEditingController _shopNameController;
   late TextEditingController _addressLine1Controller;
@@ -90,6 +99,87 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     _extraFooterController = TextEditingController(
       text: 'Thank You... Visit Again!',
     );
+  }
+
+  void _showBluetoothDevices(BuildContext context) {
+    // Get an instance of BleController
+    final BleController bleController = Get.put(BleController());
+
+    // Start scanning for devices
+    bleController.scanDevices();
+
+    // Show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Available Bluetooth Devices"),
+          content: GetBuilder<BleController>(
+            // No need to initialize again
+            builder: (controller) {
+              return SizedBox(
+                width: double.maxFinite,
+                child: Obx(() {
+                  final devices = controller.discoveredDevices;
+                  if (devices.isNotEmpty) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: devices.length,
+                      itemBuilder: (context, index) {
+                        final device =
+                            devices[index]; // Ensure this matches your type
+                        return ListTile(
+                          title: Text(device.name.isNotEmpty
+                              ? device.name
+                              : 'Unknown Device'),
+                          subtitle: Text(device.id), // Handle nullable ID
+                          onTap: () {
+                            Navigator.pop(context); // Close the dialog
+                            _onDeviceSelected(device);
+                            // Use the correct device object here
+                            controller.connectToDevice(
+                                device); // Pass the selected device
+                          },
+                        );
+                      },
+                    );
+                  } else {
+                    return const Center(
+                      child: Text("No devices found"),
+                    );
+                  }
+                }),
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onDeviceSelected(DiscoveredDevice device) {
+    log('Selected device: ${device.name} (${device.id})');
+    setState(() {
+      _selectedDevice = BluetoothDevice(device.id, device.name);
+    });
+    // Save the selected printer to persistent storage
+    // For example, using shared preferences
+    _saveSelectedPrinter(device);
+  }
+
+  Future<void> _saveSelectedPrinter(DiscoveredDevice device) async {
+    // Use shared preferences to store the selected device details
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedPrinterId', device.id);
+    await prefs.setString('selectedPrinterName', device.name);
   }
 
   @override
@@ -178,18 +268,39 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 ),
               ),
               const SizedBox(height: 5),
-              const Text(
-                "Device Not Selected",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
+
+              _selectedDevice != null
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _selectedDevice!.name?.isNotEmpty == true
+                              ? _selectedDevice!.name!
+                              : 'Unknown Device',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                      ],
+                    )
+                  : const Text(
+                      "Device Not Selected",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+
               const SizedBox(height: 15),
               AppButton(
                 buttonText: 'Scan',
-                onTap: () {},
+                onTap: () {
+                  _showBluetoothDevices(context);
+                },
               ),
+
               const SizedBox(height: 25),
 
               // Printer settings

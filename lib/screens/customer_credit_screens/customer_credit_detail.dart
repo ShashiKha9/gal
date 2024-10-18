@@ -9,7 +9,6 @@ import 'package:galaxy_mini/utils/extension.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 class CustomerCreditDetail extends StatefulWidget {
   final String customerName;
@@ -262,6 +261,18 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
   }
 
   Widget _customerInfo() {
+    // Access SyncProvider using Provider.of
+    final syncProvider = Provider.of<SyncProvider>(context, listen: false);
+
+    // Find the customer in customerList using the customerCode
+    String? mobileNumber;
+    for (var customer in syncProvider.customerList) {
+      if (customer.customerCode == widget.customerCode) {
+        mobileNumber = customer.mobile1 ?? 'N/A'; // Fetch mobile1 if available
+        break;
+      }
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 5),
       elevation: 2,
@@ -276,8 +287,9 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Display dynamic mobileNumber fetched from SyncProvider
                 Text(
-                  "${widget.customerName} - 1234567890",
+                  "${widget.customerName} - $mobileNumber",
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -415,10 +427,10 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Bills:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
+          // const Text(
+          //   'Bills:',
+          //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          // ),
           billData.isNotEmpty
               ? ListView.builder(
                   shrinkWrap: true,
@@ -461,10 +473,10 @@ class _CustomerCreditDetailState extends State<CustomerCreditDetail> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Payments:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
+          // const Text(
+          //   'Payments:',
+          //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          // ),
           paymentData.isNotEmpty
               ? ListView.builder(
                   shrinkWrap: true,

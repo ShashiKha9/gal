@@ -42,6 +42,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
   final List<ItemModel> _items = [];
   final TextEditingController nameController = TextEditingController();
   String? selectedDepartment;
+  bool isRate1 = true;
 
   @override
   void initState() {
@@ -124,11 +125,13 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
       }
 
       // Update rates
-      double rate1 = double.tryParse(item.rate1 ?? '0.0') ?? 0.0;
-      rates[item.name!] = rate1;
+      double rate = isRate1
+          ? double.tryParse(item.rate1 ?? '0.0') ?? 0.0
+          : double.tryParse(item.rate2 ?? '0.0') ?? 0.0;
+      rates[item.name!] = rate;
 
       // Update total amount
-      totalAmount += rate1;
+      totalAmount += rate;
     });
 
     // Only navigate to DepartmentScreen if we are in edit mode
@@ -238,7 +241,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         .where((item) => quantities.containsKey(item.name))
         .map((item) => {
               'name': item.name,
-              'rate1': item.rate1,
+              'rate1': isRate1 ? item.rate1 : item.rate2,
               // add other fields as needed
             })
         .toList();
@@ -384,14 +387,20 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
         onSearch: (p0) {},
         isMenu: widget.isEdit ? false : true,
         actions: true,
-        actionWidget: InkWell(
-          onTap: () {},
+        actionWidget: GestureDetector(
+          onTap: () {
+            setState(() {
+              // Toggle the rate between rate1 and rate2
+              isRate1 = !isRate1;
+              log("Rate changed to: ${isRate1 ? 'Rate 1' : 'Rate 2'}");
+            });
+          },
           child: Row(
             children: [
-              const Text(
-                "Rate 1",
-                style:
-                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              Text(
+                isRate1 ? 'Rate 1' : 'Rate 2',
+                style: const TextStyle(
+                    color: Colors.black, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 5),
               Transform.rotate(
@@ -657,7 +666,7 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                                         ),
                                       ),
                                       Text(
-                                        "₹ ${item.rate1}",
+                                        "₹ ${isRate1 ? item.rate1 : item.rate2}",
                                         style: const TextStyle(
                                           fontSize: 10.5,
                                           fontWeight: FontWeight.bold,
