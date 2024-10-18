@@ -839,66 +839,60 @@ class SyncProvider extends ChangeNotifier {
 
 // Method to load itemList from SharedPreferences
   Future<void> loadItemListFromPrefs() async {
-    List<String>? jsonList =
-        await mySharedPreferences.getStringList('itemList');
-    List<String>? orderedItemNames =
-        await mySharedPreferences.getStringList('items_order');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Retrieve the list of item JSON strings from SharedPreferences
+    List<String>? jsonList = prefs.getStringList('itemList');
 
     if (jsonList != null) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      log("SharedPreferences instance loaded");
+      // Create a map to store the original index of each item based on 'code'
+      Map<String, int> originalPositions = {};
 
-      // Map jsonList to ItemModel and apply edits from SharedPreferences
+      for (int i = 0; i < jsonList.length; i++) {
+        ItemModel item = ItemModel.fromJson(jsonDecode(jsonList[i]));
+        // Map each item's 'code' to its original index
+        originalPositions[item.code!] = i;
+      }
+
+      // Create a new list from the JSON, updating items where necessary
       itemList = jsonList.map((jsonItem) {
         ItemModel item = ItemModel.fromJson(jsonDecode(jsonItem));
-        String itemCode = item.code ?? 'unknown_item';
 
-        // Retrieve the edited name and rate1 from SharedPreferences, if available
-        String? editedName = prefs.getString('name_$itemCode');
-        String? editedRate1 = prefs.getString('rate1_$itemCode');
+        // Check for edited fields in SharedPreferences
+        String? editedName = prefs.getString('name_${item.code}');
+        String? editedRate1 = prefs.getString('rate1_${item.code}');
+        bool? isHot = prefs.getBool('is_hot_item_${item.code}');
+        bool? displayinselection =
+            prefs.getBool('display_in_selection_${item.code}');
 
-        // Handle the isHot and displayinselection fields - default to 'false' if missing
-        bool isHot = prefs.getBool('is_hot_item_$itemCode') ??
-            (item.isHot?.toLowerCase() == 'true');
-        bool displayinselection =
-            prefs.getBool('display_in_selection_$itemCode') ??
-                (item.displayinselection?.toLowerCase() == 'true');
-
-        // Apply the edited values only if they exist, else use original values
-        String? rate1 = (editedRate1 != null && editedRate1.isNotEmpty)
-            ? num.tryParse(editedRate1)?.toString() ?? item.rate1
-            : item.rate1;
-
-        // Use the edited name if available; otherwise, keep the original name
-        String? name = (editedName != null && editedName.isNotEmpty)
-            ? editedName
-            : item.name;
-
-        // Update the item using copyWith for name, rate1, isHot, and displayinselection
+        // Update fields if there are edits
         item = item.copyWith(
-          name: name,
-          rate1: rate1,
-          isHot: isHot.toString(),
-          displayinselection: displayinselection.toString(),
+          name: editedName ?? item.name,
+          rate1: editedRate1 ?? item.rate1,
+          isHot: isHot != null ? isHot.toString() : item.isHot,
+          displayinselection: displayinselection != null
+              ? displayinselection.toString()
+              : item.displayinselection,
         );
 
-        return item; // Return the item regardless of edits
+        return item;
       }).toList();
 
-      // Filter the itemList to only include hot items that should be displayed
+      // Now, sort the itemList based on the original positions stored in the map
+      itemList.sort((a, b) {
+        int posA = originalPositions[a.code!]!;
+        int posB = originalPositions[b.code!]!;
+        return posA.compareTo(posB);
+      });
+
+      // Finally, apply any filtering logic (e.g., only display hot items)
       itemList = itemList
           .where((item) =>
               item.isHot?.toLowerCase() == 'true' &&
               item.displayinselection?.toLowerCase() == 'true')
           .toList();
 
-      notifyListeners(); // Notify listeners if itemList is updated
-    }
-
-    if (orderedItemNames != null) {
-      itemList.sort((a, b) => orderedItemNames
-          .indexOf(a.name!)
-          .compareTo(orderedItemNames.indexOf(b.name!)));
+      // Notify listeners so the UI updates
       notifyListeners();
     }
   }

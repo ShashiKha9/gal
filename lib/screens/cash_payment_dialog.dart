@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
+import 'package:galaxy_mini/screens/setting_screens/ble_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
+// Import your BLE controller
 
 class CashPaymentDialog extends StatefulWidget {
   final String customerName;
@@ -27,13 +30,15 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
   double returnAmount = 0.0;
   int billNumber = 0;
 
+  final BleController bleController =
+      Get.put(BleController()); // Initialize the BLE controller
+
   @override
   void initState() {
     super.initState();
     _loadCurrentBillNumber();
   }
 
-  // Load the current bill number from shared preferences
   Future<void> _loadCurrentBillNumber() async {
     final creditPartyProvider =
         Provider.of<CustomerCreditProvider>(context, listen: false);
@@ -44,7 +49,6 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
     });
   }
 
-  // Store the updated bill number
   Future<void> _updateBillNumber() async {
     final creditPartyProvider =
         Provider.of<CustomerCreditProvider>(context, listen: false);
@@ -64,7 +68,6 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
             style: const TextStyle(fontSize: 16),
           ),
           const SizedBox(height: 16.0),
-
           TextField(
             decoration: const InputDecoration(
               labelText: 'Received Amount',
@@ -79,13 +82,11 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
             },
           ),
           const SizedBox(height: 16.0),
-          // Display return amount
           Text(
             'Return Amount: Rs. ${returnAmount.toStringAsFixed(2)}',
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16.0),
-          // Display current bill number
           Text(
             'Bill Number: BILL-$billNumber',
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -105,19 +106,29 @@ class _CashPaymentDialogState extends State<CashPaymentDialog> {
             final creditPartyProvider =
                 Provider.of<CustomerCreditProvider>(context, listen: false);
 
-            // Store payment data with bill number and selected payment mode
             await creditPartyProvider.storeCashPaymentData(
               widget.customerName,
               widget.customerCode,
               widget.totalAmount,
               receivedAmount,
               returnAmount,
-              billNumber, // Pass the current bill number
-              widget.selectedPaymentMode, // Pass the selected payment mode
+              billNumber,
+              widget.selectedPaymentMode,
             );
 
             // Update bill number for the next transaction
             await _updateBillNumber();
+
+            // Print the payment details
+            String printData = '''
+              Customer Name: ${widget.customerName}
+              Customer Code: ${widget.customerCode}
+              Total Amount: Rs. ${widget.totalAmount.toStringAsFixed(2)}
+              Received Amount: Rs. ${receivedAmount.toStringAsFixed(2)}
+              Return Amount: Rs. ${returnAmount.toStringAsFixed(2)}
+              Bill Number: BILL-$billNumber
+            ''';
+            bleController.printData(printData); // Call the print function
 
             // Close the dialog
             Navigator.of(context).pop();

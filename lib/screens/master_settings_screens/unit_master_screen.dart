@@ -87,13 +87,7 @@ class _UnitMasterScreenState extends State<UnitMasterScreen> {
                   builder: (context, syncProvider, child) {
                 log(syncProvider.unitList.length.toString(),
                     name: 'Consumer length');
-                return GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    crossAxisSpacing: 16.0,
-                    mainAxisSpacing: 16.0,
-                    childAspectRatio: 4.0,
-                  ),
+                return ListView.builder(
                   itemCount: syncProvider.unitList.length,
                   itemBuilder: (context, index) {
                     final unit = syncProvider.unitList[index];

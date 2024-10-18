@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
+import 'package:galaxy_mini/provider/sync_provider.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
+import 'package:provider/provider.dart'; // Add this for using Provider
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'customer_credit_detail.dart';
-// Import your provider
 
 class CustomerCredits extends StatefulWidget {
   const CustomerCredits({super.key});
@@ -59,7 +60,6 @@ class _CustomerCreditsState extends State<CustomerCredits> {
 
     // For each customer code, load the last bill and payment details
     for (String customerCode in _customerCodes) {
-      // Fetch last bill and payment details
       await _loadLastBillAndPayment(customerCode);
     }
   }
@@ -108,6 +108,9 @@ class _CustomerCreditsState extends State<CustomerCredits> {
 
   @override
   Widget build(BuildContext context) {
+    // Access SyncProvider using Provider.of
+    final syncProvider = Provider.of<SyncProvider>(context);
+
     return Scaffold(
       appBar: MainAppBar(
         title: 'Customer Credits',
@@ -127,6 +130,15 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                 Map<String, dynamic> lastBill = _lastBillMap[code] ?? {};
                 Map<String, dynamic> lastPayment = _lastPaymentMap[code] ?? {};
                 double currentBalance = lastBill['currentBalance'] ?? 0.0;
+
+                // Find the customer in customerList using the customerCode
+                String? mobileNumber;
+                for (var customer in syncProvider.customerList) {
+                  if (customer.customerCode == code) {
+                    mobileNumber = customer.mobile1 ?? 'N/A';
+                    break;
+                  }
+                }
 
                 return GestureDetector(
                   onTap: () {
@@ -155,7 +167,7 @@ class _CustomerCreditsState extends State<CustomerCredits> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "$name - 1234567890", // Sample phone number
+                                "$name - $mobileNumber", // Display the fetched mobile number
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
