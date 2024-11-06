@@ -1,65 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:galaxy_mini/screens/report_screens/report_detail_screen.dart';
-import 'package:galaxy_mini/screens/report_screens/report_main_screens.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class BillwiseReportScreen extends StatefulWidget implements ReportSceens {
-  const BillwiseReportScreen({super.key});
+class CancelledBillwiseScreen extends StatefulWidget {
+  const CancelledBillwiseScreen({super.key});
 
   @override
-  State<BillwiseReportScreen> createState() => _BillwiseReportScreenState();
+  State<CancelledBillwiseScreen> createState() =>
+      _CancelledBillwiseScreenState();
 }
 
-class _BillwiseReportScreenState extends State<BillwiseReportScreen> {
+class _CancelledBillwiseScreenState extends State<CancelledBillwiseScreen> {
   // TODO: Remove this Static data after implementing API
   final List<Map<String, String>> _data = [
     {
       '': '1',
-      'billNo': '2',
+      'billNo': '1',
       'totalItems': '100.0',
       'totalAmount': '2000.0',
       'orderDate': '{date, time}',
       'payment': 'Cash',
+      'status': 'Cancelled',
       'code': '1',
       'customerCode': '-',
       'customerName': '-',
+      'reasonOfCancellation': 'UI Test',
+      'personName': 'Hemang',
+      'cancelledOn': '{date, time}',
     },
     {
       '': '2',
-      'billNo': '4',
-      'totalItems': '50.0',
-      'totalAmount': '5000.0',
-      'orderDate': '{date, time}',
-      'payment': 'Card',
-      'code': '1',
-      'customerCode': '-',
-      'customerName': '-',
-    },
-    {
-      '': '3',
-      'billNo': '5',
-      'totalItems': '20.0',
-      'totalAmount': '1000.0',
-      'orderDate': '{date, time}',
-      'payment': 'UPI',
-      'code': '1',
-      'customerCode': '-',
-      'customerName': '-',
-    },
-    {
-      '': '4',
-      'billNo': '7',
+      'billNo': '3',
       'totalItems': '100.0',
       'totalAmount': '2000.0',
       'orderDate': '{date, time}',
       'payment': 'Cash',
+      'status': 'Cancelled',
       'code': '1',
       'customerCode': '-',
       'customerName': '-',
+      'reasonOfCancellation': 'UI Test',
+      'personName': 'Hemang',
+      'cancelledOn': '{date, time}',
+    },
+    {
+      '': '3',
+      'billNo': '6',
+      'totalItems': '100.0',
+      'totalAmount': '2000.0',
+      'orderDate': '{date, time}',
+      'payment': 'Cash',
+      'status': 'Cancelled',
+      'code': '1',
+      'customerCode': '-',
+      'customerName': '-',
+      'reasonOfCancellation': 'UI Test',
+      'personName': 'Hemang',
+      'cancelledOn': '{date, time}',
     },
   ];
-
-  bool hasData() => _data.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -91,24 +89,32 @@ class _BillwiseReportScreenState extends State<BillwiseReportScreen> {
                           _buildHeaderCell('Total Amount'),
                           _buildHeaderCell('Order Date'),
                           _buildHeaderCell('Payment'),
+                          _buildHeaderCell('Status'),
                           _buildHeaderCell('Code'),
                           _buildHeaderCell('Customer Code'),
                           _buildHeaderCell('Customer Name'),
+                          _buildHeaderCell('Reason of Cancellation'),
+                          _buildHeaderCell("Person's Name"),
+                          _buildHeaderCell('Cancelled On'),
                         ],
                       ),
                       // Data rows from _data
                       for (var rowData in _data)
                         TableRow(
                           children: [
-                            _buildDataCell(rowData['']!, context),
-                            _buildDataCell(rowData['billNo']!, context),
-                            _buildDataCell(rowData['totalItems']!, context),
-                            _buildDataCell(rowData['totalAmount']!, context),
-                            _buildDataCell(rowData['orderDate']!, context),
-                            _buildDataCell(rowData['payment']!, context),
-                            _buildDataCell(rowData['code']!, context),
-                            _buildDataCell(rowData['customerCode']!, context),
-                            _buildDataCell(rowData['customerName']!, context),
+                            _buildDataCell(rowData['']!),
+                            _buildDataCell(rowData['billNo']!),
+                            _buildDataCell(rowData['totalItems']!),
+                            _buildDataCell(rowData['totalAmount']!),
+                            _buildDataCell(rowData['orderDate']!),
+                            _buildDataCell(rowData['payment']!),
+                            _buildDataCell(rowData['status']!),
+                            _buildDataCell(rowData['code']!),
+                            _buildDataCell(rowData['customerCode']!),
+                            _buildDataCell(rowData['customerName']!),
+                            _buildDataCell(rowData['reasonOfCancellation']!),
+                            _buildDataCell(rowData['personName']!),
+                            _buildDataCell(rowData['cancelledOn']!),
                           ],
                         ),
                     ],
@@ -135,19 +141,13 @@ class _BillwiseReportScreenState extends State<BillwiseReportScreen> {
     );
   }
 
-  static TableCell _buildDataCell(String text, BuildContext context) {
+  static TableCell _buildDataCell(String text) {
     return TableCell(
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ReportDetailScreen()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
         ),
       ),
     );

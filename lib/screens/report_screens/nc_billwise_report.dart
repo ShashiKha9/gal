@@ -1,27 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class ItemwiseReportScreen extends StatefulWidget {
-  const ItemwiseReportScreen({super.key});
+class NcBillwiseReport extends StatefulWidget {
+  const NcBillwiseReport({super.key});
 
   @override
-  State<ItemwiseReportScreen> createState() => _ItemwiseReportScreenState();
+  State<NcBillwiseReport> createState() => _NcBillwiseReportState();
 }
 
-class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
+class _NcBillwiseReportState extends State<NcBillwiseReport> {
   // TODO: Remove this Static data after implementing API
   final List<Map<String, String>> _data = [
     {
       '': '1',
-      'Name': '100.0',
-      'Item Sold': '2000.0',
-      'Amount': '2490.0',
+      'billNo': '1',
+      'totalItems': '100.0',
+      'totalAmount': '2000.0',
+      'orderDate': '{date, time}',
+      'payment': 'NC',
+      'status': 'NC',
+      'code': '1',
+      'note': 'UI Test',
+      'personName': 'Hemang',
     },
     {
       '': '2',
-      'Name': '50.0',
-      'Item Sold': '5000.0',
-      'Amount': '2490.0',
+      'billNo': '3',
+      'totalItems': '100.0',
+      'totalAmount': '2000.0',
+      'orderDate': '{date, time}',
+      'payment': 'NC',
+      'status': 'NC',
+      'code': '1',
+      'note': 'UI Test',
+      'personName': 'Hemang',
     },
   ];
 
@@ -44,23 +56,37 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                       width: 1.0,
                     ),
                     children: [
+                      // Table header row
                       TableRow(
                         decoration:
                             const BoxDecoration(color: AppColors.lightPink),
                         children: [
                           _buildHeaderCell(''),
-                          _buildHeaderCell('Name'),
-                          _buildHeaderCell('Item Sold'),
-                          _buildHeaderCell('Amount'),
+                          _buildHeaderCell('Bill No.'),
+                          _buildHeaderCell('Total Items'),
+                          _buildHeaderCell('Total Amount'),
+                          _buildHeaderCell('Order Date'),
+                          _buildHeaderCell('Payment'),
+                          _buildHeaderCell('Status'),
+                          _buildHeaderCell('Code'),
+                          _buildHeaderCell('Note'),
+                          _buildHeaderCell("Person's Name"),
                         ],
                       ),
+                      // Data rows from _data
                       for (var rowData in _data)
                         TableRow(
                           children: [
                             _buildDataCell(rowData['']!),
-                            _buildDataCell(rowData['Name']!),
-                            _buildDataCell(rowData['Item Sold']!),
-                            _buildDataCell(rowData['Amount']!),
+                            _buildDataCell(rowData['billNo']!),
+                            _buildDataCell(rowData['totalItems']!),
+                            _buildDataCell(rowData['totalAmount']!),
+                            _buildDataCell(rowData['orderDate']!),
+                            _buildDataCell(rowData['payment']!),
+                            _buildDataCell(rowData['status']!),
+                            _buildDataCell(rowData['code']!),
+                            _buildDataCell(rowData['note']!),
+                            _buildDataCell(rowData['personName']!),
                           ],
                         ),
                     ],

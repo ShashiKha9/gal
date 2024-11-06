@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class ItemwiseReportScreen extends StatefulWidget {
-  const ItemwiseReportScreen({super.key});
+class DepartmentwiseReportScreen extends StatefulWidget {
+  const DepartmentwiseReportScreen({super.key});
 
   @override
-  State<ItemwiseReportScreen> createState() => _ItemwiseReportScreenState();
+  State<DepartmentwiseReportScreen> createState() =>
+      _DepartmentwiseReportScreenState();
 }
 
-class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
+class _DepartmentwiseReportScreenState
+    extends State<DepartmentwiseReportScreen> {
   // TODO: Remove this Static data after implementing API
   final List<Map<String, String>> _data = [
     {
       '': '1',
-      'Name': '100.0',
-      'Item Sold': '2000.0',
+      'Department': 'Shirts',
+      'Qty': '10.0',
       'Amount': '2490.0',
     },
     {
       '': '2',
-      'Name': '50.0',
-      'Item Sold': '5000.0',
-      'Amount': '2490.0',
+      'Department': 'T-shirts',
+      'Qty': '50.0',
+      'Amount': '5490.0',
     },
   ];
 
@@ -49,8 +51,8 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                             const BoxDecoration(color: AppColors.lightPink),
                         children: [
                           _buildHeaderCell(''),
-                          _buildHeaderCell('Name'),
-                          _buildHeaderCell('Item Sold'),
+                          _buildHeaderCell('Department'),
+                          _buildHeaderCell('Qty'),
                           _buildHeaderCell('Amount'),
                         ],
                       ),
@@ -58,8 +60,8 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                         TableRow(
                           children: [
                             _buildDataCell(rowData['']!),
-                            _buildDataCell(rowData['Name']!),
-                            _buildDataCell(rowData['Item Sold']!),
+                            _buildDataCell(rowData['Department']!),
+                            _buildDataCell(rowData['Qty']!),
                             _buildDataCell(rowData['Amount']!),
                           ],
                         ),

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_button.dart';
+import 'package:galaxy_mini/components/app_textfield.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,7 +17,10 @@ class BillSettingsScreen extends StatefulWidget {
 class _BillSettingsScreenState extends State<BillSettingsScreen> {
   bool showPLU = false;
   bool resetBill = false;
+  bool startBill = false;
   String? selectedFrequency;
+
+  final TextEditingController billNumberController = TextEditingController();
 
   @override
   void initState() {
@@ -46,6 +50,24 @@ class _BillSettingsScreenState extends State<BillSettingsScreen> {
         padding: const EdgeInsets.all(8),
         child: Column(
           children: [
+            CheckboxListTile(
+              title: const Text('Start Bill Number From'),
+              value: startBill,
+              activeColor: AppColors.blue,
+              onChanged: (bool? newValue) {
+                setState(() {
+                  startBill = newValue!;
+                });
+              },
+            ),
+            if (startBill)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: AppTextfield(
+                  controller: billNumberController,
+                  labelText: "Start Bill Number From",
+                ),
+              ),
             CheckboxListTile(
               title: const Text('Show PLU Option'),
               value: showPLU,

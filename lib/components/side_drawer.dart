@@ -24,6 +24,11 @@ class _SideDrawerState extends State<SideDrawer> {
     super.initState();
   }
 
+  final bool upcomingOrders = true;
+  final bool reports = true;
+  final bool customerCredits = true;
+  final bool inventory = true;
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -43,53 +48,57 @@ class _SideDrawerState extends State<SideDrawer> {
               ),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.list_alt, color: AppColors.blue),
-            title: const Text('Upcoming orders'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UpcomingOrdersPage()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.insert_chart, color: AppColors.blue),
-            title: const Text('Reports'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ReportSceens()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.credit_card, color: AppColors.blue),
-            title: const Text('Customer Credits'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const CustomerCredits()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.inventory, color: AppColors.blue),
-            title: const Text('Inventory'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const InventoryHeadScreen()),
-              );
-            },
-          ),
+          if (upcomingOrders)
+            ListTile(
+              leading: const Icon(Icons.list_alt, color: AppColors.blue),
+              title: const Text('Upcoming orders'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const UpcomingOrdersPage()),
+                );
+              },
+            ),
+          if (reports)
+            ListTile(
+              leading: const Icon(Icons.insert_chart, color: AppColors.blue),
+              title: const Text('Reports'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReportSceens()),
+                );
+              },
+            ),
+          if (customerCredits)
+            ListTile(
+              leading: const Icon(Icons.credit_card, color: AppColors.blue),
+              title: const Text('Customer Credits'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const CustomerCredits()),
+                );
+              },
+            ),
+          if (inventory)
+            ListTile(
+              leading: const Icon(Icons.inventory, color: AppColors.blue),
+              title: const Text('Inventory'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const InventoryHeadScreen()),
+                );
+              },
+            ),
           ListTile(
             leading: const Icon(Icons.sync, color: AppColors.blue),
             title: const Text('Sync data'),

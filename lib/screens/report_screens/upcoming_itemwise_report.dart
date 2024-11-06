@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class ItemwiseReportScreen extends StatefulWidget {
-  const ItemwiseReportScreen({super.key});
+class UpcomingItemwiseReport extends StatefulWidget {
+  const UpcomingItemwiseReport({super.key});
 
   @override
-  State<ItemwiseReportScreen> createState() => _ItemwiseReportScreenState();
+  State<UpcomingItemwiseReport> createState() => _UpcomingItemwiseReportState();
 }
 
-class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
+class _UpcomingItemwiseReportState extends State<UpcomingItemwiseReport> {
   // TODO: Remove this Static data after implementing API
   final List<Map<String, String>> _data = [
     {
       '': '1',
       'Name': '100.0',
-      'Item Sold': '2000.0',
+      'Item Booked': 'Shirts',
       'Amount': '2490.0',
     },
     {
       '': '2',
       'Name': '50.0',
-      'Item Sold': '5000.0',
+      'Item Booked': 'Adult T-Shirts',
       'Amount': '2490.0',
     },
   ];
@@ -50,7 +50,7 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                         children: [
                           _buildHeaderCell(''),
                           _buildHeaderCell('Name'),
-                          _buildHeaderCell('Item Sold'),
+                          _buildHeaderCell('Item Booked'),
                           _buildHeaderCell('Amount'),
                         ],
                       ),
@@ -59,7 +59,7 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                           children: [
                             _buildDataCell(rowData['']!),
                             _buildDataCell(rowData['Name']!),
-                            _buildDataCell(rowData['Item Sold']!),
+                            _buildDataCell(rowData['Item Booked']!),
                             _buildDataCell(rowData['Amount']!),
                           ],
                         ),
