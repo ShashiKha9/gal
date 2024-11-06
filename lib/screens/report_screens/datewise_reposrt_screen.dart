@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 
-class ItemwiseReportScreen extends StatefulWidget {
-  const ItemwiseReportScreen({super.key});
+class DatewiseReportScreen extends StatefulWidget {
+  const DatewiseReportScreen({super.key});
 
   @override
-  State<ItemwiseReportScreen> createState() => _ItemwiseReportScreenState();
+  State<DatewiseReportScreen> createState() => _DatewiseReportScreenState();
 }
 
-class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
+class _DatewiseReportScreenState extends State<DatewiseReportScreen> {
   // TODO: Remove this Static data after implementing API
   final List<Map<String, String>> _data = [
     {
       '': '1',
-      'Name': '100.0',
-      'Item Sold': '2000.0',
+      'Date': '{date, time}',
+      'Total Bills': '2',
       'Amount': '2490.0',
     },
     {
       '': '2',
-      'Name': '50.0',
-      'Item Sold': '5000.0',
-      'Amount': '2490.0',
+      'Date': '{date, time}',
+      'Total Bills': '4',
+      'Amount': '1490.0',
     },
   ];
 
@@ -49,8 +49,8 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                             const BoxDecoration(color: AppColors.lightPink),
                         children: [
                           _buildHeaderCell(''),
-                          _buildHeaderCell('Name'),
-                          _buildHeaderCell('Item Sold'),
+                          _buildHeaderCell('Date'),
+                          _buildHeaderCell('Total Bills'),
                           _buildHeaderCell('Amount'),
                         ],
                       ),
@@ -58,8 +58,8 @@ class _ItemwiseReportScreenState extends State<ItemwiseReportScreen> {
                         TableRow(
                           children: [
                             _buildDataCell(rowData['']!),
-                            _buildDataCell(rowData['Name']!),
-                            _buildDataCell(rowData['Item Sold']!),
+                            _buildDataCell(rowData['Date']!),
+                            _buildDataCell(rowData['Total Bills']!),
                             _buildDataCell(rowData['Amount']!),
                           ],
                         ),

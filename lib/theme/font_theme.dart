@@ -6,3 +6,10 @@ TextStyle blackBold = const TextStyle(
   color: Colors.black,
   fontFamily: 'Montserrat',
 );
+
+TextStyle normalBlack = const TextStyle(
+  fontSize: 16,
+  fontWeight: FontWeight.normal,
+  color: Colors.black,
+  fontFamily: 'Montserrat',
+);
