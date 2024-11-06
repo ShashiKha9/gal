@@ -13,4 +13,5 @@ class ApiUrls {
   static const getkotmessageApi = 'getkot_message';
   static const postAddCustomerApi = 'customer';
   static const getUnitApi = 'getunit';
+  static const getCustomerCreditsApi = 'getcustomerCredit';
 }

@@ -1,10 +1,15 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/components/scaffold_message.dart';
 import 'package:galaxy_mini/provider/customer_credit_provider.dart';
 import 'package:galaxy_mini/provider/park_provider.dart';
 import 'package:galaxy_mini/provider/sync_provider.dart';
+import 'package:galaxy_mini/provider/upcomingorder_provider.dart';
 import 'package:galaxy_mini/screens/cash_payment_dialog.dart';
 import 'package:galaxy_mini/screens/master_settings_screens/customer_masters/add_new_customer.dart';
+import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:galaxy_mini/utils/extension.dart';
 import 'package:provider/provider.dart';
 
@@ -35,9 +40,16 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
   late double totalAmount;
   late SyncProvider syncProvider;
   late ParkedOrderProvider parkprovider;
+  late CustomerCreditProvider custprovider;
   String? selectedPaymentMode;
   String? selectedCustomerName;
   String? selectedCustomerCode;
+  bool _isPercentage = false;
+  bool isCouponApplied = false;
+  String _discountValue = '';
+  double updatedTotalAmount = 0.0;
+  double discountedTotalAmount = 0.0;
+  bool showTaxDetails = false;
 
   @override
   void initState() {
@@ -46,6 +58,8 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
     totalAmount = widget.totalAmount;
     syncProvider = Provider.of<SyncProvider>(context, listen: false);
     parkprovider = Provider.of<ParkedOrderProvider>(context, listen: false);
+    custprovider = Provider.of<CustomerCreditProvider>(context, listen: false);
+    fetchTaxDetails();
   }
 
   void _increaseQuantity(String itemName) {
@@ -68,21 +82,30 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
   }
 
   void _showPaymentDialog(
-      BuildContext context, String selectedPaymentMode, double totalAmount) {
+      BuildContext context,
+      String selectedPaymentMode,
+      double updatedTotalAmount,
+      double discountedTotalAmount,
+      bool isDiscountApplied) {
     final custprovider =
         Provider.of<CustomerCreditProvider>(context, listen: false);
+
+    // Determine which total amount to pass
+    double amountToBePaid =
+        isDiscountApplied ? discountedTotalAmount : updatedTotalAmount;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Amount to be Paid'),
-          content: Text('Total Amount: Rs. ${totalAmount.toStringAsFixed(2)}'),
+          content:
+              Text('Total Amount: Rs. ${amountToBePaid.toStringAsFixed(2)}'),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pop(context); // Close the dialog
               },
             ),
             ElevatedButton(
@@ -91,14 +114,11 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                 // Use the custprovider to store payment data
                 if (selectedPaymentMode == 'UPI' ||
                     selectedPaymentMode == 'Card') {
-                  await custprovider.storeCardUpiPayment(totalAmount);
+                  await custprovider.storeCardUpiPayment(amountToBePaid);
                 }
 
                 // Close the dialog after storing the payment
-                // _disposeOrder(context);
-                // await parkprovider.removeParkedOrder(
-                //     widget.tableName, widget.tableGroup);
-                Navigator.of(context).pop();
+                Navigator.pop(context);
                 Navigator.pop(context);
               },
             ),
@@ -106,6 +126,84 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
         );
       },
     );
+  }
+
+  void _calculateOfferedTotal() {
+    if (isCouponApplied) {
+      return; // Skip discount calculation if a coupon is applied
+    }
+
+    // Get the latest manual discount input
+    double manualDiscount = double.tryParse(_discountValue) ?? 0.0;
+
+    // Always use the updated total amount if no coupon is applied
+    double baseAmount = updatedTotalAmount;
+
+    // Check if the discount is a percentage or a fixed amount
+    if (_isPercentage) {
+      // Calculate percentage discount
+      manualDiscount = (manualDiscount / 100) * baseAmount;
+    }
+
+    // Calculate the new total after applying manual discount
+    double newTotal = baseAmount - manualDiscount;
+
+    // Update the state with the new total amount
+    setState(() {
+      discountedTotalAmount =
+          newTotal; // Update the final total with the discount applied
+    });
+  }
+
+  void applyCoupon() {
+    setState(() {
+      isCouponApplied = true; // Disable discount field when coupon is applied
+      _discountValue = ''; // Optionally clear the discount field
+      // You might want to recalculate discountedTotalAmount here if needed
+      discountedTotalAmount = updatedTotalAmount;
+      log("Coupon applied: $isCouponApplied"); // Reset to original total or keep it as the new total
+    });
+  }
+
+  Future<void> fetchTaxDetails() async {
+    await syncProvider.getTaxAll(); // Fetch the tax details
+    calculateUpdatedTotalAmount(); // Calculate updated total amount
+  }
+
+  void calculateUpdatedTotalAmount() {
+    double totalGST = 0.0;
+
+    // Check if the tax list is not empty and calculate totalGST
+    if (syncProvider.taxList.isNotEmpty) {
+      // Ensure that you access the correct property for total GST
+      var gstValue = syncProvider
+          .taxList.first.rate; // Replace `rate` with `totalGST` if necessary
+
+      // Check if gstValue is of type String and parse it
+      totalGST =
+          double.tryParse(gstValue) ?? 0.0; // Parse string to double safely
+    }
+
+    // Calculate the updated total amount
+    updatedTotalAmount =
+        widget.totalAmount + widget.totalAmount * (totalGST / 100);
+
+    // Trigger a rebuild to update the UI
+    setState(() {});
+  }
+
+  double _calculateTotalWithTax(double subTotal) {
+    // Fetch tax values, ensuring to handle potential nulls or empty values
+    double cgst = double.tryParse(syncProvider.taxList.first.cGst) ??
+        0.0; // Replace with actual field names from your provider
+    double sgst = double.tryParse(syncProvider.taxList.first.sgst) ?? 0.0;
+    double igst = double.tryParse(syncProvider.taxList.first.iGst) ?? 0.0;
+
+    // Calculate total tax
+    double totalTax = (cgst + sgst + igst);
+
+    // Return the total amount including tax
+    return subTotal + subTotal * (totalTax / 100);
   }
 
   // void _disposeOrder(BuildContext context) {
@@ -124,6 +222,485 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
   //   Navigator.popUntil(context, (route) => route.isFirst);
   // }
 
+  void showOrderDetailsDialog(
+    BuildContext context,
+    String? selectedCustomerName,
+    String selectedCustomerCode,
+  ) {
+    DateTime now = DateTime.now();
+    DateTime orderDateTime = now.add(const Duration(minutes: 10));
+
+    // Separate controllers for date and time
+    final TextEditingController orderDateController = TextEditingController(
+      text:
+          '${orderDateTime.day} ${_monthToString(orderDateTime.month)} ${orderDateTime.year}',
+    );
+    final TextEditingController orderTimeController = TextEditingController(
+      text:
+          '${orderDateTime.hour}:${orderDateTime.minute.toString().padLeft(2, '0')}',
+    );
+
+    final TextEditingController noteController = TextEditingController();
+    final TextEditingController advanceAmountController =
+        TextEditingController();
+    String? selectedPaymentMode;
+
+    Future<void> selectDate(BuildContext context) async {
+      final DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: orderDateTime,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101),
+      );
+      if (pickedDate != null) {
+        orderDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          orderDateTime.hour,
+          orderDateTime.minute,
+        );
+        // Update the date controller
+        orderDateController.text =
+            '${orderDateTime.day} ${_monthToString(orderDateTime.month)} ${orderDateTime.year}';
+      }
+    }
+
+    Future<void> selectTime(BuildContext context) async {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime:
+            TimeOfDay(hour: orderDateTime.hour, minute: orderDateTime.minute),
+      );
+      if (pickedTime != null) {
+        orderDateTime = DateTime(
+          orderDateTime.year,
+          orderDateTime.month,
+          orderDateTime.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+        // Update the time controller
+        orderTimeController.text =
+            '${pickedTime.hour}:${pickedTime.minute.toString().padLeft(2, '0')}';
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Enter Order Details'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date Picker Field
+                GestureDetector(
+                  onTap: () async {
+                    await selectDate(context);
+                  },
+                  child: AbsorbPointer(
+                    child: TextField(
+                      controller: orderDateController,
+                      decoration: const InputDecoration(
+                        labelText: 'Order Date',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10.0),
+
+                // Time Picker Field
+                GestureDetector(
+                  onTap: () async {
+                    await selectTime(context);
+                  },
+                  child: AbsorbPointer(
+                    child: TextField(
+                      controller: orderTimeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Order Time',
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10.0),
+
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(
+                    labelText: 'Note',
+                  ),
+                ),
+                const SizedBox(height: 10.0),
+                TextField(
+                  controller: advanceAmountController,
+                  decoration: const InputDecoration(
+                    labelText: 'Advance Amount',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 10.0),
+                DropdownButtonFormField<String>(
+                  value: selectedPaymentMode,
+                  decoration: const InputDecoration(
+                    labelText: 'Payment Mode',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Card', child: Text('Card')),
+                    DropdownMenuItem(value: 'Cash', child: Text('Cash')),
+                    DropdownMenuItem(
+                        value: 'Credit Party', child: Text('Credit Party')),
+                    DropdownMenuItem(value: 'UPI', child: Text('UPI')),
+                  ],
+                  onChanged: (value) {
+                    selectedPaymentMode = value;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Get data from the dialog
+                String orderDate = orderDateController.text;
+                String orderTime = orderTimeController.text;
+                String note = noteController.text;
+
+                // Convert advance amount from string to double safely
+                double advanceAmount =
+                    double.tryParse(advanceAmountController.text) ?? 0.0;
+
+                String paymentMode = selectedPaymentMode ?? 'None';
+                DateTime orderPlacedTime = DateTime.now();
+
+                // Ensure totalAmount is properly fetched from widget and is not null or 0
+                double subTotalAmount = widget
+                    .totalAmount; // Assuming this is your subtotal before tax
+                double updatedTotalAmount = _calculateTotalWithTax(
+                    subTotalAmount); // Calculate total with tax
+                if (updatedTotalAmount == 0.0) {
+                  scaffoldMessage(message: 'Total amount cannot be zero!');
+                  return;
+                }
+
+                // Check if advanceAmount is greater than totalAmount (which shouldn't happen)
+                if (advanceAmount > updatedTotalAmount) {
+                  scaffoldMessage(
+                      message: 'Advance amount cannot exceed total amount!');
+                  return;
+                }
+
+                // Calculate remaining amount
+                double remainingAmount = updatedTotalAmount - advanceAmount;
+
+                // Add the data from the Bill Summary
+                List<Map<String, dynamic>> items = widget.items;
+                Map<String, double> quantities = widget.quantities;
+                Map<String, double> rates = widget.rates;
+                String orderId = await Provider.of<UpcomingOrderProvider>(
+                        context,
+                        listen: false)
+                    .generateNextOrderId();
+
+                // Prepare order data
+                Map<String, dynamic> orderData = {
+                  'orderId': orderId,
+                  'orderDate': orderDate,
+                  'orderTime': orderTime,
+                  'note': note,
+                  'advanceAmount': advanceAmount,
+                  'paymentMode': paymentMode,
+                  'totalAmount': totalAmount,
+                  'remainingAmount':
+                      remainingAmount, // Include remaining amount
+                  'items': items,
+                  'quantities': quantities,
+                  'rates': rates,
+                  'customerName': selectedCustomerName, // Add customer name
+                  'customerCode': selectedCustomerCode, // Add customer code
+                  'orderPlacedTime': orderPlacedTime
+                      .toIso8601String(), // Add time when order was placed
+                };
+
+                // Use Provider to save the order data
+                Provider.of<UpcomingOrderProvider>(context, listen: false)
+                    .addOrder(orderData);
+
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _monthToString(int month) {
+    switch (month) {
+      case 1:
+        return 'January';
+      case 2:
+        return 'February';
+      case 3:
+        return 'March';
+      case 4:
+        return 'April';
+      case 5:
+        return 'May';
+      case 6:
+        return 'June';
+      case 7:
+        return 'July';
+      case 8:
+        return 'August';
+      case 9:
+        return 'September';
+      case 10:
+        return 'October';
+      case 11:
+        return 'November';
+      case 12:
+        return 'December';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  void _showOfferCouponDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Available Offer Coupons'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Consumer<SyncProvider>(
+              builder: (context, syncProvider, child) {
+                if (syncProvider.offerList.isEmpty) {
+                  return const Text('No offers available.');
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: syncProvider.offerList.length,
+                  itemBuilder: (context, index) {
+                    final offer = syncProvider.offerList[index];
+
+                    // Safely parse minBillAmount from the offer
+                    double minBillAmount =
+                        double.tryParse(offer.minBillAmount.toString()) ?? 0.0;
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        onTap: () {
+                          final totalBill = discountedTotalAmount > 0
+                              ? discountedTotalAmount
+                              : updatedTotalAmount; // Use the current bill amount after coupon
+
+                          // Check if the total bill is greater than or equal to the minimum amount for the coupon
+                          if (totalBill >= minBillAmount) {
+                            // Safely parse discount percentage from the offer
+                            double discountPercent = double.tryParse(
+                                    offer.discountInPercent.toString()) ??
+                                0.0;
+                            double discount =
+                                (discountPercent / 100) * totalBill;
+
+                            // Safely parse max discount
+                            double maxDiscount =
+                                double.tryParse(offer.maxDiscount.toString()) ??
+                                    double.infinity;
+                            discount =
+                                discount > maxDiscount ? maxDiscount : discount;
+
+                            // Calculate the discounted total amount
+                            double discountedTotal = totalBill - discount;
+
+                            // Update the state and log the discount
+                            setState(() {
+                              discountedTotalAmount =
+                                  discountedTotal; // Update the discounted total
+                              _discountValue = discount.toStringAsFixed(
+                                  2); // Store the discount value
+                              isCouponApplied =
+                                  true; // Mark that a coupon is applied
+                            });
+
+                            // Log discount details
+                            log('Coupon applied: ${offer.couponCode}');
+                            log('Total bill: $totalBill');
+                            log('Discount: $discount');
+                            log('New discounted total: $discountedTotal');
+
+                            // Close the dialog after selecting the coupon
+                            Navigator.of(context).pop();
+                          } else {
+                            // Show a message if the total bill doesn't meet the minimum order amount
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Minimum order amount of Rs. ${minBillAmount.toStringAsFixed(2)} is required to apply this coupon.',
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        leading: const Icon(
+                          Icons.local_offer,
+                          color: Colors.blue,
+                        ),
+                        title: Text(
+                          offer.couponCode ?? 'No Code',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              offer.note ?? 'Unnamed',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Discount: ${offer.discountInPercent?.toString() ?? 'No data'}%',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Max discount: Rs. ${double.tryParse(offer.maxDiscount.toString())?.toStringAsFixed(2) ?? 'No data'}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Min. order Amt: Rs. ${minBillAmount.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            Text(
+                              'Valid until: ${offer.validity ?? 'No data'}',
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showNonChargeableDialog(BuildContext context, double totalAmount) {
+    final TextEditingController noteController = TextEditingController();
+    final TextEditingController personNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Mark as Non-Chargeable Order"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: noteController,
+                decoration: const InputDecoration(labelText: "Enter Note"),
+              ),
+              TextField(
+                controller: personNameController,
+                decoration:
+                    const InputDecoration(labelText: "Enter Person's Name"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text("Close"),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Handle submit action here
+                String note = noteController.text;
+                String personName = personNameController.text;
+
+                // Get the current bill number
+                int currentBillNumber =
+                    await custprovider.getCurrentBillNumber();
+
+                // Store non-chargeable order details in CustomerCreditProvider
+                await CustomerCreditProvider().storeNonChargeableOrder(
+                  note: note,
+                  personName: personName,
+                  totalAmount: updatedTotalAmount,
+                  billNumber: currentBillNumber,
+                );
+
+                // Increment the bill number for next transaction
+                await custprovider.setCurrentBillNumber(currentBillNumber + 1);
+
+                // Log for debugging
+                log("Note: $note");
+                log("Person's Name: $personName");
+                log("Total Amount: $totalAmount");
+
+                Navigator.of(context)
+                    .pop(); // Close the dialog after submission
+              },
+              child: const Text("Submit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final displayedItems = widget.items
@@ -131,9 +708,44 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bill Summary'),
-        backgroundColor: const Color(0xFFC41E3A),
+      appBar: MainAppBar(
+        title: "Bill Summary",
+        actions: true,
+        actionWidget: Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.local_offer,
+              ),
+              onPressed: () {
+                _showOfferCouponDialog(context);
+              },
+            ),
+            IconButton(
+                icon: const Icon(
+                  Icons.list_alt,
+                ),
+                onPressed: () {
+                  if (selectedCustomerCode == null) {
+                    scaffoldMessage(message: 'Please select a customer code');
+                    return;
+                  }
+                  showOrderDetailsDialog(
+                    context,
+                    selectedCustomerName,
+                    selectedCustomerCode!,
+                  );
+                }),
+            IconButton(
+              icon: const Icon(
+                Icons.not_interested,
+              ),
+              onPressed: () {
+                _showNonChargeableDialog(context, totalAmount);
+              },
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -226,17 +838,63 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                     style:
                         TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    'Rs. ${totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFC41E3A),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        // Check if discount or offer coupon has been applied
+                        discountedTotalAmount > 0
+                            ? 'Rs. ${discountedTotalAmount.toStringAsFixed(2)}' // Show the discounted/offer-applied total
+                            : 'Rs. ${updatedTotalAmount.toStringAsFixed(2)}', // Otherwise, show original total amount
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.blue,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          showTaxDetails
+                              ? Icons.arrow_drop_up
+                              : Icons.arrow_drop_down,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            showTaxDetails =
+                                !showTaxDetails; // Toggle visibility of tax details
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            if (showTaxDetails)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'CGST: ${(double.tryParse(syncProvider.taxList.first.cGst)?.toStringAsFixed(2) ?? '0.00')} %',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      'SGST: ${(double.tryParse(syncProvider.taxList.first.sgst)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      'IGST: ${(double.tryParse(syncProvider.taxList.first.iGst)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      'Total GST: ${(double.tryParse(syncProvider.taxList.first.rate)?.toStringAsFixed(2) ?? '0.00')}%',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               children: [
                 // Payment Mode Dropdown
@@ -281,20 +939,38 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                 const SizedBox(width: 16.0), // Add spacing between fields
                 // Discount TextField
                 Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Discount',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12.0, horizontal: 10.0),
-                    ),
-                    keyboardType:
-                        TextInputType.number, // Assuming discount is a number
+                  child: AppTextfield(
+                    labelText: 'Discount ${_isPercentage ? '%' : '₹'}',
+                    keyBoardType: TextInputType.number,
                     onChanged: (value) {
-                      // Handle discount change
+                      if (isCouponApplied) {
+                        return;
+                      }
+                      setState(() {
+                        _discountValue = value;
+                        discountedTotalAmount = updatedTotalAmount;
+
+                        if (_discountValue.isNotEmpty) {
+                          _calculateOfferedTotal();
+                        } else {
+                          discountedTotalAmount = updatedTotalAmount;
+                        }
+                      });
                     },
+                    enabled: !isCouponApplied,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _isPercentage = !_isPercentage;
+                    });
+                    _calculateOfferedTotal();
+                  },
+                  icon: Text(
+                    _isPercentage ? '%' : '₹',
+                    style: const TextStyle(fontSize: 25),
                   ),
                 ),
               ],
@@ -394,12 +1070,15 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                     ),
                     onPressed: () {
                       if (selectedPaymentMode == 'Cash') {
+                        double amountToBePaid = _discountValue.isNotEmpty
+                            ? discountedTotalAmount
+                            : updatedTotalAmount;
                         // Show the cash payment dialog
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return CashPaymentDialog(
-                              totalAmount: totalAmount,
+                              totalAmount: amountToBePaid,
                               selectedPaymentMode: selectedPaymentMode,
                               onConfirm: (receivedAmount) {
                                 // final creditPartyProvider =
@@ -427,6 +1106,9 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                         // Check if a customer is selected
                         if (selectedCustomerName != null &&
                             selectedCustomerCode != null) {
+                          double amountToBePaid = _discountValue.isNotEmpty
+                              ? discountedTotalAmount
+                              : updatedTotalAmount;
                           // Show the payment dialog
                           showDialog(
                             context: context,
@@ -442,7 +1124,7 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                        'Total Amount: Rs. ${totalAmount.toStringAsFixed(2)}'),
+                                        'Total Amount: Rs. ${amountToBePaid.toStringAsFixed(2)}'),
                                     const SizedBox(height: 16.0),
                                     // Text field for amount
                                     TextField(
@@ -516,7 +1198,7 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                                       await creditPartyProvider.storeBillData(
                                         billNumber: newBillNumber,
                                         billDate: billDate,
-                                        totalAmount: totalAmount,
+                                        totalAmount: amountToBePaid,
                                         selectedCustomerName:
                                             selectedCustomerName!,
                                         selectedCustomerCode:
@@ -577,13 +1259,17 @@ class _ParkedOrderDetailState extends State<ParkedOrderDetail> {
                         if (selectedPaymentMode == 'UPI' ||
                             selectedPaymentMode == 'Card') {
                           _showPaymentDialog(
-                              context, selectedPaymentMode!, totalAmount);
+                              context,
+                              selectedPaymentMode!,
+                              updatedTotalAmount,
+                              discountedTotalAmount,
+                              _discountValue.isNotEmpty);
                         } else {
                           // Handle other payment modes or show a message
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                'Please proceed with Rs. ${totalAmount.toStringAsFixed(2)} or select another option',
+                                'Please proceed with Rs. ${updatedTotalAmount.toStringAsFixed(2)} or select another option',
                               ),
                             ),
                           );

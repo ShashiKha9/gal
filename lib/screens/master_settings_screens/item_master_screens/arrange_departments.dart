@@ -24,12 +24,12 @@ class _ArrangeDepartmentsState extends State<ArrangeDepartments> {
 
   void _saveOrder() {
     _syncProvider.saveDepartmentsOrder();
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true); // Indicate that the order was saved
   }
 
   void _cancelChanges() {
     _syncProvider.loadDepartmentsOrder();
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(false); // Indicate that changes were canceled
   }
 
   @override
