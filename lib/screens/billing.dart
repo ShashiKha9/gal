@@ -543,7 +543,7 @@ class BillPageState extends State<BillPage> {
           .toList(),
       'quantities': Map.from(quantities),
       'rates': Map.from(widget.rates),
-      'totalAmount': updatedTotalAmount,
+      'totalAmount': totalAmount,
       'tablegroup': table.group,
       'tableName': table.name,
     };

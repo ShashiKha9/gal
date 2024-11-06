@@ -53,6 +53,21 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
     _loadData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Load the saved department order whenever dependencies change
+    _syncProvider.loadDepartmentsOrder().then((_) {
+      // Check if the previously selected index is still valid
+      if (_selectedDepartmentIndex >= _syncProvider.departmentList.length) {
+        // Reset the selected index if it's out of bounds
+        _selectedDepartmentIndex = 0; // or set to -1 if no selection
+      }
+      // Call setState to refresh the UI
+      setState(() {});
+    });
+  }
+
   Future<void> _loadData() async {
     setState(() {
       _isLoading = true; // Show loader
@@ -495,11 +510,11 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
                               selected: isSelected,
                               onSelected: (selected) {
                                 setState(() {
-                                  _selectedDepartmentIndex = index;
+                                  _selectedDepartmentIndex = selected
+                                      ? index
+                                      : _selectedDepartmentIndex;
                                 });
                               },
-                              avatar: null,
-                              showCheckmark: false,
                               backgroundColor: Colors.white,
                               selectedColor: AppColors.blue,
                               shape: RoundedRectangleBorder(

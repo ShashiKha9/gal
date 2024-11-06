@@ -226,4 +226,24 @@ class SyncRepository extends BaseRepository {
       rethrow; // Rethrow the exception to be caught by the caller
     }
   }
+
+    Future<Map<String, dynamic>> getCustomerCredits() async {
+    try {
+      final response = await getHttp(
+        api: ApiUrls.getCustomerCreditsApi,
+        useToken: true,
+      );
+      // log(response.body, name: 'getItem');
+
+      // Check if the response is successful (status code 200)
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw const HttpException('Failed to load customer credits data');
+      }
+    } catch (e) {
+      log(e.toString(), name: 'getcustomercreditsError');
+      rethrow; // Rethrow the exception to be caught by the caller
+    }
+  }
 }
