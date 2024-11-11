@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/provider/auth_provider.dart';
+import 'package:galaxy_mini/utils/enum.dart';
 
 class ChangeLoginUserDialog extends StatefulWidget {
   const ChangeLoginUserDialog({super.key});
@@ -61,8 +63,13 @@ class _ChangeLoginUserDialogState extends State<ChangeLoginUserDialog> {
         ),
         TextButton(
           onPressed: () {
-            // String oldPassword = oldPasswordController.text;
-            // String newPassword = newPasswordController.text;
+            String username = usernameController.text;
+            String password = newPasswordController.text;
+            LoginProvider().changeUser(
+                username: username,
+                password: password,
+                userType: userType.login.toString(),
+                userId:"");
 
             Navigator.of(context).pop();
           },

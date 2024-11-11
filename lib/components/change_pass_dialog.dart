@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
+import 'package:galaxy_mini/provider/auth_provider.dart';
 
 class ChangePasswordDialog extends StatefulWidget {
   const ChangePasswordDialog({super.key});
@@ -12,6 +13,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final TextEditingController oldPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
 
   bool obscureTextOld = true;
   bool obscureTextNew = true;
@@ -77,6 +79,11 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           onPressed: () {
             // String oldPassword = oldPasswordController.text;
             // String newPassword = newPasswordController.text;
+
+            LoginProvider().changePassword(
+                oldPassword: oldPasswordController.text,
+                newPassword: newPasswordController.text,
+                userId: "4");
 
             Navigator.of(context).pop();
           },

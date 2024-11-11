@@ -40,6 +40,9 @@ class BaseRepository {
     // };
 
     // Set up the headers
+    final body = data.entries.map((entry) {
+    return '${Uri.encodeComponent(entry.key)}=${Uri.encodeComponent(entry.value.toString())}';
+  }).join('&');
     final headers = {
       'Content-Type': 'application/json',
       'access-token': accessToken,
@@ -49,7 +52,7 @@ class BaseRepository {
     return http.post(
       Uri.parse(ApiUrls.baseUrl + api),
       headers: headers,
-      body: json.encode(data),
+      body: body,
     );
   }
 

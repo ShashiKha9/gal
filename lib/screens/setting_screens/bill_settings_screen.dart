@@ -1,9 +1,11 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:galaxy_mini/app.dart';
 import 'package:galaxy_mini/components/app_button.dart';
 import 'package:galaxy_mini/components/app_textfield.dart';
 import 'package:galaxy_mini/components/main_appbar.dart';
+import 'package:galaxy_mini/screens/home_screens/hot_items_screen.dart';
 import 'package:galaxy_mini/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,11 +76,9 @@ class _BillSettingsScreenState extends State<BillSettingsScreen> {
               activeColor: AppColors.blue,
               onChanged: (bool? newValue) {
                 setState(() {
-                  showPLU = newValue!;
-                  _saveShowPLU(newValue);
+                  showPLU = newValue ?? false;
+                  _saveShowPLU(newValue!);
                 });
-                Navigator.pop(context);
-                Navigator.pop(context);
               },
             ),
             CheckboxListTile(

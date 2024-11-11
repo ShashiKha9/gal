@@ -1,6 +1,8 @@
 class ApiUrls {
   static const baseUrl = 'https://test17042024.galaxymini.in/mobileapi/api/';
   static const login = 'login';
+  static const changePassword = 'changepassword';
+  static const changeUser= 'updateotheruser';
   static const getItemApi = 'getItem';
   static const getDepartmentApi = 'getDepartment';
   static const getTableMasterApi = 'getTableMaster';
